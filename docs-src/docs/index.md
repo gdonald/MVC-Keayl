@@ -7,8 +7,7 @@ The homepage for MVC::Keayl is [https://github.com/gdonald/MVC-Keayl](https://gi
 ## Synopsis
 
 MVC::Keayl is a [Model-View-Controller](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)
-web framework for Raku, modeled on the [Ruby on Rails](https://rubyonrails.org/)
-ActionPack stack — routing, controllers, and views.
+web framework for Raku.
 
 It is the web layer only. The model layer is delegated to
 [ORM::ActiveRecord](https://github.com/gdonald/ORM-ActiveRecord) and default view
@@ -20,3 +19,4 @@ default adapter built on [Cro](https://cro.raku.org/).
 
 - [Request](request.md) — the incoming HTTP request wrapper.
 - [Response](response.md) — the outgoing HTTP response builder.
+- [Middleware](middleware.md) — the Rack-like middleware stack and endpoint protocol.

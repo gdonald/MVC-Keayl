@@ -5,6 +5,7 @@ nav:
   - Home: index.md
   - Request: request.md
   - Response: response.md
+  - Middleware: middleware.md
 theme:
   name: 'material'
 markdown_extensions:

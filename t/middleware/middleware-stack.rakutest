@@ -1,0 +1,97 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::MiddlewareStack;
+use MVC::Keayl::Request;
+use MiddlewareFixtures;
+
+sub build-stack(*@uses) {
+  my $stack = MVC::Keayl::MiddlewareStack.new;
+  $stack.use(.key, WrapMiddleware, :tag(.value)) for @uses;
+  $stack
+}
+
+sub call-body($stack) {
+  $stack.build(AppEndpoint.new).call(MVC::Keayl::Request.new).body
+}
+
+# middleware protocol
+
+{
+  my $app = WrapMiddleware.new(:app(AppEndpoint.new), :tag('A'));
+  is $app.call(MVC::Keayl::Request.new).body, 'A(app)',
+    'a middleware wraps the downstream app and post-processes its response';
+}
+
+{
+  my $app = HaltMiddleware.new(:app(AppEndpoint.new), :status(418));
+  is $app.call(MVC::Keayl::Request.new).status, 418,
+    'a middleware may short-circuit without calling the downstream app';
+}
+
+# building and ordering
+
+{
+  my $stack = build-stack('a' => 'A', 'b' => 'B');
+  is call-body($stack), 'A(B(app))', 'the first middleware added is the outermost';
+}
+
+{
+  my $stack = MVC::Keayl::MiddlewareStack.new;
+  is call-body($stack), 'app', 'an empty stack returns the endpoint unwrapped';
+}
+
+# named introspection
+
+{
+  my $stack = build-stack('a' => 'A', 'b' => 'B');
+  is-deeply $stack.names, ('a', 'b'), 'names lists entries in order';
+  is $stack.elems, 2, 'elems counts the entries';
+}
+
+{
+  my $stack = build-stack('a' => 'A');
+  ok $stack.contains('a'), 'contains is true for a present entry';
+  nok $stack.contains('missing'), 'contains is false for an absent entry';
+}
+
+# insert-before / insert-after
+
+{
+  my $stack = build-stack('a' => 'A', 'b' => 'B');
+  $stack.insert-before('b', 'x', WrapMiddleware, :tag('X'));
+  is-deeply $stack.names, ('a', 'x', 'b'), 'insert-before places the entry ahead of the target';
+  is call-body($stack), 'A(X(B(app)))', 'insert-before nests the new middleware in order';
+}
+
+{
+  my $stack = build-stack('a' => 'A', 'b' => 'B');
+  $stack.insert-after('a', 'x', WrapMiddleware, :tag('X'));
+  is-deeply $stack.names, ('a', 'x', 'b'), 'insert-after places the entry behind the target';
+}
+
+{
+  my $stack = build-stack('a' => 'A');
+  throws-like { $stack.insert-before('missing', 'x', WrapMiddleware, :tag('X')) },
+    Exception, message => /missing/,
+    'insert-before raises for an unknown target';
+}
+
+{
+  my $stack = build-stack('a' => 'A');
+  throws-like { $stack.insert-after('missing', 'x', WrapMiddleware, :tag('X')) },
+    Exception, message => /missing/,
+    'insert-after raises for an unknown target';
+}
+
+# delete
+
+{
+  my $stack = build-stack('a' => 'A', 'b' => 'B');
+  $stack.delete('a');
+  is-deeply $stack.names, ('b',), 'delete removes the named entry';
+  is call-body($stack), 'B(app)', 'delete drops the middleware from the built chain';
+}
+
+done-testing;
