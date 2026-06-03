@@ -1,0 +1,113 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing;
+
+# draw DSL and recognition
+
+{
+  my $router = routes {
+    root to => 'home#index';
+    get '/users', to => 'users#index';
+    post '/users', to => 'users#create';
+  };
+
+  is $router.routes.elems, 3, 'the routes block collects each declared route';
+}
+
+{
+  my $router = routes { get '/users', to => 'users#index' };
+  my $route = $router.recognize('GET', '/users');
+
+  is $route.controller, 'users', 'a controller#action target parses the controller';
+  is $route.action, 'index', 'a controller#action target parses the action';
+}
+
+{
+  my $router = routes { get '/users', to => 'users#index' };
+  nok $router.recognize('GET', '/missing').defined, 'recognize returns undefined for an unknown path';
+}
+
+{
+  my $router = routes {
+    get '/users', to => 'users#index';
+    post '/users', to => 'users#create';
+  };
+
+  is $router.recognize('POST', '/users').action, 'create', 'recognize discriminates by HTTP method';
+}
+
+# verb helpers
+
+{
+  my %verbs = GET => 'get', POST => 'post', PUT => 'put',
+              PATCH => 'patch', DELETE => 'delete', OPTIONS => 'options';
+
+  for %verbs.kv -> $verb, $helper {
+    my $router = routes { ::('&' ~ $helper)('/x', to => 'c#a') };
+    ok $router.recognize($verb, '/x').defined, "the $helper helper registers a $verb route";
+  }
+}
+
+# HEAD maps to GET
+
+{
+  my $router = routes { get '/users', to => 'users#index' };
+  ok $router.recognize('HEAD', '/users').defined, 'a GET route also answers HEAD';
+}
+
+# callable target
+
+{
+  my $router = routes { get '/inline', to => sub { 'body' } };
+  my $route = $router.recognize('GET', '/inline');
+
+  ok $route.callable.defined, 'a callable target is stored as a callable';
+  is $route.callable.(), 'body', 'the callable target is invokable';
+}
+
+{
+  my $router = routes { get '/users', to => 'users#index' };
+  nok $router.recognize('GET', '/users').callable.defined,
+    'a string target exposes no callable';
+}
+
+# match with via
+
+{
+  my $router = routes { match '/search', to => 'search#run', via => <get post> };
+
+  ok $router.recognize('GET', '/search').defined, 'match registers each listed verb (GET)';
+  ok $router.recognize('POST', '/search').defined, 'match registers each listed verb (POST)';
+  nok $router.recognize('DELETE', '/search').defined, 'match does not register unlisted verbs';
+}
+
+{
+  my $router = routes { match '/any', to => 'x#y', via => 'all' };
+  ok $router.recognize('DELETE', '/any').defined, 'via all registers every verb';
+}
+
+{
+  my $router = routes { match '/any', to => 'x#y', via => * };
+  ok $router.recognize('PUT', '/any').defined, 'via Whatever registers every verb';
+}
+
+# root
+
+{
+  my $router = routes { root to => 'home#index' };
+
+  is $router.recognize('GET', '/').controller, 'home', 'root maps GET / to its target';
+  is $router.route-named('root').path, '/', 'root registers a route named root';
+}
+
+# loading from a file
+
+{
+  my $router = load-routes('specs/lib/routes-fixture.raku');
+
+  is $router.routes.elems, 4, 'load-routes evaluates the routes file into a router';
+  is $router.recognize('GET', '/users').action, 'index', 'the loaded routes recognize requests';
+}
+
+done-testing;

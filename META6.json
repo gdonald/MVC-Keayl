@@ -27,7 +27,10 @@
     "MVC::Keayl::Middleware": "lib/MVC/Keayl/Middleware.rakumod",
     "MVC::Keayl::MiddlewareStack": "lib/MVC/Keayl/MiddlewareStack.rakumod",
     "MVC::Keayl::Request": "lib/MVC/Keayl/Request.rakumod",
-    "MVC::Keayl::Response": "lib/MVC/Keayl/Response.rakumod"
+    "MVC::Keayl::Response": "lib/MVC/Keayl/Response.rakumod",
+    "MVC::Keayl::Router": "lib/MVC/Keayl/Router.rakumod",
+    "MVC::Keayl::Routing": "lib/MVC/Keayl/Routing.rakumod",
+    "MVC::Keayl::Routing::Route": "lib/MVC/Keayl/Routing/Route.rakumod"
   },
   "resources": [],
   "support": {
