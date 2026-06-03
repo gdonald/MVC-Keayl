@@ -1,0 +1,204 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Request;
+
+# method & verb predicates
+
+{
+  my $req = MVC::Keayl::Request.new(:method<post>);
+  is $req.method, 'POST', 'method is normalized to uppercase';
+}
+
+{
+  my %verbs =
+    GET    => 'is-get',
+    POST   => 'is-post',
+    PUT    => 'is-put',
+    PATCH  => 'is-patch',
+    DELETE => 'is-delete',
+    HEAD   => 'is-head';
+
+  for %verbs.kv -> $verb, $predicate {
+    my $req = MVC::Keayl::Request.new(:method($verb));
+    ok $req."$predicate"(), "$predicate is true for $verb";
+  }
+
+  my $get = MVC::Keayl::Request.new(:method<GET>);
+  nok $get.is-post, 'is-post is false for GET';
+}
+
+# path & query string
+
+{
+  my $req = MVC::Keayl::Request.new(:target('/users?q=hi'));
+  is $req.path, '/users', 'path is split from the target';
+  is $req.query-string, 'q=hi', 'query string is split from the target';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:target('/users'));
+  is $req.query-string, '', 'query string is empty without a question mark';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:path('/explicit'), :query-string('a=1'));
+  is $req.path, '/explicit', 'explicit path is honored';
+  is $req.query-string, 'a=1', 'explicit query string is honored';
+}
+
+{
+  my $req = MVC::Keayl::Request.new;
+  is $req.path, '/', 'path defaults to /';
+}
+
+# headers
+
+{
+  my $req = MVC::Keayl::Request.new(:headers({ 'Content-Type' => 'text/html' }));
+  is $req.header('content-type'), 'text/html', 'header lookup is case-insensitive';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:headers({ Accept => <text/html application/json> }));
+  is $req.header('accept'), 'text/html, application/json', 'multi-value headers are joined';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:headers({ Host => 'ex.com' }));
+  ok $req.has-header('HOST'), 'has-header is case-insensitive and true when present';
+  nok $req.has-header('x-missing'), 'has-header is false when absent';
+}
+
+# is-xhr
+
+{
+  my $req = MVC::Keayl::Request.new(:headers({ 'X-Requested-With' => 'XMLHttpRequest' }));
+  ok $req.is-xhr, 'is-xhr is true for an XMLHttpRequest header';
+}
+
+{
+  my $req = MVC::Keayl::Request.new;
+  nok $req.is-xhr, 'is-xhr is false without the header';
+}
+
+# scheme & ssl
+
+{
+  my $req = MVC::Keayl::Request.new;
+  is $req.scheme, 'http', 'scheme defaults to http';
+  nok $req.is-ssl, 'is-ssl is false for http';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:scheme<HTTPS>);
+  is $req.scheme, 'https', 'connection scheme is normalized to lowercase';
+  ok $req.is-ssl, 'is-ssl is true for https';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:scheme<http>, :headers({ 'X-Forwarded-Proto' => 'https' }));
+  is $req.scheme, 'https', 'X-Forwarded-Proto overrides the connection scheme';
+}
+
+# host & port
+
+{
+  my $req = MVC::Keayl::Request.new(:headers({ Host => 'example.com:3000' }));
+  is $req.host, 'example.com', 'host strips the port';
+  is $req.port, 3000, 'port is read from the Host header';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:headers({ Host => 'example.com' }));
+  is $req.port, 80, 'port defaults to 80 for http';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:scheme<https>, :headers({ Host => 'example.com' }));
+  is $req.port, 443, 'port defaults to 443 for https';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:headers({ Host => 'example.com', 'X-Forwarded-Port' => '8443' }));
+  is $req.port, 8443, 'X-Forwarded-Port is used when the Host header has no port';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:headers({ Host => 'origin.com', 'X-Forwarded-Host' => 'proxy.com' }));
+  is $req.host, 'proxy.com', 'X-Forwarded-Host takes precedence over Host';
+}
+
+{
+  my $req = MVC::Keayl::Request.new;
+  nok $req.host.defined, 'host is undefined without a Host header';
+}
+
+# remote-ip
+
+{
+  my $req = MVC::Keayl::Request.new(:remote-address('10.0.0.1'));
+  is $req.remote-ip, '10.0.0.1', 'remote-ip falls back to the connection address';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(
+    :remote-address('10.0.0.1'),
+    :headers({ 'X-Forwarded-For' => '203.0.113.5, 10.0.0.1' }),
+  );
+  is $req.remote-ip, '203.0.113.5', 'remote-ip prefers the first X-Forwarded-For entry';
+}
+
+# query params
+
+{
+  my $req = MVC::Keayl::Request.new(:query-string('a=1&b=two'));
+  is-deeply $req.query-params, { a => '1', b => 'two' }, 'query params parse into a hash';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:query-string('q=a%20b+c'));
+  is $req.query-params<q>, 'a b c', 'query params are percent- and plus-decoded';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:query-string('t=1&t=2&t=3'));
+  is-deeply $req.query-params<t>, ['1', '2', '3'], 'repeated keys collect into an array';
+}
+
+{
+  my $req = MVC::Keayl::Request.new;
+  is-deeply $req.query-params, {}, 'query params are empty without a query string';
+}
+
+# body (lazy, raw)
+
+{
+  my $req = MVC::Keayl::Request.new(:body('plain'));
+  is $req.body, 'plain', 'a string body is returned as-is';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:body('héllo'.encode('utf-8')));
+  is $req.body, 'héllo', 'a Blob body is decoded as utf-8';
+}
+
+{
+  my $req = MVC::Keayl::Request.new;
+  is $req.body, '', 'a missing body reads as the empty string';
+}
+
+{
+  my $calls = 0;
+  my $req = MVC::Keayl::Request.new(:body(-> { $calls++; 'lazy' }));
+
+  is $calls, 0, 'the body source is not read until the body is accessed';
+
+  is $req.body, 'lazy', 'the body source is read on first access';
+  is $calls, 1, 'the body source is read exactly once';
+
+  $req.body;
+  is $calls, 1, 'subsequent body access is memoized';
+}
+
+done-testing;

@@ -19,7 +19,8 @@
     "ORM::Factory:auth<zef:gdonald>"
   ],
   "provides": {
-    "MVC::Keayl": "lib/MVC/Keayl.rakumod"
+    "MVC::Keayl": "lib/MVC/Keayl.rakumod",
+    "MVC::Keayl::Request": "lib/MVC/Keayl/Request.rakumod"
   },
   "resources": [],
   "support": {
