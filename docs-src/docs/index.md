@@ -19,3 +19,4 @@ default adapter built on [Cro](https://cro.raku.org/).
 ## Pages
 
 - [Request](request.md) — the incoming HTTP request wrapper.
+- [Response](response.md) — the outgoing HTTP response builder.

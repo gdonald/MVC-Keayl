@@ -20,7 +20,8 @@
   ],
   "provides": {
     "MVC::Keayl": "lib/MVC/Keayl.rakumod",
-    "MVC::Keayl::Request": "lib/MVC/Keayl/Request.rakumod"
+    "MVC::Keayl::Request": "lib/MVC/Keayl/Request.rakumod",
+    "MVC::Keayl::Response": "lib/MVC/Keayl/Response.rakumod"
   },
   "resources": [],
   "support": {

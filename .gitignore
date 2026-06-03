@@ -2,3 +2,4 @@
 lib/.precomp
 .fezignore
 .behave-failures
+docs-src/site

@@ -1,0 +1,171 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Response;
+
+sub pairs-named(@pairs, Str $name) {
+  @pairs.grep(*.key.lc eq $name.lc)
+}
+
+# status
+
+{
+  my $res = MVC::Keayl::Response.new;
+  is $res.status, 200, 'status defaults to 200';
+}
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.status = 404;
+  is $res.status, 404, 'status is writable';
+}
+
+{
+  my $res = MVC::Keayl::Response.new(:status(201));
+  is $res.status, 201, 'status can be set at construction';
+}
+
+# construction with headers and body
+
+{
+  my $res = MVC::Keayl::Response.new(:headers({ 'X-Foo' => 'bar' }), :body('hello'));
+  is $res.header('x-foo'), 'bar', 'constructor headers are stored';
+  is $res.body, 'hello', 'constructor body is stored';
+}
+
+# headers
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.set-header('Content-Type', 'text/plain');
+  is $res.header('CONTENT-TYPE'), 'text/plain', 'header lookup is case-insensitive';
+}
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.set-header('X-A', '1');
+  ok $res.has-header('x-a'), 'has-header is true when present';
+  nok $res.has-header('x-missing'), 'has-header is false when absent';
+}
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.set-header('X-A', '1');
+  $res.delete-header('X-A');
+  nok $res.has-header('x-a'), 'delete-header removes the header';
+}
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.set-header('X-A', 'first');
+  $res.set-header('X-A', 'second');
+  is $res.header('x-a'), 'second', 'set-header replaces an existing value';
+}
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.add-header('Set-Cookie', 'a=1');
+  $res.add-header('Set-Cookie', 'b=2');
+  is $res.header('set-cookie'), 'a=1, b=2', 'add-header accumulates values';
+}
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.set-header('X-One', '1');
+  $res.set-header('X-Two', '2');
+  is-deeply $res.headers, { 'X-One' => '1', 'X-Two' => '2' },
+    'headers returns display names and joined values';
+}
+
+# convenience accessors
+
+{
+  my $res = MVC::Keayl::Response.new;
+  nok $res.content-type.defined, 'content-type is undefined until set';
+
+  $res.content-type('application/json');
+  is $res.content-type, 'application/json', 'content-type getter reflects the setter';
+}
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.location('/users/1');
+  is $res.location, '/users/1', 'location getter reflects the setter';
+}
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.content-type('application/json');
+  is $res.header('content-type'), 'application/json', 'content-type writes the Content-Type header';
+}
+
+# content-length
+
+{
+  my $res = MVC::Keayl::Response.new(:body('héllo'));
+  is $res.content-length, 6, 'content-length counts utf-8 bytes, not characters';
+}
+
+# body buffering
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.write('foo');
+  $res.write('bar');
+  is $res.body, 'foobar', 'write appends to the body buffer';
+}
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.write('foo');
+  $res.body('replaced');
+  is $res.body, 'replaced', 'the body setter replaces the buffer';
+}
+
+# finalization to the adapter tuple
+
+{
+  my $res = MVC::Keayl::Response.new(:status(201), :body('hi'));
+  my ($status, $headers, $body) = $res.finish;
+  is $status, 201, 'finish returns the status as the first element';
+}
+
+{
+  my $res = MVC::Keayl::Response.new(:body('hi'));
+  my ($status, $headers, $body) = $res.finish;
+  isa-ok $body, Blob, 'finish returns the body as a Blob';
+  is $body.decode('utf-8'), 'hi', 'the finished body holds the buffered content';
+}
+
+{
+  my $res = MVC::Keayl::Response.new(:body('héllo'));
+  my ($status, $headers, $body) = $res.finish;
+  my $len = pairs-named($headers.list, 'Content-Length').head.value;
+  is $len, '6', 'finish sets Content-Length to the body byte count';
+}
+
+{
+  my $res = MVC::Keayl::Response.new(:body('hi'));
+  my ($status, $headers, $body) = $res.finish;
+  my $ct = pairs-named($headers.list, 'Content-Type').head.value;
+  is $ct, 'text/html; charset=utf-8', 'finish supplies a default Content-Type';
+}
+
+{
+  my $res = MVC::Keayl::Response.new(:body('{}'));
+  $res.content-type('application/json');
+  my ($status, $headers, $body) = $res.finish;
+  my $ct = pairs-named($headers.list, 'Content-Type').head.value;
+  is $ct, 'application/json', 'finish preserves an explicit Content-Type';
+}
+
+{
+  my $res = MVC::Keayl::Response.new;
+  $res.add-header('Set-Cookie', 'a=1');
+  $res.add-header('Set-Cookie', 'b=2');
+  my ($status, $headers, $body) = $res.finish;
+  is pairs-named($headers.list, 'Set-Cookie').elems, 2,
+    'finish emits one pair per value for multi-value headers';
+}
+
+done-testing;

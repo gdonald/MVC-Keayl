@@ -4,6 +4,7 @@ repo_url: https://github.com/gdonald/MVC-Keayl
 nav:
   - Home: index.md
   - Request: request.md
+  - Response: response.md
 theme:
   name: 'material'
 markdown_extensions:
