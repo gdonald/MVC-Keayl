@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stage: [prove6, behave]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: Raku/setup-raku@v1
+        with:
+          raku-version: 'latest'
+      - name: Raku version
+        run: raku --version
+      - name: Install Dependencies
+        run: zef install --/test --test-depends --deps-only .
+      - name: Install App::Prove6
+        run: zef install --/test App::Prove6
+      - name: Install DBIish
+        run: zef install --/test DBIish
+      - name: Run ${{ matrix.stage }}
+        run: ./test.raku ${{ matrix.stage }}

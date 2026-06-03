@@ -1,0 +1,75 @@
+#!/usr/bin/env raku
+
+use v6.d;
+
+my constant NAME = 'keayl';
+
+sub version(--> Str) {
+  my $meta = $*PROGRAM.parent.parent.add('META6.json');
+  return 'unknown' unless $meta.e;
+
+  my $text = $meta.slurp;
+  with $text ~~ / '"version"' \s* ':' \s* '"' (<-["]>+) '"' / {
+    return ~$0;
+  }
+
+  'unknown';
+}
+
+sub usage(--> Str) {
+  qq:to/USAGE/.chomp;
+    Usage: {NAME} <command> [options]
+
+    Commands:
+      new <name>              create a new application skeleton
+      server                  boot the application (alias: s)
+      routes                  print the route table
+      console                 open a REPL with the app loaded (alias: c)
+      generate <type> <name>  run a generator (alias: g)
+                                types: controller, scaffold
+      version                 print the {NAME} version
+      help                    show this message
+
+    Run `{NAME} <command> --help` for command-specific options.
+    USAGE
+}
+
+sub not-yet(Str:D $command --> Int) {
+  note "{NAME}: `$command` is not implemented yet.";
+  1;
+}
+
+multi sub MAIN('version') { say version(); }
+multi sub MAIN('help')    { say usage(); }
+
+multi sub MAIN('new', $name) {
+  exit not-yet("new $name");
+}
+
+multi sub MAIN('server') { exit not-yet('server'); }
+multi sub MAIN('s')      { exit not-yet('server'); }
+
+multi sub MAIN('routes') { exit not-yet('routes'); }
+
+multi sub MAIN('console') { exit not-yet('console'); }
+multi sub MAIN('c')       { exit not-yet('console'); }
+
+multi sub MAIN('generate', $type, $name) { exit generate($type, $name); }
+multi sub MAIN('g',        $type, $name) { exit generate($type, $name); }
+
+sub generate(Str:D $type, Str:D $name --> Int) {
+  unless $type eq 'controller' || $type eq 'scaffold' {
+    note "{NAME}: unknown generator '$type' (expected: controller, scaffold)";
+    return 2;
+  }
+
+  not-yet("generate $type $name");
+}
+
+multi sub MAIN(Bool :$version) {
+  if $version {
+    say version();
+  } else {
+    say usage();
+  }
+}

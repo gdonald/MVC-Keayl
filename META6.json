@@ -1,0 +1,40 @@
+{
+  "name": "MVC::Keayl",
+  "description": "Model-View-Controller web framework",
+  "version": "0.0.1",
+  "api": "1",
+  "perl": "6.d",
+  "authors": ["Greg Donald"],
+  "auth": "zef:gdonald",
+  "depends": [
+    "Cro::HTTP",
+    "ORM::ActiveRecord:auth<zef:gdonald>",
+    "Template::HAML:auth<zef:gdonald>"
+  ],
+  "build-depends": [],
+  "test-depends": [
+    "Test",
+    "Test::META",
+    "BDD::Behave:auth<zef:gdonald>",
+    "ORM::Factory:auth<zef:gdonald>"
+  ],
+  "provides": {
+    "MVC::Keayl": "lib/MVC/Keayl.rakumod"
+  },
+  "resources": [],
+  "support": {
+    "source": "https://github.com/gdonald/MVC-Keayl.git",
+    "bugtracker": "https://github.com/gdonald/MVC-Keayl/issues"
+  },
+  "license": "Artistic-2.0",
+  "tags": [
+    "MVC",
+    "Web",
+    "Framework",
+    "Rails",
+    "Controller",
+    "Routing",
+    "View"
+  ],
+  "source-url": "git://github.com/gdonald/MVC-Keayl.git"
+}
