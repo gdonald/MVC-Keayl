@@ -9,3 +9,4 @@ has %.params;
 method controller(--> Str)     { $!route.controller }
 method action(--> Str)         { $!route.action }
 method callable(--> Callable)  { $!route.callable }
+method target                  { $!route.target }

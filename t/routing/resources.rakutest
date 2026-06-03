@@ -1,0 +1,150 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing;
+
+# the seven REST actions
+
+{
+  my $router = routes { resources 'users' };
+
+  is $router.recognize('GET', '/users').action, 'index', 'resources maps GET / to index';
+  is $router.recognize('POST', '/users').action, 'create', 'resources maps POST / to create';
+  is $router.recognize('GET', '/users/new').action, 'new', 'resources maps GET /new to new';
+  is $router.recognize('GET', '/users/5').action, 'show', 'resources maps GET /:id to show';
+  is $router.recognize('GET', '/users/5/edit').action, 'edit', 'resources maps GET /:id/edit to edit';
+  is $router.recognize('PATCH', '/users/5').action, 'update', 'resources maps PATCH /:id to update';
+  is $router.recognize('PUT', '/users/5').action, 'update', 'resources maps PUT /:id to update';
+  is $router.recognize('DELETE', '/users/5').action, 'destroy', 'resources maps DELETE /:id to destroy';
+}
+
+{
+  my $router = routes { resources 'users' };
+  is $router.recognize('GET', '/users/5').params<id>, '5', 'member routes capture the id param';
+}
+
+{
+  my $router = routes { resources 'users' };
+  is $router.recognize('GET', '/users/5').controller, 'users', 'resources targets the named controller';
+}
+
+# named helpers
+
+{
+  my $router = routes { resources 'users' };
+
+  is $router.route-named('users').path, '/users', 'the plural name covers the collection';
+  is $router.route-named('user').path, '/users/:id', 'the singular name covers the member';
+  is $router.route-named('new-user').path, '/users/new', 'new gets a new- prefixed name';
+  is $router.route-named('edit-user').path, '/users/:id/edit', 'edit gets an edit- prefixed name';
+}
+
+# only / except
+
+{
+  my $router = routes { resources 'users', :only<index show> };
+
+  is $router.routes.map(*.action).unique.sort.join(','), 'index,show', 'only keeps just the listed actions';
+}
+
+{
+  my $router = routes { resources 'users', :except<destroy> };
+  nok $router.recognize('DELETE', '/users/5').defined, 'except drops the listed action';
+}
+
+# member and collection
+
+{
+  my $router = routes {
+    resources 'photos', {
+      member { get 'preview', to => 'photos#preview' }
+    }
+  };
+
+  is $router.recognize('GET', '/photos/9/preview').action, 'preview', 'a member block adds a member route';
+  is $router.recognize('GET', '/photos/9/preview').route.name, 'preview-photo', 'a member route is named per the singular';
+}
+
+{
+  my $router = routes {
+    resources 'photos', {
+      collection { get 'search', to => 'photos#search' }
+    }
+  };
+
+  is $router.recognize('GET', '/photos/search').action, 'search', 'a collection block adds a collection route';
+  is $router.recognize('GET', '/photos/search').route.name, 'search-photos', 'a collection route is named per the plural';
+}
+
+{
+  my $router = routes {
+    resources 'photos', {
+      collection { get 'search', to => 'photos#search' }
+    }
+  };
+
+  is $router.recognize('GET', '/photos/9').action, 'show', 'a collection route does not shadow show';
+}
+
+{
+  my $router = routes {
+    resources 'photos', {
+      get 'stats', to => 'photos#stats', on => 'collection';
+    }
+  };
+
+  is $router.recognize('GET', '/photos/stats').action, 'stats', 'on collection adds a collection route';
+}
+
+# path and as
+
+{
+  my $router = routes { resources 'people', :path<team> };
+
+  ok $router.recognize('GET', '/team').defined, 'path overrides the URL segment';
+  nok $router.recognize('GET', '/people').defined, 'the original segment is not registered when path is given';
+}
+
+{
+  my $router = routes { resources 'people', :as<member> };
+  ok $router.route-named('member').defined, 'as overrides the helper name';
+}
+
+# controller and module
+
+{
+  my $router = routes { resources 'users', :controller<accounts> };
+  is $router.recognize('GET', '/users').target, 'accounts#index', 'controller overrides the target controller';
+}
+
+{
+  my $router = routes { resources 'posts', :module<admin> };
+  is $router.recognize('GET', '/posts').target, 'admin/posts#index', 'module prefixes the controller';
+}
+
+# param
+
+{
+  my $router = routes { resources 'users', :param<slug> };
+  is $router.recognize('GET', '/users/abc').params<slug>, 'abc', 'param renames the member key';
+}
+
+# path-names
+
+{
+  my $router = routes { resources 'users', :path-names({ new => 'neu', edit => 'bearbeiten' }) };
+
+  is $router.recognize('GET', '/users/neu').action, 'new', 'path-names renames the new segment';
+  is $router.recognize('GET', '/users/5/bearbeiten').action, 'edit', 'path-names renames the edit segment';
+}
+
+# multiple resources
+
+{
+  my $router = routes { resources 'users', 'posts' };
+
+  ok $router.recognize('GET', '/users').defined, 'multiple resources registers the first';
+  ok $router.recognize('GET', '/posts').defined, 'multiple resources registers the second';
+}
+
+done-testing;

@@ -96,6 +96,85 @@ get '/users/:id', to => 'users#show',
   defaults    => { format => 'html' };
 ```
 
+## Resources
+
+`resources` declares the seven REST routes for a resource in one call:
+
+```perl6
+resources 'users';
+```
+
+| Verb           | Path              | Action  | Name        |
+| -------------- | ----------------- | ------- | ----------- |
+| GET            | `/users`          | index   | `users`     |
+| POST           | `/users`          | create  | `users`     |
+| GET            | `/users/new`      | new     | `new-user`  |
+| GET            | `/users/:id`      | show    | `user`      |
+| GET            | `/users/:id/edit` | edit    | `edit-user` |
+| PATCH / PUT    | `/users/:id`      | update  | `user`      |
+| DELETE         | `/users/:id`      | destroy | `user`      |
+
+Pass several names to declare more than one resource at once:
+
+```perl6
+resources 'users', 'posts';
+```
+
+### Limiting actions
+
+`only` and `except` choose which of the seven actions to generate:
+
+```perl6
+resources 'users', :only<index show>;
+resources 'photos', :except<destroy>;
+```
+
+### Member and collection routes
+
+A block adds extra routes. `member` routes act on a single record (`/:id`),
+`collection` routes act on the set:
+
+```perl6
+resources 'photos', {
+  member {
+    get 'preview', to => 'photos#preview';      # GET /photos/:id/preview
+  }
+  collection {
+    get 'search', to => 'photos#search';        # GET /photos/search
+  }
+}
+```
+
+`on` does the same for a single route without a block:
+
+```perl6
+resources 'photos', {
+  get 'stats', to => 'photos#stats', on => 'collection';
+}
+```
+
+Member route names are suffixed with the singular (`preview-photo`), collection
+routes with the plural (`search-photos`).
+
+### Resource options
+
+| Option        | Effect                                                            |
+| ------------- | ---------------------------------------------------------------- |
+| `path`        | Override the URL segment (`/team` instead of `/people`).         |
+| `as`          | Override the helper name base.                                   |
+| `controller`  | Override the target controller.                                  |
+| `module`      | Prefix the controller (`admin/posts`).                          |
+| `param`       | Rename the member key (`:slug` instead of `:id`).               |
+| `path-names`  | Rename the `new` and `edit` URL segments.                       |
+
+```perl6
+resources 'people',
+  path        => 'team',
+  controller  => 'staff',
+  param       => 'slug',
+  path-names  => { new => 'neu', edit => 'bearbeiten' };
+```
+
 ## Recognition
 
 The router answers `recognize($method, $path)`, returning a match or an
