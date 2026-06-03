@@ -1,0 +1,16 @@
+site_name: MVC::Keayl
+site_url: https://gdonald.github.io/MVC-Keayl/
+repo_url: https://github.com/gdonald/MVC-Keayl
+nav:
+  - Home: index.md
+  - Request: request.md
+theme:
+  name: 'material'
+markdown_extensions:
+  - attr_list
+  - pymdownx.highlight:
+      linenums: true
+  - pymdownx.superfences
+  - admonition
+  - toc:
+      permalink: true
