@@ -7,7 +7,7 @@ short-circuit by returning its own response.
 
 ## The endpoint protocol
 
-An endpoint is anything that does the `MVC::Keayl::Endpoint` role — a single
+An endpoint is anything that does the `MVC::Keayl::Endpoint` role: a single
 `call` method that takes a [`Request`](request.md) and returns a
 [`Response`](response.md):
 
@@ -45,7 +45,7 @@ class Timing is MVC::Keayl::Middleware {
 ```
 
 A middleware that returns a response **without** calling `self.app` short-circuits
-the rest of the stack — useful for authentication gates, caching, and the like.
+the rest of the stack, useful for authentication gates, caching, and the like.
 
 ## The stack
 
@@ -84,7 +84,7 @@ $stack.delete('timing');
 ### Introspection
 
 ```perl6
-$stack.names;            # ('logger', 'timing')  — in order
+$stack.names;            # ('logger', 'timing'), in order
 $stack.elems;            # 2
 $stack.contains('ssl');  # False
 ```

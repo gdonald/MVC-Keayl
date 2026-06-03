@@ -29,7 +29,7 @@ my $request = MVC::Keayl::Request.new(
 | `:headers`        | A hash of header names to values; names are matched case-insensitively.  |
 | `:scheme`         | Connection scheme (`http` / `https`); normalized to lowercase.           |
 | `:remote-address` | The peer address reported by the connection.                             |
-| `:body`           | The request body — a `Str`, a `Blob`, or a `Callable` read lazily.       |
+| `:body`           | The request body: a `Str`, a `Blob`, or a `Callable` read lazily.        |
 
 Supplying `:target` takes precedence over `:path` / `:query-string`.
 
@@ -109,7 +109,7 @@ $request.remote-ip;   # '203.0.113.5'
 
 ## Body
 
-The body is read lazily — a `Callable` source is invoked only on the first call
+The body is read lazily. A `Callable` source is invoked only on the first call
 to `body`, and the result is memoized. A `Blob` is decoded as UTF-8, and a
 missing body reads as the empty string:
 

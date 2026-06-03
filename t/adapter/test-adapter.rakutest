@@ -1,0 +1,76 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Adapter::Test;
+use MVC::Keayl::MiddlewareStack;
+use MVC::Keayl::Request;
+use ServerFixtures;
+use MiddlewareFixtures;
+
+sub echo-adapter {
+  MVC::Keayl::Adapter::Test.new(:app(EchoEndpoint.new))
+}
+
+# request dispatch and translation
+
+{
+  my $response = echo-adapter.request('POST', '/users?q=1');
+  is $response.header('X-Method'), 'POST', 'request dispatches with the given method';
+  is $response.header('X-Path'), '/users', 'the target path reaches the endpoint';
+  is $response.header('X-Query'), 'q=1', 'the query string reaches the endpoint';
+}
+
+{
+  my $response = echo-adapter.request('POST', '/x', :body('payload'));
+  is $response.body, 'payload', 'the body reaches the endpoint';
+}
+
+{
+  my $response = echo-adapter.request('GET', '/x', :headers({ Host => 'ex.com' }));
+  is $response.header('X-Host'), 'ex.com', 'request headers reach the endpoint';
+}
+
+{
+  my $response = echo-adapter.request('GET', '/x', :remote-address('9.9.9.9'));
+  is $response.header('X-Remote-IP'), '9.9.9.9', 'the remote address reaches the endpoint';
+}
+
+# verb helpers
+
+{
+  my %verbs =
+    GET    => 'get',
+    POST   => 'post',
+    PUT    => 'put',
+    PATCH  => 'patch',
+    DELETE => 'delete',
+    HEAD   => 'head';
+
+  for %verbs.kv -> $verb, $helper {
+    my $response = echo-adapter."$helper"('/x');
+    is $response.header('X-Method'), $verb, "the $helper helper dispatches a $verb";
+  }
+}
+
+# middleware integration
+
+{
+  my $stack = MVC::Keayl::MiddlewareStack.new;
+  $stack.use('w', WrapMiddleware, :tag('W'));
+
+  my $adapter = MVC::Keayl::Adapter::Test.new(:app($stack.build(AppEndpoint.new)));
+  is $adapter.get('/').body, 'W(app)', 'the adapter drives the full middleware stack';
+}
+
+# abstract interface: handle returns the finalized tuple
+
+{
+  my $adapter = MVC::Keayl::Adapter::Test.new(:app(AppEndpoint.new));
+  my ($status, $headers, $body) = $adapter.handle(MVC::Keayl::Request.new(:target('/')));
+  is $status, 200, 'handle returns the status';
+  isa-ok $body, Blob, 'handle returns the body as a Blob';
+  is $body.decode('utf-8'), 'app', 'handle returns the rendered body';
+}
+
+done-testing;

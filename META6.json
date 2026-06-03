@@ -20,6 +20,9 @@
   ],
   "provides": {
     "MVC::Keayl": "lib/MVC/Keayl.rakumod",
+    "MVC::Keayl::Adapter": "lib/MVC/Keayl/Adapter.rakumod",
+    "MVC::Keayl::Adapter::Cro": "lib/MVC/Keayl/Adapter/Cro.rakumod",
+    "MVC::Keayl::Adapter::Test": "lib/MVC/Keayl/Adapter/Test.rakumod",
     "MVC::Keayl::Endpoint": "lib/MVC/Keayl/Endpoint.rakumod",
     "MVC::Keayl::Middleware": "lib/MVC/Keayl/Middleware.rakumod",
     "MVC::Keayl::MiddlewareStack": "lib/MVC/Keayl/MiddlewareStack.rakumod",
@@ -32,14 +35,6 @@
     "bugtracker": "https://github.com/gdonald/MVC-Keayl/issues"
   },
   "license": "Artistic-2.0",
-  "tags": [
-    "MVC",
-    "Web",
-    "Framework",
-    "Rails",
-    "Controller",
-    "Routing",
-    "View"
-  ],
+  "tags": ["MVC", "Web", "Framework", "Model", "Controller", "Routing", "View"],
   "source-url": "git://github.com/gdonald/MVC-Keayl.git"
 }

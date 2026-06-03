@@ -84,7 +84,7 @@ $response.body('replaced'); # discards the buffer
 
 ## Finalization
 
-`finish` commits the response and returns the adapter tuple — a `(status,
+`finish` commits the response and returns the adapter tuple: a `(status,
 headers, body)` list where `headers` is an itemized list of `name => value`
 pairs (one pair per value, so multi-value headers like `Set-Cookie` stay
 separate) and `body` is a UTF-8 `Blob`:

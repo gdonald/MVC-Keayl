@@ -1,0 +1,86 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Adapter::Cro;
+use Cro::HTTP::Request;
+use Cro::HTTP::Response;
+use Cro::HTTP::Client;
+use ServerFixtures;
+
+sub cro-adapter {
+  MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :port(0))
+}
+
+sub cro-request(Str $method, Str $target, *@headers) {
+  my $request = Cro::HTTP::Request.new(:$method, :$target);
+  $request.append-header(.key, .value) for @headers;
+  $request
+}
+
+# build-request translation
+
+{
+  my $request = cro-adapter.build-request(cro-request('GET', '/p?a=b'), Blob.new);
+  is $request.method, 'GET', 'the Cro method is translated';
+  is $request.path, '/p', 'the Cro target path is translated';
+  is $request.query-string, 'a=b', 'the Cro query string is translated';
+}
+
+{
+  my $request = cro-adapter.build-request(cro-request('GET', '/', 'Host' => 'h.com'), Blob.new);
+  is $request.header('host'), 'h.com', 'Cro headers are translated';
+}
+
+{
+  my $request = cro-adapter.build-request(cro-request('POST', '/'), 'body-bytes'.encode('utf-8'));
+  is $request.body, 'body-bytes', 'the body blob is decoded into the request';
+}
+
+# fill-response translation
+
+{
+  my $adapter  = cro-adapter;
+  my $cro-req  = cro-request('POST', '/echo');
+  my $cro-res  = Cro::HTTP::Response.new(:request($cro-req));
+
+  $adapter.fill-response($cro-req, 'hi'.encode('utf-8'), $cro-res);
+
+  is $cro-res.status, 200, 'fill-response copies the status onto the Cro response';
+  is $cro-res.header('X-Method'), 'POST', 'fill-response copies headers onto the Cro response';
+  is (await $cro-res.body-blob).decode('utf-8'), 'hi', 'fill-response copies the body onto the Cro response';
+}
+
+{
+  my $adapter  = cro-adapter;
+  my $cro-req  = cro-request('GET', '/');
+  my $cro-res  = Cro::HTTP::Response.new(:request($cro-req));
+
+  $adapter.fill-response($cro-req, Blob.new, $cro-res);
+
+  nok $cro-res.header('Content-Length').defined,
+    'fill-response leaves Content-Length to Cro';
+}
+
+# integration: a real round-trip over a socket
+
+{
+  my $port    = free-port();
+  my $adapter = MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :host('127.0.0.1'), :$port);
+
+  $adapter.start;
+  LEAVE $adapter.stop;
+
+  my $response = await Cro::HTTP::Client.post(
+    "http://127.0.0.1:$port/echo?x=9",
+    body => 'payload'.encode('utf-8'),
+  );
+
+  is $response.status, 200, 'the served response carries the status';
+  is $response.header('X-Method'), 'POST', 'the served request preserves the method';
+  is $response.header('X-Path'), '/echo', 'the served request preserves the path';
+  is $response.header('X-Remote-IP'), '127.0.0.1', 'the served request carries the client address';
+  is (await $response.body-text), 'payload', 'the served response carries the body';
+}
+
+done-testing;

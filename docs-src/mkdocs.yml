@@ -6,6 +6,7 @@ nav:
   - Request: request.md
   - Response: response.md
   - Middleware: middleware.md
+  - Server adapters: adapters.md
 theme:
   name: 'material'
 markdown_extensions:
