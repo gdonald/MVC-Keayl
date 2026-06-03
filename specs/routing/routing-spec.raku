@@ -119,6 +119,33 @@ describe 'MVC::Keayl routing root', {
   }
 }
 
+describe 'MVC::Keayl routing recognition with path patterns', {
+  it 'surfaces dynamic segment params', {
+    my $router = routes { get '/users/:id', to => 'users#show' };
+    expect($router.recognize('GET', '/users/42').params<id>).to.be('42');
+  }
+
+  it 'matches a constrained route for a valid segment', {
+    my $router = routes { get '/items/:id', to => 'items#show', constraints => { id => /^\d+$/ } };
+    expect($router.recognize('GET', '/items/7').defined).to.be-truthy;
+  }
+
+  it 'skips a constrained route for an invalid segment', {
+    my $router = routes { get '/items/:id', to => 'items#show', constraints => { id => /^\d+$/ } };
+    expect($router.recognize('GET', '/items/abc').defined).to.be-falsy;
+  }
+
+  it 'captures the rest of the path with a glob', {
+    my $router = routes { get '/files/*path', to => 'files#serve' };
+    expect($router.recognize('GET', '/files/a/b.txt').params<path>).to.be('a/b.txt');
+  }
+
+  it 'captures the extension with format true', {
+    my $router = routes { get '/p/:id', to => 'p#show', format => True };
+    expect($router.recognize('GET', '/p/3.json').params<format>).to.be('json');
+  }
+}
+
 describe 'MVC::Keayl routing load-routes', {
   let(:router, { load-routes('specs/lib/routes-fixture.raku') });
 

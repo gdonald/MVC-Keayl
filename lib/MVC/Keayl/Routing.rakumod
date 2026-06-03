@@ -37,32 +37,32 @@ sub load-routes(IO() $path --> MVC::Keayl::Router:D) is export {
   EVALFILE $path
 }
 
-sub get(Str:D $path, :$to, Str :$as) is export {
-  current-router.add-route(['GET'], $path, $to, :name($as))
+sub get(Str:D $path, :$to, Str :$as, :%constraints, :%defaults, Bool :$format) is export {
+  current-router.add-route(['GET'], $path, $to, :name($as), :%constraints, :%defaults, :$format)
 }
 
-sub post(Str:D $path, :$to, Str :$as) is export {
-  current-router.add-route(['POST'], $path, $to, :name($as))
+sub post(Str:D $path, :$to, Str :$as, :%constraints, :%defaults, Bool :$format) is export {
+  current-router.add-route(['POST'], $path, $to, :name($as), :%constraints, :%defaults, :$format)
 }
 
-sub put(Str:D $path, :$to, Str :$as) is export {
-  current-router.add-route(['PUT'], $path, $to, :name($as))
+sub put(Str:D $path, :$to, Str :$as, :%constraints, :%defaults, Bool :$format) is export {
+  current-router.add-route(['PUT'], $path, $to, :name($as), :%constraints, :%defaults, :$format)
 }
 
-sub patch(Str:D $path, :$to, Str :$as) is export {
-  current-router.add-route(['PATCH'], $path, $to, :name($as))
+sub patch(Str:D $path, :$to, Str :$as, :%constraints, :%defaults, Bool :$format) is export {
+  current-router.add-route(['PATCH'], $path, $to, :name($as), :%constraints, :%defaults, :$format)
 }
 
-sub delete(Str:D $path, :$to, Str :$as) is export {
-  current-router.add-route(['DELETE'], $path, $to, :name($as))
+sub delete(Str:D $path, :$to, Str :$as, :%constraints, :%defaults, Bool :$format) is export {
+  current-router.add-route(['DELETE'], $path, $to, :name($as), :%constraints, :%defaults, :$format)
 }
 
-sub options(Str:D $path, :$to, Str :$as) is export {
-  current-router.add-route(['OPTIONS'], $path, $to, :name($as))
+sub options(Str:D $path, :$to, Str :$as, :%constraints, :%defaults, Bool :$format) is export {
+  current-router.add-route(['OPTIONS'], $path, $to, :name($as), :%constraints, :%defaults, :$format)
 }
 
-sub match(Str:D $path, :$to, :$via = 'GET', Str :$as) is export {
-  current-router.add-route(via-verbs($via), $path, $to, :name($as))
+sub match(Str:D $path, :$to, :$via = 'GET', Str :$as, :%constraints, :%defaults, Bool :$format) is export {
+  current-router.add-route(via-verbs($via), $path, $to, :name($as), :%constraints, :%defaults, :$format)
 }
 
 sub root(:$to, Str :$as = 'root') is export {

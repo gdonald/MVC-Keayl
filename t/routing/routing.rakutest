@@ -101,6 +101,33 @@ use MVC::Keayl::Routing;
   is $router.route-named('root').path, '/', 'root registers a route named root';
 }
 
+# path patterns through recognition
+
+{
+  my $router = routes { get '/users/:id', to => 'users#show' };
+  is $router.recognize('GET', '/users/42').params<id>, '42',
+    'recognize surfaces dynamic segment params';
+}
+
+{
+  my $router = routes { get '/items/:id', to => 'items#show', constraints => { id => /^\d+$/ } };
+
+  ok $router.recognize('GET', '/items/7').defined, 'a constrained route matches a valid segment';
+  nok $router.recognize('GET', '/items/abc').defined, 'a constrained route skips an invalid segment';
+}
+
+{
+  my $router = routes { get '/files/*path', to => 'files#serve' };
+  is $router.recognize('GET', '/files/a/b.txt').params<path>, 'a/b.txt',
+    'a glob route captures the rest of the path';
+}
+
+{
+  my $router = routes { get '/p/:id', to => 'p#show', format => True };
+  is $router.recognize('GET', '/p/3.json').params<format>, 'json',
+    'format true captures the extension through recognition';
+}
+
 # loading from a file
 
 {

@@ -64,18 +64,51 @@ match '/any',    to => 'catch#all',   via => *;
 root to => 'home#index';
 ```
 
-## Recognition
+## Path patterns
 
-The router answers `recognize($method, $path)`, returning the matching route or
-an undefined route when nothing matches:
+A path can carry dynamic segments, a glob, optional groups, a format, and
+per-segment constraints. The matched values become params on recognition.
 
 ```perl6
-my $route = $router.recognize('GET', '/users');
+get '/users/:id',          to => 'users#show';     # :id captures one segment
+get '/files/*path',        to => 'files#serve';    # *path captures the rest, slashes included
+get '/users(/:id)',        to => 'users#index';    # (...) is an optional group
+get '/users/:id(.:format)', to => 'users#show';    # (.:format) peels off an extension
+```
 
-$route.controller;   # 'users'
-$route.action;       # 'index'
-$route.verbs;        # ['GET', 'HEAD']
-$route.callable;     # the inline handler, or an undefined Callable
+A `:segment` matches a single path segment, stopping at a `/` or a `.`. A
+`*glob` matches everything that remains, including slashes. Anything inside
+`(...)` is optional.
+
+`format => True` appends an optional `(.:format)` segment without writing it out:
+
+```perl6
+get '/users/:id', to => 'users#show', format => True;
+```
+
+`defaults` supplies values for params that are absent from the path, and
+`constraints` restricts a segment to a pattern. A request whose segment fails the
+constraint falls through to the next route:
+
+```perl6
+get '/users/:id', to => 'users#show',
+  constraints => { id => /^\d+$/ },
+  defaults    => { format => 'html' };
+```
+
+## Recognition
+
+The router answers `recognize($method, $path)`, returning a match or an
+undefined match when nothing fits:
+
+```perl6
+my $match = $router.recognize('GET', '/users/42');
+
+$match.controller;   # 'users'
+$match.action;       # 'show'
+$match.params;       # { id => '42' }
+$match.callable;     # the inline handler, or an undefined Callable
+$match.route;        # the matched route
 ```
 
 `route-named($name)` looks a route up by its name.

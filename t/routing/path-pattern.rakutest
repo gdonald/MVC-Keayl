@@ -1,0 +1,91 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing::PathPattern;
+
+sub pattern(Str $source, *%opts) {
+  MVC::Keayl::Routing::PathPattern.new(:$source, |%opts)
+}
+
+# static paths
+
+{
+  my $p = pattern('/users');
+  is-deeply $p.match('/users'), {}, 'a static path matches with no params';
+  nok $p.match('/users/1').defined, 'a static path does not match a longer path';
+}
+
+# dynamic segments
+
+{
+  my $p = pattern('/users/:id');
+  is $p.match('/users/42')<id>, '42', 'a dynamic segment captures its value';
+  nok $p.match('/users').defined, 'a missing dynamic segment fails the match';
+}
+
+{
+  my $p = pattern('/users/:id/edit');
+  is $p.match('/users/7/edit')<id>, '7', 'a dynamic segment between statics captures';
+}
+
+{
+  my $p = pattern('/:controller/:action');
+  my %params = $p.match('/posts/show');
+  is %params<controller>, 'posts', 'multiple dynamic segments capture the first';
+  is %params<action>, 'show', 'multiple dynamic segments capture the second';
+}
+
+{
+  my $p = pattern('/users/:id');
+  nok $p.match('/users/1/2').defined, 'a dynamic segment does not span a slash';
+}
+
+# glob segments
+
+{
+  my $p = pattern('/files/*path');
+  is $p.match('/files/a/b/c.txt')<path>, 'a/b/c.txt', 'a glob captures the rest including slashes';
+}
+
+# optional segments
+
+{
+  my $p = pattern('/users(/:id)');
+  is $p.match('/users/9')<id>, '9', 'an optional segment captures when present';
+  is-deeply $p.match('/users'), {}, 'an optional segment is absent when omitted';
+}
+
+# format segment
+
+{
+  my $p = pattern('/users/:id(.:format)');
+  my %with = $p.match('/users/3.json');
+  is %with<id>, '3', 'the id is captured ahead of the format';
+  is %with<format>, 'json', 'the format segment captures the extension';
+
+  is $p.match('/users/3')<id>, '3', 'the format segment is optional';
+  nok $p.match('/users/3')<format>.defined, 'the format is absent without an extension';
+}
+
+{
+  my $p = pattern('/users/:id', :format);
+  is $p.match('/users/3.xml')<format>, 'xml', 'format true appends an optional format segment';
+}
+
+# defaults
+
+{
+  my $p = pattern('/users/:id(.:format)', :defaults({ format => 'html' }));
+  is $p.match('/users/3')<format>, 'html', 'a default fills an absent optional segment';
+  is $p.match('/users/3.json')<format>, 'json', 'a present segment overrides the default';
+}
+
+# constraints
+
+{
+  my $p = pattern('/users/:id', :constraints({ id => /^\d+$/ }));
+  is $p.match('/users/42')<id>, '42', 'a segment matching its constraint is captured';
+  nok $p.match('/users/abc').defined, 'a segment failing its constraint fails the match';
+}
+
+done-testing;
