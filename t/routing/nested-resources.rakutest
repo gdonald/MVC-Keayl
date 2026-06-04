@@ -1,0 +1,84 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing;
+
+# nested resources
+
+{
+  my $router = routes { resources 'magazines', { resources 'ads' } };
+
+  is $router.recognize('GET', '/magazines/3/ads').action, 'index',
+    'a nested resource indexes under the parent member';
+  is $router.recognize('GET', '/magazines/3/ads').params<magazine_id>, '3',
+    'a nested route captures the parent key';
+  is $router.recognize('GET', '/magazines/3/ads/7').params<id>, '7',
+    'a nested member route captures its own id';
+  is $router.recognize('GET', '/magazines/3/ads/7').action, 'show',
+    'a nested member route maps to show';
+}
+
+{
+  my $router = routes { resources 'magazines', { resources 'ads' } };
+
+  is $router.route-named('magazine-ads').path, '/magazines/:magazine_id/ads',
+    'the nested collection helper is prefixed by the parent singular';
+  is $router.route-named('magazine-ad').path, '/magazines/:magazine_id/ads/:id',
+    'the nested member helper is prefixed by the parent singular';
+}
+
+# nested singular under plural
+
+{
+  my $router = routes { resources 'users', { resource 'profile' } };
+  is $router.recognize('GET', '/users/5/profile').action, 'show',
+    'a singular resource nests under a plural parent member';
+}
+
+# plural under singular
+
+{
+  my $router = routes { resource 'account', { resources 'transactions' } };
+  is $router.recognize('GET', '/account/transactions').action, 'index',
+    'a plural resource nests under a singular parent';
+}
+
+# deep nesting
+
+{
+  my $router = routes { resources 'publishers', { resources 'magazines', { resources 'ads' } } };
+
+  is $router.recognize('GET', '/publishers/1/magazines/2/ads/3').action, 'show',
+    'resources nest more than one level deep';
+  is $router.recognize('GET', '/publishers/1/magazines/2/ads/3').route.name, 'publisher-magazine-ad',
+    'deep nesting accumulates the helper prefix';
+}
+
+# shallow nesting
+
+{
+  my $router = routes { resources 'magazines', :shallow, { resources 'ads' } };
+
+  is $router.recognize('GET', '/magazines/3/ads').action, 'index', 'shallow keeps the collection nested';
+  is $router.recognize('GET', '/magazines/3/ads/new').action, 'new', 'shallow keeps new nested';
+  is $router.recognize('GET', '/ads/7').action, 'show', 'shallow drops the parent for the member';
+  is $router.recognize('GET', '/ads/7/edit').action, 'edit', 'shallow drops the parent for edit';
+}
+
+{
+  my $router = routes { resources 'magazines', :shallow, { resources 'ads' } };
+
+  is $router.recognize('GET', '/ads/7').route.name, 'ad', 'shallow member helpers drop the parent prefix';
+  is $router.recognize('GET', '/magazines/3/ads').route.name, 'magazine-ads', 'shallow collection helpers keep the prefix';
+}
+
+# shallow_path and shallow_prefix
+
+{
+  my $router = routes { resources 'magazines', { resources 'ads', :shallow, :shallow-path<a>, :shallow-prefix<x> } };
+
+  is $router.recognize('GET', '/a/7').action, 'show', 'shallow-path overrides the shallow member segment';
+  is $router.recognize('GET', '/a/7').route.name, 'xad', 'shallow-prefix overrides the shallow member name prefix';
+}
+
+done-testing;

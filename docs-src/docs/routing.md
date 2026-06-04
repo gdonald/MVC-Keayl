@@ -104,15 +104,15 @@ get '/users/:id', to => 'users#show',
 resources 'users';
 ```
 
-| Verb           | Path              | Action  | Name        |
-| -------------- | ----------------- | ------- | ----------- |
-| GET            | `/users`          | index   | `users`     |
-| POST           | `/users`          | create  | `users`     |
-| GET            | `/users/new`      | new     | `new-user`  |
-| GET            | `/users/:id`      | show    | `user`      |
-| GET            | `/users/:id/edit` | edit    | `edit-user` |
-| PATCH / PUT    | `/users/:id`      | update  | `user`      |
-| DELETE         | `/users/:id`      | destroy | `user`      |
+| Verb        | Path              | Action  | Name        |
+| ----------- | ----------------- | ------- | ----------- |
+| GET         | `/users`          | index   | `users`     |
+| POST        | `/users`          | create  | `users`     |
+| GET         | `/users/new`      | new     | `new-user`  |
+| GET         | `/users/:id`      | show    | `user`      |
+| GET         | `/users/:id/edit` | edit    | `edit-user` |
+| PATCH / PUT | `/users/:id`      | update  | `user`      |
+| DELETE      | `/users/:id`      | destroy | `user`      |
 
 Pass several names to declare more than one resource at once:
 
@@ -158,14 +158,14 @@ routes with the plural (`search-photos`).
 
 ### Resource options
 
-| Option        | Effect                                                            |
-| ------------- | ---------------------------------------------------------------- |
-| `path`        | Override the URL segment (`/team` instead of `/people`).         |
-| `as`          | Override the helper name base.                                   |
-| `controller`  | Override the target controller.                                  |
-| `module`      | Prefix the controller (`admin/posts`).                          |
-| `param`       | Rename the member key (`:slug` instead of `:id`).               |
-| `path-names`  | Rename the `new` and `edit` URL segments.                       |
+| Option       | Effect                                                   |
+| ------------ | -------------------------------------------------------- |
+| `path`       | Override the URL segment (`/team` instead of `/people`). |
+| `as`         | Override the helper name base.                           |
+| `controller` | Override the target controller.                          |
+| `module`     | Prefix the controller (`admin/posts`).                   |
+| `param`      | Rename the member key (`:slug` instead of `:id`).        |
+| `path-names` | Rename the `new` and `edit` URL segments.                |
 
 ```perl6
 resources 'people',
@@ -173,6 +173,66 @@ resources 'people',
   controller  => 'staff',
   param       => 'slug',
   path-names  => { new => 'neu', edit => 'bearbeiten' };
+```
+
+## Singular resources
+
+`resource` declares a resource with no index and no `:id`, for a thing there is
+only one of per request (a profile, an account):
+
+```perl6
+resource 'profile';
+```
+
+| Verb        | Path            | Action  | Name           |
+| ----------- | --------------- | ------- | -------------- |
+| GET         | `/profile/new`  | new     | `new-profile`  |
+| POST        | `/profile`      | create  | `profile`      |
+| GET         | `/profile`      | show    | `profile`      |
+| GET         | `/profile/edit` | edit    | `edit-profile` |
+| PATCH / PUT | `/profile`      | update  | `profile`      |
+| DELETE      | `/profile`      | destroy | `profile`      |
+
+The controller defaults to the plural (`profiles`). `resource` takes the same
+options as `resources` (`only`, `except`, `path`, `as`, `controller`, `module`,
+`path-names`, and `member`/`collection` blocks).
+
+## Nesting
+
+Resources nest inside a resource block. A nested resource is scoped under the
+parent member, and its key is named after the parent:
+
+```perl6
+resources 'magazines', {
+  resources 'ads';
+}
+```
+
+This produces `/magazines/:magazine_id/ads`, `/magazines/:magazine_id/ads/:id`,
+and so on, with helper names prefixed by the parent singular (`magazine-ads`,
+`magazine-ad`, `new-magazine-ad`, `edit-magazine-ad`). Plural and singular
+resources nest either way, and nesting can go more than one level deep, though
+nesting more than one level deep is usually a sign the routes want flattening.
+
+### Shallow nesting
+
+`shallow` keeps the collection routes (index, new, create) nested but lifts the
+member routes (show, edit, update, destroy) to the top level, so member URLs stay
+short:
+
+```perl6
+resources 'magazines', :shallow, {
+  resources 'ads';
+}
+```
+
+Collection routes stay at `/magazines/:magazine_id/ads`, while member routes move
+to `/ads/:id`. The member helpers drop the parent prefix (`ad` rather than
+`magazine-ad`). `shallow-path` overrides the shallow member segment and
+`shallow-prefix` overrides the shallow member name prefix:
+
+```perl6
+resources 'ads', :shallow, :shallow-path<a>, :shallow-prefix<x>;
 ```
 
 ## Recognition

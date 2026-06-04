@@ -1,0 +1,91 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing;
+
+# the six singular actions, no index, no :id
+
+{
+  my $router = routes { resource 'profile' };
+
+  is $router.recognize('GET', '/profile/new').action, 'new', 'resource maps GET /new to new';
+  is $router.recognize('POST', '/profile').action, 'create', 'resource maps POST to create';
+  is $router.recognize('GET', '/profile').action, 'show', 'resource maps GET to show';
+  is $router.recognize('GET', '/profile/edit').action, 'edit', 'resource maps GET /edit to edit';
+  is $router.recognize('PATCH', '/profile').action, 'update', 'resource maps PATCH to update';
+  is $router.recognize('PUT', '/profile').action, 'update', 'resource maps PUT to update';
+  is $router.recognize('DELETE', '/profile').action, 'destroy', 'resource maps DELETE to destroy';
+}
+
+{
+  my $router = routes { resource 'profile' };
+  nok $router.routes.first(*.action eq 'index').defined, 'a singular resource has no index';
+}
+
+{
+  my $router = routes { resource 'profile' };
+  nok $router.recognize('GET', '/profile/1').defined, 'a singular resource has no :id member';
+}
+
+# controller is pluralized
+
+{
+  my $router = routes { resource 'profile' };
+  is $router.recognize('GET', '/profile').target, 'profiles#show', 'a singular resource targets the plural controller';
+}
+
+# named helpers are singular
+
+{
+  my $router = routes { resource 'profile' };
+
+  is $router.route-named('profile').path, '/profile', 'the singular name covers show';
+  is $router.route-named('new-profile').path, '/profile/new', 'new gets a new- prefixed name';
+  is $router.route-named('edit-profile').path, '/profile/edit', 'edit gets an edit- prefixed name';
+}
+
+# options
+
+{
+  my $router = routes { resource 'profile', :only<show edit> };
+  is $router.routes.map(*.action).unique.sort.join(','), 'edit,show', 'only filters singular actions';
+}
+
+{
+  my $router = routes { resource 'profile', :except<destroy> };
+  nok $router.recognize('DELETE', '/profile').defined, 'except drops a singular action';
+}
+
+{
+  my $router = routes { resource 'profile', :path<me> };
+  is $router.recognize('GET', '/me').action, 'show', 'path overrides the singular URL segment';
+}
+
+{
+  my $router = routes { resource 'profile', :controller<accounts> };
+  is $router.recognize('GET', '/profile').target, 'accounts#show', 'controller overrides the plural default';
+}
+
+{
+  my $router = routes { resource 'profile', :module<admin> };
+  is $router.recognize('GET', '/profile').target, 'admin/profiles#show', 'module prefixes the pluralized controller';
+}
+
+{
+  my $router = routes { resource 'profile', :path-names({ edit => 'change' }) };
+  is $router.recognize('GET', '/profile/change').action, 'edit', 'path-names renames the singular edit segment';
+}
+
+# member routes
+
+{
+  my $router = routes {
+    resource 'profile', {
+      member { get 'avatar', to => 'profiles#avatar' }
+    }
+  };
+
+  is $router.recognize('GET', '/profile/avatar').action, 'avatar', 'a singular member route has no :id';
+}
+
+done-testing;

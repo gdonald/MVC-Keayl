@@ -80,12 +80,21 @@ sub root(:$to, Str :$as = 'root') is export {
   current-router.add-route(['GET'], '/', $to, :name($as))
 }
 
-sub resources(*@args, :$only, :$except, :$path, :$as, :$controller, :$module, :$param, :%path-names) is export {
+sub resources(*@args, :$only, :$except, :$path, :$as, :$controller, :$module, :$param, :%path-names, :$shallow, :$shallow-path, :$shallow-prefix) is export {
   my @names = @args.grep(* ~~ Str);
   my $block = @args.first(* ~~ Callable);
 
   for @names -> $name {
-    add-resource(current-router, $name, :$only, :$except, :$path, :$as, :$controller, :$module, :$param, :%path-names, :$block);
+    add-resource(current-router, $name, :$only, :$except, :$path, :$as, :$controller, :$module, :$param, :%path-names, :$shallow, :$shallow-path, :$shallow-prefix, :$block);
+  }
+}
+
+sub resource(*@args, :$only, :$except, :$path, :$as, :$controller, :$module, :%path-names) is export {
+  my @names = @args.grep(* ~~ Str);
+  my $block = @args.first(* ~~ Callable);
+
+  for @names -> $name {
+    add-singular-resource(current-router, $name, :$only, :$except, :$path, :$as, :$controller, :$module, :%path-names, :$block);
   }
 }
 
