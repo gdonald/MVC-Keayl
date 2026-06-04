@@ -38,13 +38,15 @@ describe 'MVC::Keayl routing block redirect', {
 }
 
 describe 'MVC::Keayl routing mount', {
-  let(:router, {
-    my $app = sub { 'mounted' };
-    routes { mount $app, at => '/legacy' }
-  });
+  my $app = sub { 'mounted' };
+  let(:router, { routes { mount $app, at => '/legacy' } });
 
   it 'matches its mount point', {
     expect(router.recognize('GET', '/legacy').defined).to.be-truthy;
+  }
+
+  it 'carries the mounted app', {
+    expect(router.recognize('GET', '/legacy/x').target.app === $app).to.be-truthy;
   }
 
   it 'has a Mount target', {

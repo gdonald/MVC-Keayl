@@ -45,7 +45,7 @@ use MVC::Keayl::Routing::Mount;
 {
   my $app = sub { 'mounted' };
   my $router = routes { mount $app, at => '/legacy' };
-  is $router.recognize('GET', '/legacy/x').target.app, $app, 'a mount carries the mounted app';
+  ok $router.recognize('GET', '/legacy/x').target.app === $app, 'a mount carries the mounted app';
 }
 
 done-testing;

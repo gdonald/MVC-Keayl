@@ -8,6 +8,7 @@ nav:
   - Middleware: middleware.md
   - Server adapters: adapters.md
   - Routing: routing.md
+  - Controllers: controllers.md
 theme:
   name: 'material'
 markdown_extensions:

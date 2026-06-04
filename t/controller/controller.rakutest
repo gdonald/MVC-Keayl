@@ -1,0 +1,67 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Response;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+# action dispatch and implicit render
+
+{
+  my $controller = GreetController.new;
+  is $controller.dispatch('index').body, 'all greetings', 'dispatch runs the action and implicitly renders its return value';
+}
+
+{
+  my $controller = GreetController.new(:params({ id => 5 }));
+  is $controller.dispatch('show').body, 'greeting 5', 'an action reads request params';
+}
+
+{
+  my $controller = GreetController.new;
+  my $response = $controller.dispatch('create');
+
+  is $response.status, 201, 'an action can set the response status directly';
+  is $response.body, 'created', 'an explicit body is kept';
+}
+
+{
+  my $controller = GreetController.new;
+  my $response = $controller.dispatch('ping');
+
+  is $response.body, 'pong', 'implicit render writes the return value when the body is empty';
+  is $response.header('X-Ping'), 'pong', 'an action can set response headers';
+}
+
+# per-request instance
+
+{
+  my $request = MVC::Keayl::Request.new(:method<GET>);
+  my $controller = GreetController.new(:$request, :params({ id => 9 }));
+
+  is $controller.request.method, 'GET', 'the controller exposes its request';
+  is $controller.params<id>, 9, 'the controller exposes its params';
+  isa-ok $controller.response, MVC::Keayl::Response, 'the controller has a response';
+}
+
+{
+  my $a = GreetController.new;
+  my $b = GreetController.new;
+  nok $a.response === $b.response, 'each controller instance gets its own response';
+}
+
+# dispatch guards
+
+{
+  throws-like { GreetController.new.dispatch('missing') }, Exception, message => /missing/,
+    'dispatching an unknown action raises';
+}
+
+{
+  throws-like { GreetController.new.dispatch('request') }, Exception,
+    'a base controller method is not dispatchable as an action';
+}
+
+done-testing;
