@@ -1,0 +1,69 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+# send-data
+
+{
+  my $response = DownloadController.new.dispatch('data-csv');
+  is $response.body, "a,b\n1,2", 'send-data writes the payload';
+  is $response.header('content-type'), 'text/csv', 'send-data sets the content type';
+  is $response.header('Content-Disposition'), 'attachment; filename="report.csv"', 'send-data sets an attachment disposition with the filename';
+}
+
+{
+  my $response = DownloadController.new.dispatch('data-inline');
+  is $response.header('Content-Disposition'), 'inline', 'send-data honours an inline disposition';
+  is $response.header('content-type'), 'application/octet-stream', 'send-data defaults to octet-stream';
+}
+
+{
+  my $response = DownloadController.new.dispatch('data-binary');
+  my ($status, $headers, $blob) = $response.finish;
+  is-deeply $blob.list, (0, 1, 2, 255), 'send-data sends a binary payload byte-for-byte';
+}
+
+# send-file
+
+{
+  my $response = DownloadController.new.dispatch('file');
+  is $response.body, '0123456789', 'send-file serves the file contents';
+  is $response.header('content-type'), 'text/plain', 'send-file guesses the content type from the extension';
+  is $response.header('Content-Disposition'), 'attachment; filename="sample.txt"', 'send-file uses the basename as the filename';
+  is $response.header('Accept-Ranges'), 'bytes', 'send-file advertises range support';
+}
+
+{
+  my $response = DownloadController.new.dispatch('file-typed');
+  is $response.header('content-type'), 'text/plain', 'send-file honours an explicit content type';
+  is $response.header('Content-Disposition'), 'inline; filename="down.txt"', 'send-file honours an explicit filename and disposition';
+}
+
+# range requests
+
+{
+  my $request = MVC::Keayl::Request.new(:headers({ Range => 'bytes=2-5' }));
+  my $response = DownloadController.new(:$request).dispatch('file');
+
+  is $response.status, 206, 'a range request returns partial content';
+  is $response.body, '2345', 'a range request serves the requested byte range';
+  is $response.header('Content-Range'), 'bytes 2-5/10', 'a range response sets Content-Range';
+}
+
+{
+  my $request = MVC::Keayl::Request.new(:headers({ Range => 'bytes=7-' }));
+  my $response = DownloadController.new(:$request).dispatch('file');
+  is $response.body, '789', 'an open-ended range serves to the end of the file';
+}
+
+{
+  my $request = MVC::Keayl::Request.new(:headers({ Range => 'bytes=-3' }));
+  my $response = DownloadController.new(:$request).dispatch('file');
+  is $response.body, '789', 'a suffix range serves the last bytes';
+}
+
+done-testing;

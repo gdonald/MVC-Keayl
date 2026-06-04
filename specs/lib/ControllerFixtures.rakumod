@@ -82,3 +82,13 @@ class FlowController is MVC::Keayl::Controller is export {
   }
 }
 
+class DownloadController is MVC::Keayl::Controller is export {
+  method data-csv    { self.send-data("a,b\n1,2", type => 'text/csv', filename => 'report.csv') }
+  method data-inline { self.send-data('hi', disposition => 'inline') }
+  method data-binary { self.send-data(Blob.new(0, 1, 2, 255), filename => 'x.bin') }
+
+  method file        { self.send-file('specs/lib/fixtures/sample.txt') }
+  method file-typed  { self.send-file('specs/lib/fixtures/sample.txt', type => 'text/plain', filename => 'down.txt', disposition => 'inline') }
+}
+
+

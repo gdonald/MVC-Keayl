@@ -98,7 +98,7 @@ method write(Str:D $chunk) {
   self
 }
 
-multi method body(--> Str)              { @!body-parts.join }
+multi method body(--> Str)              { $!binary-body.defined ?? $!binary-body.decode('utf-8') !! @!body-parts.join }
 multi method body(Str:D $value)         { $!binary-body = Nil; @!body-parts = [$value]; self }
 multi method body(Blob:D $value)        { $!binary-body = $value; @!body-parts = []; self }
 

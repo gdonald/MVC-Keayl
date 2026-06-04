@@ -148,3 +148,27 @@ self.head('created', location => '/users/5');
 
 A redirect, like a render, marks the response performed, so a render or redirect
 after one raises a double-render error.
+
+## Sending files and data
+
+`send-data` sends an in-memory payload, a string or a `Blob`, with a content type
+and disposition. The default disposition is `attachment`:
+
+```perl6
+self.send-data($csv, type => 'text/csv', filename => 'report.csv');
+self.send-data($bytes, filename => 'image.png');
+self.send-data($html, disposition => 'inline');
+```
+
+`send-file` sends a file from disk. The content type is guessed from the
+extension unless given, and the filename defaults to the basename:
+
+```perl6
+self.send-file('tmp/report.csv');
+self.send-file('public/logo.png', disposition => 'inline');
+```
+
+`send-file` advertises `Accept-Ranges: bytes` and honours a `Range` request
+header, replying with `206 Partial Content`, a `Content-Range` header, and the
+requested slice. Open-ended (`bytes=100-`) and suffix (`bytes=-100`) ranges both
+work.
