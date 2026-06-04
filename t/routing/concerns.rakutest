@@ -1,0 +1,50 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing;
+
+# concerns option
+
+{
+  my $router = routes {
+    concern 'commentable', { resources 'comments' };
+    resources 'posts', concerns => 'commentable';
+  };
+
+  is $router.recognize('GET', '/posts/5/comments').action, 'index', 'a concern adds its routes to the resource';
+  is $router.recognize('GET', '/posts/5/comments').params<post_id>, '5', 'concern routes nest under the resource';
+}
+
+# concerns call inside a block
+
+{
+  my $router = routes {
+    concern 'commentable', { resources 'comments' };
+    resources 'photos', { concerns 'commentable' };
+  };
+
+  is $router.recognize('GET', '/photos/9/comments').action, 'index', 'concerns can be invoked inside a resource block';
+}
+
+# multiple concerns
+
+{
+  my $router = routes {
+    concern 'commentable', { resources 'comments' };
+    concern 'taggable', { resources 'tags' };
+    resources 'posts', concerns => <commentable taggable>;
+  };
+
+  ok $router.recognize('GET', '/posts/5/comments').defined, 'multiple concerns apply the first';
+  ok $router.recognize('GET', '/posts/5/tags').defined, 'multiple concerns apply the second';
+}
+
+# unknown concern
+
+{
+  throws-like {
+    routes { resources 'posts', concerns => 'missing' }
+  }, Exception, message => /missing/, 'an unknown concern raises';
+}
+
+done-testing;

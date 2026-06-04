@@ -3,6 +3,48 @@ use MVC::Keayl::Router;
 
 unit module MVC::Keayl::Routing::Resources;
 
+sub scope-path-addition($path --> Str) is export {
+  return '' without $path;
+  return '(/' ~ $0 ~ ')' if $path ~~ /^ '(' (.*) ')' $/;
+  '/' ~ $path
+}
+
+# The accumulated path / module / name prefixes, scoped controller, and
+# constraint / default state contributed by enclosing `namespace`, `scope`,
+# `controller`, `constraints`, and `defaults` blocks.
+class RoutingContext is export {
+  has Str $.path-prefix = '';
+  has Str $.module-prefix = '';
+  has Str $.name-prefix = '';
+  has Str $.controller;
+  has     %.segment-constraints;
+  has     %.request-constraints;
+  has     @.constraint-callables;
+  has     %.defaults;
+
+  method merge(:$path, :$module, :$as, :$controller, :%segment-constraints, :%request-constraints, :@constraint-callables, :%defaults --> RoutingContext) {
+    RoutingContext.new(
+      path-prefix          => $!path-prefix ~ scope-path-addition($path),
+      module-prefix        => $!module-prefix ~ ($module ?? $module ~ '/' !! ''),
+      name-prefix          => $!name-prefix ~ ($as ?? $as ~ '-' !! ''),
+      controller           => $controller // $!controller,
+      segment-constraints  => { %!segment-constraints, %segment-constraints },
+      request-constraints  => { %!request-constraints, %request-constraints },
+      constraint-callables => [ |@!constraint-callables, |@constraint-callables ],
+      defaults             => { %!defaults, %defaults },
+    )
+  }
+
+  method route-args(:%constraints, :%defaults --> Capture) {
+    \(
+      constraints          => { %!segment-constraints, %constraints },
+      defaults             => { %!defaults, %defaults },
+      request-constraints  => %!request-constraints,
+      constraint-callables => @!constraint-callables,
+    )
+  }
+}
+
 class ResourceScope {
   has Str  $.collection-path;
   has Str  $.member-base;
@@ -61,6 +103,10 @@ sub resolve-actions(@all, $only, $except --> List) {
   @actions.List
 }
 
+sub current-context(--> RoutingContext) {
+  $*KEAYL-SCOPE // RoutingContext.new
+}
+
 sub run-block-and-rest($router, $scope, $block, @rest, @wanted) {
   with $block {
     my $*KEAYL-RESOURCE = $scope;
@@ -68,12 +114,14 @@ sub run-block-and-rest($router, $scope, $block, @rest, @wanted) {
     $block();
   }
 
+  my $ctx = current-context();
   my %wanted;
   %wanted{$_} = True for @wanted;
 
   for @rest -> %route {
     next unless %wanted{%route<action>};
-    $router.add-route([%route<verb>], %route<path>, $scope.controller ~ '#' ~ %route<action>, :name(%route<name>));
+    $router.add-route([%route<verb>], %route<path>, $scope.controller ~ '#' ~ %route<action>,
+      :name(%route<name>), |$ctx.route-args);
   }
 }
 
@@ -85,11 +133,12 @@ sub add-resource(
        :$block,
 ) is export {
   my $parent      = $*KEAYL-RESOURCE;
-  my $path-prefix = $parent.defined ?? $parent.child-prefix      !! '';
-  my $name-prefix = $parent.defined ?? $parent.child-name-prefix !! '';
+  my $ctx         = current-context();
+  my $path-prefix = $parent.defined ?? $parent.child-prefix      !! $ctx.path-prefix;
+  my $name-prefix = $parent.defined ?? $parent.child-name-prefix !! $ctx.name-prefix;
 
   my $segment   = $path // $name;
-  my $ctrl      = $controller // ($module ?? "$module/$name" !! $name);
+  my $ctrl      = $controller // ($ctx.module-prefix ~ ($module ?? $module ~ '/' !! '') ~ $name);
   my $plural    = $as // $name;
   my $singular  = singularize($plural);
   my $id        = $param // 'id';
@@ -109,14 +158,14 @@ sub add-resource(
   my $member             = $member-base ~ '/:' ~ $id;
 
   my @rest =
-    { action => 'index',   verb => 'GET',    path => $collection,                    name => $name-prefix ~ $plural },
-    { action => 'new',     verb => 'GET',    path => $collection ~ '/' ~ $new-seg,   name => 'new-' ~ $name-prefix ~ $singular },
-    { action => 'create',  verb => 'POST',   path => $collection,                    name => $name-prefix ~ $plural },
-    { action => 'edit',    verb => 'GET',    path => $member ~ '/' ~ $edit-seg,      name => 'edit-' ~ $member-name-prefix ~ $singular },
-    { action => 'show',    verb => 'GET',    path => $member,                        name => $member-name-prefix ~ $singular },
-    { action => 'update',  verb => 'PATCH',  path => $member,                        name => $member-name-prefix ~ $singular },
-    { action => 'update',  verb => 'PUT',    path => $member,                        name => $member-name-prefix ~ $singular },
-    { action => 'destroy', verb => 'DELETE', path => $member,                        name => $member-name-prefix ~ $singular };
+    { action => 'index',   verb => 'GET',    path => $collection,                  name => $name-prefix ~ $plural },
+    { action => 'new',     verb => 'GET',    path => $collection ~ '/' ~ $new-seg, name => 'new-' ~ $name-prefix ~ $singular },
+    { action => 'create',  verb => 'POST',   path => $collection,                  name => $name-prefix ~ $plural },
+    { action => 'edit',    verb => 'GET',    path => $member ~ '/' ~ $edit-seg,    name => 'edit-' ~ $member-name-prefix ~ $singular },
+    { action => 'show',    verb => 'GET',    path => $member,                      name => $member-name-prefix ~ $singular },
+    { action => 'update',  verb => 'PATCH',  path => $member,                      name => $member-name-prefix ~ $singular },
+    { action => 'update',  verb => 'PUT',    path => $member,                      name => $member-name-prefix ~ $singular },
+    { action => 'destroy', verb => 'DELETE', path => $member,                      name => $member-name-prefix ~ $singular };
 
   my $scope = ResourceScope.new(
     :collection-path($collection),
@@ -143,12 +192,13 @@ sub add-singular-resource(
        :$block,
 ) is export {
   my $parent      = $*KEAYL-RESOURCE;
-  my $path-prefix = $parent.defined ?? $parent.child-prefix      !! '';
-  my $name-prefix = $parent.defined ?? $parent.child-name-prefix !! '';
+  my $ctx         = current-context();
+  my $path-prefix = $parent.defined ?? $parent.child-prefix      !! $ctx.path-prefix;
+  my $name-prefix = $parent.defined ?? $parent.child-name-prefix !! $ctx.name-prefix;
 
   my $segment   = $path // $name;
   my $singular  = $as // $name;
-  my $ctrl      = $controller // ($module ?? "$module/" ~ pluralize($name) !! pluralize($name));
+  my $ctrl      = $controller // ($ctx.module-prefix ~ ($module ?? $module ~ '/' !! '') ~ pluralize($name));
   my $new-seg   = %path-names<new>  // 'new';
   my $edit-seg  = %path-names<edit> // 'edit';
 
@@ -193,5 +243,5 @@ sub add-resource-route(ResourceScope:D $scope, @verbs, Str:D $action, $to, Str:D
     default           { $scope.member-name-prefix ~ $action ~ '-' ~ $scope.singular }
   };
 
-  $*KEAYL-ROUTER.add-route(@verbs, $route-path, $target, :$name);
+  $*KEAYL-ROUTER.add-route(@verbs, $route-path, $target, :$name, |current-context().route-args);
 }

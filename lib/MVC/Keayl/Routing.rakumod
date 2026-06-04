@@ -4,7 +4,8 @@ use MVC::Keayl::Routing::Resources;
 
 unit module MVC::Keayl::Routing;
 
-my @ALL-VERBS = <GET POST PUT PATCH DELETE OPTIONS HEAD>;
+my @ALL-VERBS     = <GET POST PUT PATCH DELETE OPTIONS HEAD>;
+my @REQUEST-ATTRS = <subdomain host format protocol port method>;
 
 sub via-verbs($via --> List) {
   return @ALL-VERBS.List if $via ~~ Whatever;
@@ -19,11 +20,52 @@ sub current-router(--> MVC::Keayl::Router:D) {
   $router
 }
 
+sub current-context(--> RoutingContext) {
+  $*KEAYL-SCOPE // RoutingContext.new
+}
+
+sub with-context(RoutingContext $context, $block) {
+  my $*KEAYL-SCOPE = $context;
+  $block() with $block;
+}
+
+sub path-to-action(Str $path --> Str) {
+  $path.subst(/^ '/' /, '').split('/').grep(*.chars).tail // $path
+}
+
+sub apply-module-prefix($target, Str $module-prefix) {
+  return $target unless $target ~~ Str && $module-prefix ne '' && $target.contains('#');
+  my ($ctrl, $action) = $target.split('#', 2);
+  $module-prefix ~ $ctrl ~ '#' ~ $action
+}
+
+sub resolve-target($to, Str $path, RoutingContext $context) {
+  return $to if $to ~~ Callable;
+
+  my $target;
+  if $to ~~ Str && $to.contains('#') {
+    $target = $to;
+  } elsif $context.controller.defined {
+    my $action = ($to ~~ Str && $to.chars) ?? $to !! path-to-action($path);
+    $target = $context.controller ~ '#' ~ $action;
+  } else {
+    $target = $to;
+  }
+
+  apply-module-prefix($target, $context.module-prefix)
+}
+
 sub register(@verbs, Str:D $path, $to, $as, $on, %constraints, %defaults, $format) {
   with $*KEAYL-RESOURCE {
     add-resource-route($_, @verbs, $path, $to, ($on // $*KEAYL-ON // 'member'), $as);
   } else {
-    current-router.add-route(@verbs, $path, $to, :name($as), :%constraints, :%defaults, :$format);
+    my $context = current-context();
+    my $full-path = $context.path-prefix ~ $path;
+    my $target = resolve-target($to, $path, $context);
+    my $name = $as.defined ?? $context.name-prefix ~ $as !! $as;
+
+    current-router.add-route(@verbs, $full-path, $target, :name($name), :$format,
+      |$context.route-args(:%constraints, :%defaults));
   }
 }
 
@@ -34,6 +76,8 @@ sub routes(&block --> MVC::Keayl::Router:D) is export {
     my $*KEAYL-ROUTER = $router;
     my $*KEAYL-RESOURCE;
     my $*KEAYL-ON;
+    my $*KEAYL-SCOPE = RoutingContext.new;
+    my $*KEAYL-CONCERNS = {};
     block();
   }
 
@@ -77,21 +121,32 @@ sub match(Str:D $path, :$to, :$via = 'GET', Str :$as, :$on, :%constraints, :%def
 }
 
 sub root(:$to, Str :$as = 'root') is export {
-  current-router.add-route(['GET'], '/', $to, :name($as))
+  my $context = current-context();
+  current-router.add-route(['GET'], $context.path-prefix ~ '/', resolve-target($to, '/', $context),
+    :name($context.name-prefix ~ $as), |$context.route-args);
 }
 
-sub resources(*@args, :$only, :$except, :$path, :$as, :$controller, :$module, :$param, :%path-names, :$shallow, :$shallow-path, :$shallow-prefix) is export {
+sub resource-block($user-block, $concerns) {
+  return $user-block without $concerns;
+
+  sub {
+    $user-block() with $user-block;
+    concerns(|$concerns.list);
+  }
+}
+
+sub resources(*@args, :$only, :$except, :$path, :$as, :$controller, :$module, :$param, :%path-names, :$shallow, :$shallow-path, :$shallow-prefix, :$concerns) is export {
   my @names = @args.grep(* ~~ Str);
-  my $block = @args.first(* ~~ Callable);
+  my $block = resource-block(@args.first(* ~~ Callable), $concerns);
 
   for @names -> $name {
     add-resource(current-router, $name, :$only, :$except, :$path, :$as, :$controller, :$module, :$param, :%path-names, :$shallow, :$shallow-path, :$shallow-prefix, :$block);
   }
 }
 
-sub resource(*@args, :$only, :$except, :$path, :$as, :$controller, :$module, :%path-names) is export {
+sub resource(*@args, :$only, :$except, :$path, :$as, :$controller, :$module, :%path-names, :$concerns) is export {
   my @names = @args.grep(* ~~ Str);
-  my $block = @args.first(* ~~ Callable);
+  my $block = resource-block(@args.first(* ~~ Callable), $concerns);
 
   for @names -> $name {
     add-singular-resource(current-router, $name, :$only, :$except, :$path, :$as, :$controller, :$module, :%path-names, :$block);
@@ -106,4 +161,53 @@ sub member(&block) is export {
 sub collection(&block) is export {
   my $*KEAYL-ON = 'collection';
   block();
+}
+
+sub namespace(Str:D $name, *@args) is export {
+  my $block = @args.first(* ~~ Callable);
+  with-context(current-context().merge(:path($name), :module($name), :as($name)), $block);
+}
+
+sub scope(*@args, :$path, :$module, :$as) is export {
+  my $positional = @args.first(* ~~ Str);
+  my $block = @args.first(* ~~ Callable);
+  with-context(current-context().merge(:path($path // $positional), :$module, :$as), $block);
+}
+
+sub controller(Str:D $name, *@args) is export {
+  my $block = @args.first(* ~~ Callable);
+  with-context(current-context().merge(:controller($name)), $block);
+}
+
+sub concern(Str:D $name, &block) is export {
+  $*KEAYL-CONCERNS{$name} = &block;
+}
+
+sub concerns(*@names) is export {
+  for @names.flat -> $name {
+    my $block = $*KEAYL-CONCERNS{$name} // die "unknown concern '$name'";
+    $block();
+  }
+}
+
+sub constraints(*@args, *%spec) is export {
+  my @positional = @args;
+  my $block = @positional.pop;
+  my @custom = @positional;
+
+  my %segment;
+  my %request;
+  for %spec.kv -> $key, $value {
+    if @REQUEST-ATTRS.first(* eq $key) { %request{$key} = $value } else { %segment{$key} = $value }
+  }
+
+  with-context(
+    current-context().merge(:segment-constraints(%segment), :request-constraints(%request), :constraint-callables(@custom)),
+    $block,
+  );
+}
+
+sub defaults(*@args, *%values) is export {
+  my $block = @args.first(* ~~ Callable);
+  with-context(current-context().merge(:defaults(%values)), $block);
 }

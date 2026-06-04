@@ -7,6 +7,8 @@ has Str @.verbs;
 has MVC::Keayl::Routing::PathPattern $.pattern;
 has     $.target;
 has Str $.name;
+has     %.request-constraints;
+has     @.constraint-callables;
 
 method path(--> Str) {
   $!pattern.source
@@ -32,4 +34,24 @@ method handles(Str:D $method --> Bool) {
 
 method match-path(Str:D $path --> Hash) {
   $!pattern.match($path)
+}
+
+method matches-request(%context --> Bool) {
+  for %!request-constraints.kv -> $attr, $expected {
+    my $actual = %context{$attr};
+    return False without $actual;
+
+    if $expected ~~ Regex {
+      return False unless $actual ~~ $expected;
+    } else {
+      return False unless $actual eq $expected;
+    }
+  }
+
+  for @!constraint-callables -> $constraint {
+    my $ok = $constraint ~~ Callable ?? $constraint(%context) !! $constraint.matches(%context);
+    return False unless $ok;
+  }
+
+  True
 }

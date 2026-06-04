@@ -235,6 +235,100 @@ to `/ads/:id`. The member helpers drop the parent prefix (`ad` rather than
 resources 'ads', :shallow, :shallow-path<a>, :shallow-prefix<x>;
 ```
 
+## Namespaces and scopes
+
+`namespace` prefixes the path, the controller module, and the helper name all at
+once:
+
+```perl6
+namespace 'admin', {
+  resources 'users';        # /admin/users => admin/users, named admin-users
+}
+```
+
+`scope` controls each of those independently:
+
+```perl6
+scope(path => 'api', module => 'v1', as => 'api', {
+  get '/ping', to => 'ping#show', as => 'ping';   # /api/ping => v1/ping#show, named api-ping
+});
+```
+
+`controller` sets the controller for the routes inside, so a target can be just
+an action and a bare path defaults its action:
+
+```perl6
+controller 'photos', {
+  get '/preview', to => 'show';   # photos#show
+  get '/list';                    # photos#list
+}
+```
+
+An optional scope segment is written with parentheses, which suits an i18n locale
+prefix that may or may not be present:
+
+```perl6
+scope('(:locale)', {
+  get '/about', to => 'pages#about';   # matches /about and /en/about
+});
+```
+
+Scopes nest and compose their prefixes.
+
+## Concerns
+
+A concern is a reusable block of routes. Define it once with `concern`, then mix
+it into resources with the `concerns` option or a `concerns` call inside a block:
+
+```perl6
+concern 'commentable', { resources 'comments' };
+
+resources 'posts', concerns => 'commentable';
+resources 'photos', { concerns 'commentable' };
+```
+
+Concern routes nest under the resource that mixes them in, so
+`/posts/:post_id/comments` and `/photos/:photo_id/comments` both appear.
+
+## Constraints and defaults
+
+A `constraints` block restricts the routes inside it. Segment keys constrain path
+params, while `subdomain`, `host`, `format`, `protocol`, `port`, and `method`
+constrain request attributes:
+
+```perl6
+constraints(:id(/^\d+$/), {
+  get '/items/:id', to => 'items#show';        # /items/42 matches, /items/abc does not
+});
+
+constraints(:subdomain<api>, {
+  get '/data', to => 'data#index';             # only when the request subdomain is api
+});
+```
+
+A custom constraint is a callable that receives the request context, or an object
+with a `matches` method:
+
+```perl6
+constraints(-> %context { %context<host>.ends-with('.internal') }, {
+  get '/admin', to => 'admin#index';
+});
+```
+
+Request constraints are checked during recognition against a context hash:
+
+```perl6
+$router.recognize('GET', '/data', context => { subdomain => 'api' });
+```
+
+A `defaults` block supplies default params for the routes inside it:
+
+```perl6
+defaults(format => 'json', {
+  get '/api/users', to => 'users#index';       # params include format => 'json'
+});
+```
+
 ## Recognition
 
 The router answers `recognize($method, $path)`, returning a match or an

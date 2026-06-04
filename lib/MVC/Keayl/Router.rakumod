@@ -15,6 +15,8 @@ method add-route(
       :%constraints,
       :%defaults,
   Bool :$format,
+      :%request-constraints,
+      :@constraint-callables,
   --> ::?CLASS:D
 ) {
   my @normalized = @verbs.map(*.uc).unique;
@@ -22,17 +24,26 @@ method add-route(
 
   my $pattern = MVC::Keayl::Routing::PathPattern.new(:source($path), :%constraints, :%defaults, :$format);
 
-  @!routes.push: MVC::Keayl::Routing::Route.new(:verbs(@normalized), :$pattern, :$target, :$name);
+  @!routes.push: MVC::Keayl::Routing::Route.new(
+    :verbs(@normalized),
+    :$pattern,
+    :$target,
+    :$name,
+    :%request-constraints,
+    :@constraint-callables,
+  );
 
   self
 }
 
-method recognize(Str:D $method, Str:D $path --> MVC::Keayl::Routing::RouteMatch) {
+method recognize(Str:D $method, Str:D $path, :%context --> MVC::Keayl::Routing::RouteMatch) {
   for @!routes -> $route {
     next unless $route.handles($method);
 
     my $params = $route.match-path($path);
     next without $params;
+
+    next unless $route.matches-request(%context);
 
     return MVC::Keayl::Routing::RouteMatch.new(:$route, :params($params));
   }

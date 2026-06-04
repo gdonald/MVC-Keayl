@@ -1,0 +1,63 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing;
+
+class HostConstraint {
+  method matches(%context) {
+    (%context<host> // '').ends-with('.io')
+  }
+}
+
+# segment constraints applied to a block
+
+{
+  my $router = routes { constraints(:id(/^\d+$/), { get '/items/:id', to => 'items#show' }) };
+
+  ok $router.recognize('GET', '/items/42').defined, 'a block segment constraint accepts a valid segment';
+  nok $router.recognize('GET', '/items/abc').defined, 'a block segment constraint rejects an invalid segment';
+}
+
+# request constraints by attribute
+
+{
+  my $router = routes { constraints(:subdomain<api>, { get '/data', to => 'data#index' }) };
+
+  ok $router.recognize('GET', '/data', context => { subdomain => 'api' }).defined, 'a request constraint matches the right attribute';
+  nok $router.recognize('GET', '/data', context => { subdomain => 'www' }).defined, 'a request constraint rejects the wrong attribute';
+  nok $router.recognize('GET', '/data').defined, 'a request constraint fails when the attribute is absent';
+}
+
+{
+  my $router = routes { constraints(:host(/^api\./), { get '/data', to => 'data#index' }) };
+
+  ok $router.recognize('GET', '/data', context => { host => 'api.example.com' }).defined, 'a regex request constraint matches';
+  nok $router.recognize('GET', '/data', context => { host => 'www.example.com' }).defined, 'a regex request constraint rejects a non-match';
+}
+
+# custom callable constraint
+
+{
+  my $router = routes { constraints(-> %c { (%c<host> // '').ends-with('.io') }, { get '/x', to => 'x#y' }) };
+
+  ok $router.recognize('GET', '/x', context => { host => 'a.io' }).defined, 'a custom callable constraint accepts';
+  nok $router.recognize('GET', '/x', context => { host => 'a.com' }).defined, 'a custom callable constraint rejects';
+}
+
+# custom object constraint with a matches method
+
+{
+  my $router = routes { constraints(HostConstraint.new, { get '/z', to => 'z#y' }) };
+
+  ok $router.recognize('GET', '/z', context => { host => 'a.io' }).defined, 'a constraint object accepts via matches';
+  nok $router.recognize('GET', '/z', context => { host => 'a.com' }).defined, 'a constraint object rejects via matches';
+}
+
+# defaults applied to a block
+
+{
+  my $router = routes { defaults(format => 'json', { get '/api/users', to => 'users#index' }) };
+  is $router.recognize('GET', '/api/users').params<format>, 'json', 'a defaults block supplies a default param';
+}
+
+done-testing;

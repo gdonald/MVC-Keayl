@@ -1,0 +1,67 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing;
+
+# namespace
+
+{
+  my $router = routes { namespace 'admin', { resources 'users' } };
+
+  is $router.recognize('GET', '/admin/users').target, 'admin/users#index', 'namespace prefixes the path and module';
+  is $router.recognize('GET', '/admin/users').route.name, 'admin-users', 'namespace prefixes the helper name';
+}
+
+{
+  my $router = routes { namespace 'admin', { get '/dashboard', to => 'dashboard#show' } };
+  is $router.recognize('GET', '/admin/dashboard').target, 'admin/dashboard#show', 'namespace prefixes a plain route';
+}
+
+# scope with independent path / module / as
+
+{
+  my $router = routes { scope(path => 'api', module => 'v1', as => 'api', { get '/ping', to => 'ping#show', as => 'ping' }) };
+
+  is $router.recognize('GET', '/api/ping').target, 'v1/ping#show', 'scope applies path and module independently';
+  ok $router.route-named('api-ping').defined, 'scope applies the name prefix';
+}
+
+{
+  my $router = routes { scope(path => 'api', { get '/ping', to => 'ping#show' }) };
+  is $router.recognize('GET', '/api/ping').target, 'ping#show', 'a path-only scope does not change the module';
+}
+
+# controller block
+
+{
+  my $router = routes { controller 'photos', { get '/preview', to => 'show' } };
+  is $router.recognize('GET', '/preview').target, 'photos#show', 'a controller block supplies the controller for an action target';
+}
+
+{
+  my $router = routes { controller 'photos', { get '/list' } };
+  is $router.recognize('GET', '/list').target, 'photos#list', 'a controller block defaults the action to the path';
+}
+
+# optional scope for i18n
+
+{
+  my $router = routes { scope('(:locale)', { get '/about', to => 'pages#about' }) };
+
+  is $router.recognize('GET', '/about').action, 'about', 'an optional scope matches without the segment';
+  is $router.recognize('GET', '/en/about').params<locale>, 'en', 'an optional scope captures the segment when present';
+}
+
+# nested scopes compose
+
+{
+  my $router = routes {
+    namespace 'admin', {
+      scope(path => 'reports', { get '/daily', to => 'reports#daily' });
+    }
+  };
+
+  is $router.recognize('GET', '/admin/reports/daily').target, 'admin/reports#daily', 'nested scopes compose their prefixes';
+}
+
+done-testing;
