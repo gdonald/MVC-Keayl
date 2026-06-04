@@ -172,3 +172,42 @@ self.send-file('public/logo.png', disposition => 'inline');
 header, replying with `206 Partial Content`, a `Content-Range` header, and the
 requested slice. Open-ended (`bytes=100-`) and suffix (`bytes=-100`) ranges both
 work.
+
+## Callbacks
+
+`before-action`, `after-action`, and `around-action` register callbacks on the
+controller class. A callback is a method name or a block. Around callbacks
+receive a continuation they invoke to run the rest of the chain:
+
+```perl6
+class UsersController is MVC::Keayl::Controller {
+  method authenticate { ... }
+  method timer($next) { ...; $next(); ... }
+  method show { ... }
+}
+
+UsersController.before-action('authenticate');
+UsersController.around-action('timer');
+```
+
+A request runs the before callbacks in order, then the around callbacks wrapping
+the action, then the after callbacks in reverse order.
+
+`only` and `except` scope a callback to specific actions, and `if` / `unless`
+gate it on a method or block:
+
+```perl6
+UsersController.before-action('authenticate', except => <index show>);
+UsersController.before-action('require-admin', if => 'is-admin');
+```
+
+A subclass inherits its parents' callbacks and can drop one with
+`skip-before-action` (and `skip-after-action` / `skip-around-action`), with the
+same `only` / `except` scoping:
+
+```perl6
+PublicController.skip-before-action('authenticate');
+```
+
+A before or around callback that renders or redirects halts the chain: the action
+and the remaining callbacks do not run.

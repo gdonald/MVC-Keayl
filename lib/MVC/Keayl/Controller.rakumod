@@ -73,6 +73,127 @@ sub parse-range($range, Int:D $total --> List) {
   ($start, $end)
 }
 
+my %before-actions{Mu};
+my %after-actions{Mu};
+my %around-actions{Mu};
+my %skip-before{Mu};
+my %skip-after{Mu};
+my %skip-around{Mu};
+
+sub action-set($value) {
+  return Nil without $value;
+  ($value ~~ Str ?? ($value,) !! $value.list).map(*.Str).Set
+}
+
+sub callback-spec($callback, $only, $except, $if, $unless) {
+  { :$callback, only => action-set($only), except => action-set($except), :$if, :$unless }
+}
+
+method before-action($callback, :$only, :$except, :$if, :$unless) {
+  (%before-actions{self} //= []).push: callback-spec($callback, $only, $except, $if, $unless);
+  self
+}
+
+method after-action($callback, :$only, :$except, :$if, :$unless) {
+  (%after-actions{self} //= []).push: callback-spec($callback, $only, $except, $if, $unless);
+  self
+}
+
+method around-action($callback, :$only, :$except, :$if, :$unless) {
+  (%around-actions{self} //= []).push: callback-spec($callback, $only, $except, $if, $unless);
+  self
+}
+
+method skip-before-action($callback, :$only, :$except) {
+  (%skip-before{self} //= []).push: { :$callback, only => action-set($only), except => action-set($except) };
+  self
+}
+
+method skip-after-action($callback, :$only, :$except) {
+  (%skip-after{self} //= []).push: { :$callback, only => action-set($only), except => action-set($except) };
+  self
+}
+
+method skip-around-action($callback, :$only, :$except) {
+  (%skip-around{self} //= []).push: { :$callback, only => action-set($only), except => action-set($except) };
+  self
+}
+
+method !collect(%registry --> List) {
+  my @result;
+  @result.append(|(%registry{$_} // [])) for self.^mro.reverse;
+  @result
+}
+
+method !applies-to($spec, $action --> Bool) {
+  with $spec<only>   { return False unless $_{$action} }
+  with $spec<except> { return False if $_{$action} }
+  True
+}
+
+method !is-skipped($spec, @skips, $action --> Bool) {
+  return False unless $spec<callback> ~~ Str;
+
+  for @skips -> $skip {
+    next unless $skip<callback> ~~ Str && $skip<callback> eq $spec<callback>;
+    return True if self!applies-to($skip, $action);
+  }
+
+  False
+}
+
+method !condition-passes($spec --> Bool) {
+  with $spec<if>     { return False unless self!eval-condition($_) }
+  with $spec<unless> { return False if self!eval-condition($_) }
+  True
+}
+
+method !eval-condition($condition) {
+  $condition ~~ Callable ?? ?$condition(self) !! ?self."$condition"()
+}
+
+method !active-callbacks(%registry, %skip-registry, $action --> List) {
+  my @skips = self!collect(%skip-registry);
+
+  self!collect(%registry).grep({
+    self!applies-to($_, $action) && !self!is-skipped($_, @skips, $action) && self!condition-passes($_)
+  }).List
+}
+
+method !invoke-callback($spec) {
+  my $callback = $spec<callback>;
+  $callback ~~ Callable ?? $callback(self) !! self."$callback"()
+}
+
+method !invoke-around($spec, $next) {
+  my $callback = $spec<callback>;
+  $callback ~~ Callable ?? $callback(self, $next) !! self."$callback"($next)
+}
+
+method !run-with-callbacks(Str:D $action) {
+  for self!active-callbacks(%before-actions, %skip-before, $action) -> $callback {
+    self!invoke-callback($callback);
+    return if $!performed;
+  }
+
+  my $core = sub {
+    return if $!performed;
+    my $result = self."$action"();
+    self.implicit-render($action, $result) unless $!performed;
+  };
+
+  my $chain = $core;
+  for self!active-callbacks(%around-actions, %skip-around, $action).reverse -> $callback {
+    my $next = $chain;
+    $chain = sub { self!invoke-around($callback, $next) };
+  }
+  $chain();
+
+  for self!active-callbacks(%after-actions, %skip-after, $action).reverse -> $callback {
+    self!invoke-callback($callback);
+  }
+}
+
 method is-performed(--> Bool) {
   $!performed
 }
@@ -85,8 +206,7 @@ method !is-action(Str:D $name --> Bool) {
 method dispatch(Str:D $action --> MVC::Keayl::Response) {
   die "unknown action '$action'" unless self!is-action($action);
 
-  my $result = self."$action"();
-  self.implicit-render($action, $result) unless $!performed;
+  self!run-with-callbacks($action);
 
   $!response
 }

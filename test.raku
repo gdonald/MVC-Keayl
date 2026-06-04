@@ -36,6 +36,31 @@ sub format-ts(--> Str) {
   $d.hour, $d.minute, $d.second.Int;
 }
 
+# Precompile every provided module once, single-threaded, so the parallel
+# prove6 and behave workers read a populated precomp store instead of racing to
+# write it (a cold-precomp race can segfault MoarVM).
+sub warm-precomp() {
+  return unless 'META6.json'.IO.e;
+
+  my @modules;
+  my $in-provides = False;
+
+  for 'META6.json'.IO.lines -> $line {
+    unless $in-provides {
+      $in-provides = True if $line ~~ / '"provides"' /;
+      next;
+    }
+    last if $line ~~ /^ \s* '}'/;
+    @modules.push(~$0) if $line ~~ / '"' (<-["]>+) '"' \s* ':' /;
+  }
+
+  return unless @modules;
+
+  say "==> [{format-ts()}] warming precompilation (@modules.elems() modules)";
+  run 'raku', '-Ilib', '-e', @modules.map({ "use $_;" }).join("\n");
+  say '';
+}
+
 END {
   if %durations {
     say '';
@@ -47,6 +72,8 @@ END {
     printf "  %-9s %7.2fs\n", 'total', (now - $total-start).Num;
   }
 }
+
+warm-precomp() if @stages;
 
 for @stages -> $s {
   unless $s<dir>.IO.d && $s<dir>.IO.dir.elems {

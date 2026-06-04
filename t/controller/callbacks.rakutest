@@ -1,0 +1,70 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+# before / after / around order
+
+{
+  my $controller = CallbackController.new;
+  $controller.dispatch('show');
+
+  is $controller.trail.join(','), 'before-1,before-2,around-pre,action,around-post,after-1',
+    'before, around, action, and after callbacks run in order';
+}
+
+# halting
+
+{
+  my $controller = GuardController.new;
+  my $response = $controller.dispatch('show');
+
+  is $controller.trail.join(','), 'guard', 'a before callback that renders halts the chain';
+  is $response.body, 'denied', 'the halting callback renders the response';
+}
+
+# only / except scoping
+
+{
+  my $controller = ScopedController.new;
+  $controller.dispatch('index');
+  is $controller.trail.join(','), 'index', 'a callback with only does not run for other actions';
+}
+
+{
+  my $controller = ScopedController.new;
+  $controller.dispatch('edit');
+  is $controller.trail.join(','), 'admin,edit', 'a callback with only runs for the listed action';
+}
+
+# conditional callbacks
+
+{
+  my $controller = ConditionalController.new(:logged-in(False));
+  $controller.dispatch('show');
+  is $controller.trail.join(','), 'auth,action', 'a callback with if runs when the condition holds';
+}
+
+{
+  my $controller = ConditionalController.new(:logged-in(True));
+  $controller.dispatch('show');
+  is $controller.trail.join(','), 'action', 'a callback with if is skipped when the condition fails';
+}
+
+# inheritance and skipping
+
+{
+  my $controller = BaseAuthController.new;
+  $controller.dispatch('show');
+  is $controller.trail.join(','), 'auth,action', 'an inherited before callback runs in a subclass';
+}
+
+{
+  my $controller = PublicController.new;
+  $controller.dispatch('show');
+  is $controller.trail.join(','), 'action', 'skip-before-action removes an inherited callback';
+}
+
+done-testing;

@@ -82,6 +82,66 @@ class FlowController is MVC::Keayl::Controller is export {
   }
 }
 
+class CallbackController is MVC::Keayl::Controller is export {
+  has @.trail;
+
+  method trace(Str $label) { @!trail.push($label) }
+
+  method one-before     { self.trace('before-1') }
+  method two-before     { self.trace('before-2') }
+  method one-after      { self.trace('after-1') }
+  method timer($next)   { self.trace('around-pre'); $next(); self.trace('around-post') }
+
+  method show { self.trace('action'); 'ok' }
+}
+CallbackController.before-action('one-before');
+CallbackController.before-action('two-before');
+CallbackController.around-action('timer');
+CallbackController.after-action('one-after');
+
+class GuardController is MVC::Keayl::Controller is export {
+  has @.trail;
+
+  method trace(Str $label) { @!trail.push($label) }
+  method block { self.trace('guard'); self.render(plain => 'denied') }
+  method show  { self.trace('action'); 'shown' }
+}
+GuardController.before-action('block');
+
+class ScopedController is MVC::Keayl::Controller is export {
+  has @.trail;
+
+  method trace(Str $label) { @!trail.push($label) }
+  method admin-only { self.trace('admin') }
+  method index { self.trace('index'); 'i' }
+  method edit  { self.trace('edit'); 'e' }
+}
+ScopedController.before-action('admin-only', only => <edit>);
+
+class ConditionalController is MVC::Keayl::Controller is export {
+  has @.trail;
+  has Bool $.logged-in = False;
+
+  method trace(Str $label) { @!trail.push($label) }
+  method note-auth { self.trace('auth') }
+  method is-guest  { !$!logged-in }
+  method show { self.trace('action'); 's' }
+}
+ConditionalController.before-action('note-auth', if => 'is-guest');
+
+class BaseAuthController is MVC::Keayl::Controller is export {
+  has @.trail;
+
+  method trace(Str $label) { @!trail.push($label) }
+  method authenticate { self.trace('auth') }
+  method show { self.trace('action'); 's' }
+}
+BaseAuthController.before-action('authenticate');
+
+class PublicController is BaseAuthController is export {
+}
+PublicController.skip-before-action('authenticate');
+
 class DownloadController is MVC::Keayl::Controller is export {
   method data-csv    { self.send-data("a,b\n1,2", type => 'text/csv', filename => 'report.csv') }
   method data-inline { self.send-data('hi', disposition => 'inline') }
