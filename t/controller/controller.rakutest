@@ -5,6 +5,7 @@ use Test;
 use MVC::Keayl::Request;
 use MVC::Keayl::Response;
 use MVC::Keayl::Controller;
+use MVC::Keayl::Params;
 use ControllerFixtures;
 
 # action dispatch and implicit render
@@ -50,6 +51,19 @@ use ControllerFixtures;
   my $a = GreetController.new;
   my $b = GreetController.new;
   nok $a.response === $b.response, 'each controller instance gets its own response';
+}
+
+# nested params through Parameters
+
+{
+  my $request = MVC::Keayl::Request.new(
+    :method<POST>,
+    :headers({ 'Content-Type' => 'application/x-www-form-urlencoded' }),
+    :body('user[name]=Ada'),
+  );
+  my $controller = GreetController.new(:params(build-params({}, $request)));
+
+  is $controller.dispatch('profile').body, 'name Ada', 'an action reads nested params through Parameters';
 }
 
 # dispatch guards

@@ -6,7 +6,7 @@ unit class MVC::Keayl::Controller;
 
 has MVC::Keayl::Request  $.request;
 has MVC::Keayl::Response $.response = MVC::Keayl::Response.new;
-has      %.params;
+has      $.params = {};
 has Bool $!performed = False;
 
 method is-performed(--> Bool) {

@@ -3,6 +3,7 @@ use BDD::Behave;
 use MVC::Keayl::Request;
 use MVC::Keayl::Response;
 use MVC::Keayl::Controller;
+use MVC::Keayl::Params;
 use ControllerFixtures;
 
 describe 'MVC::Keayl::Controller dispatch', {
@@ -59,6 +60,18 @@ describe 'MVC::Keayl::Controller per-request state', {
 
   it 'gives each instance its own response', {
     expect(GreetController.new.response === GreetController.new.response).to.be-falsy;
+  }
+}
+
+describe 'MVC::Keayl::Controller nested params', {
+  it 'reads nested params through Parameters', {
+    my $request = MVC::Keayl::Request.new(
+      :method<POST>,
+      :headers({ 'Content-Type' => 'application/x-www-form-urlencoded' }),
+      :body('user[name]=Ada'),
+    );
+    my $controller = GreetController.new(:params(build-params({}, $request)));
+    expect($controller.dispatch('profile').body).to.be('name Ada');
   }
 }
 

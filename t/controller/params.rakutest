@@ -1,0 +1,100 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Params;
+use MVC::Keayl::Parameters;
+use MVC::Keayl::Request;
+
+# nested and array params
+
+{
+  my %p = parse-urlencoded('user[name]=Ada&user[email]=a@b.com');
+  is %p<user><name>, 'Ada', 'bracketed keys nest into a hash';
+  is %p<user><email>, 'a@b.com', 'sibling bracketed keys share the parent hash';
+}
+
+{
+  my %p = parse-urlencoded('ids[]=1&ids[]=2');
+  is-deeply %p<ids>, ['1', '2'], 'empty brackets append to an array';
+}
+
+{
+  my %p = parse-urlencoded('user[roles][]=admin&user[roles][]=editor');
+  is-deeply %p<user><roles>, ['admin', 'editor'], 'nested array params build under a hash';
+}
+
+{
+  my %p = parse-urlencoded('users[][name]=A&users[][age]=1');
+  is %p<users>[0]<name>, 'A', 'array-of-hashes groups consecutive keys';
+  is %p<users>[0]<age>, '1', 'array-of-hashes fills the same hash until a key repeats';
+}
+
+{
+  my %p = parse-urlencoded('q=a%20b&page=2');
+  is %p<q>, 'a b', 'flat params are percent-decoded';
+  is %p<page>, '2', 'multiple flat params parse independently';
+}
+
+# json body
+
+{
+  my %p = parse-json('{"user":{"name":"Ada"},"ids":[1,2]}');
+  is %p<user><name>, 'Ada', 'JSON objects parse into nested params';
+  is-deeply %p<ids>, [1, 2], 'JSON arrays parse into params';
+}
+
+{
+  is-deeply parse-json(''), {}, 'an empty JSON body parses to an empty hash';
+}
+
+# multipart body
+
+{
+  my $boundary = 'X';
+  my $body = "--X\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\nHello\r\n"
+           ~ "--X\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.txt\"\r\nContent-Type: text/plain\r\n\r\nfile body\r\n"
+           ~ "--X--\r\n";
+
+  my %p = parse-multipart($body, $boundary);
+
+  is %p<title>, 'Hello', 'a multipart text field parses its value';
+  is %p<file><filename>, 'a.txt', 'a multipart file field carries its filename';
+  is %p<file><content>, 'file body', 'a multipart file field carries its content';
+  is %p<file><type>, 'text/plain', 'a multipart file field carries its content type';
+}
+
+# merged, indifferent access
+
+{
+  my $request = MVC::Keayl::Request.new(
+    :method<POST>,
+    :target('/users?ref=home'),
+    :headers({ 'Content-Type' => 'application/x-www-form-urlencoded' }),
+    :body('user[name]=Ada'),
+  );
+
+  my $params = build-params({ id => '5' }, $request);
+
+  is $params<id>, '5', 'path params merge in';
+  is $params<ref>, 'home', 'query params merge in';
+  is $params<user><name>, 'Ada', 'body params merge in';
+}
+
+{
+  my $params = MVC::Keayl::Parameters.new({ '5' => 'five', name => 'Ada' });
+
+  is $params{'name'}, 'Ada', 'string key access works';
+  is $params{5}, 'five', 'a numeric key coerces to a string for indifferent access';
+}
+
+{
+  my $request = MVC::Keayl::Request.new(
+    :method<POST>,
+    :headers({ 'Content-Type' => 'application/json' }),
+    :body('{"name":"Ada"}'),
+  );
+
+  is build-params({}, $request)<name>, 'Ada', 'a JSON body merges into the params';
+}
+
+done-testing;

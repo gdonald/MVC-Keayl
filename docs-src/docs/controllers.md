@@ -32,6 +32,32 @@ self.params;     # path, query, and body params
 Each instance gets its own response, so actions never share state across
 requests.
 
+## Params
+
+`self.params` merges the path params (from routing), the query string, and the
+request body into one `MVC::Keayl::Parameters` collection. Path params win over
+the body, which wins over the query. Access is indifferent: a key is coerced to a
+string, so `params<id>` and `params{5}` reach the same value.
+
+Bracketed names build nested structures, the same way Rack does:
+
+```
+user[name]=Ada&user[email]=a@b.com   # params<user><name>, params<user><email>
+ids[]=1&ids[]=2                      # params<ids> is ['1', '2']
+user[roles][]=admin                  # params<user><roles> is ['admin']
+users[][name]=A&users[][age]=1       # params<users>[0] is { name => 'A', age => '1' }
+```
+
+The body is parsed by its `Content-Type`:
+
+- `application/x-www-form-urlencoded` parses like a query string.
+- `application/json` parses the JSON object into params.
+- `multipart/form-data` parses text fields, and file fields into a
+  `{ filename, content, type }` hash.
+
+`build-params(%path-params, $request)` produces the merged `Parameters` for a
+request, which the dispatcher passes to the controller.
+
 ## Dispatch and implicit render
 
 `dispatch($action)` runs the named action and returns the response. An action

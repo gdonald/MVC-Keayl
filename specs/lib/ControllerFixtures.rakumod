@@ -21,4 +21,8 @@ class GreetController is MVC::Keayl::Controller is export {
     self.response.set-header('X-Ping', 'pong');
     'pong'
   }
+
+  method profile {
+    'name ' ~ self.params<user><name>
+  }
 }

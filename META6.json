@@ -27,6 +27,8 @@
     "MVC::Keayl::Endpoint": "lib/MVC/Keayl/Endpoint.rakumod",
     "MVC::Keayl::Middleware": "lib/MVC/Keayl/Middleware.rakumod",
     "MVC::Keayl::MiddlewareStack": "lib/MVC/Keayl/MiddlewareStack.rakumod",
+    "MVC::Keayl::Parameters": "lib/MVC/Keayl/Parameters.rakumod",
+    "MVC::Keayl::Params": "lib/MVC/Keayl/Params.rakumod",
     "MVC::Keayl::Request": "lib/MVC/Keayl/Request.rakumod",
     "MVC::Keayl::Response": "lib/MVC/Keayl/Response.rakumod",
     "MVC::Keayl::Router": "lib/MVC/Keayl/Router.rakumod",
