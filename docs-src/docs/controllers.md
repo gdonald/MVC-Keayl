@@ -82,3 +82,41 @@ method show {
 
 Only actions defined on the controller are dispatchable. Dispatching an unknown
 action, or one of the base controller's own methods, raises.
+
+## Render
+
+`render` writes the response explicitly. The content modes set a default content
+type and the body:
+
+```perl6
+self.render(json => { ok => True });   # application/json
+self.render(plain => 'hello');         # text/plain
+self.render(html  => '<b>hi</b>');     # text/html
+self.render(body  => 'id,name', content-type => 'text/csv');
+```
+
+`status` sets the status, on its own or alongside content, and `content-type`
+overrides the default:
+
+```perl6
+self.render(plain => 'created', status => 201);
+self.render(status => 204);            # no body
+```
+
+A template is rendered by name, by another action, or inline. Locals and a layout
+are passed as options:
+
+```perl6
+self.render('show');                   # the show template
+self.render(action => 'edit');         # another action's template
+self.render('show', locals => { user => $user });
+self.render(inline => '<p>= name</p>');
+self.render('show', layout => 'admin');
+self.render('show', layout => False);  # no layout
+```
+
+Template, inline, and layout rendering go through the controller's view renderer.
+When a renderer is configured, an action that does not render explicitly
+implicitly renders the template named after the action.
+
+Rendering twice raises a double-render error.

@@ -1,0 +1,98 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+sub rendered($action, *%options) {
+  RenderController.new(|%options).dispatch($action)
+}
+
+sub renderer-options {
+  view-renderer => StubRenderer.new
+}
+
+# content-typed render modes
+
+{
+  my $response = rendered('as-json');
+  is $response.header('content-type'), 'application/json', 'render json sets the JSON content type';
+  is $response.body, '{"ok":true}', 'render json serializes its value';
+}
+
+{
+  my $response = rendered('as-plain');
+  is $response.header('content-type'), 'text/plain; charset=utf-8', 'render plain sets the plain content type';
+  is $response.body, 'hello', 'render plain writes the text';
+}
+
+{
+  my $response = rendered('as-html');
+  is $response.header('content-type'), 'text/html; charset=utf-8', 'render html sets the html content type';
+  is $response.body, '<b>hi</b>', 'render html writes the markup';
+}
+
+{
+  my $response = rendered('as-body');
+  is $response.body, 'id,name', 'render body writes the raw body';
+  is $response.header('content-type'), 'text/csv', 'an explicit content-type overrides the default';
+}
+
+# status
+
+{
+  my $response = rendered('made');
+  is $response.status, 201, 'render status sets the status alongside content';
+  is $response.body, 'created', 'the content is still rendered when a status is given';
+}
+
+{
+  my $response = rendered('only-status');
+  is $response.status, 204, 'render status alone sets the status';
+  is $response.body, '', 'render status alone leaves the body empty';
+}
+
+# template rendering through the view renderer
+
+{
+  is rendered('by-name', |renderer-options).body, 'template:show', 'render renders a template by name';
+}
+
+{
+  is rendered('by-action', |renderer-options).body, 'template:edit', 'render action renders another action template';
+}
+
+{
+  is rendered('with-locals', |renderer-options).body, 'template:show id=7', 'render passes locals to the template';
+}
+
+{
+  is rendered('inline-render', |renderer-options).body, 'inline:<p>x</p>', 'render inline renders an inline template';
+}
+
+# layouts
+
+{
+  is rendered('layered', |renderer-options).body, 'layout(admin){template:show}', 'render layout wraps the template';
+}
+
+{
+  is rendered('no-layout', |renderer-options).body, 'template:show', 'layout false renders without a layout';
+}
+
+# implicit render of the action template
+
+{
+  is rendered('implicit-show', |renderer-options).body, 'template:implicit-show',
+    'a configured view renderer makes implicit render use the action template';
+}
+
+# double render
+
+{
+  throws-like { RenderController.new.dispatch('double') }, Exception, message => /double/,
+    'rendering twice raises a double-render error';
+}
+
+done-testing;
