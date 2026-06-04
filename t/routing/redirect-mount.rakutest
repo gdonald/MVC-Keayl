@@ -1,0 +1,51 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing;
+use MVC::Keayl::Routing::Redirect;
+use MVC::Keayl::Routing::Mount;
+
+# redirect routes
+
+{
+  my $router = routes { get '/stories', to => redirect('/articles') };
+  my $target = $router.recognize('GET', '/stories').target;
+
+  isa-ok $target, MVC::Keayl::Routing::Redirect, 'a redirect target is a Redirect';
+  is $target.location-for({}), '/articles', 'a string redirect carries its location';
+  is $target.status, 301, 'a redirect defaults to status 301';
+}
+
+{
+  my $router = routes { get '/stories/:id', to => redirect(-> %p { '/articles/' ~ %p<id> }, status => 302) };
+  my $target = $router.recognize('GET', '/stories/9').target;
+
+  is $target.location-for({ id => 9 }), '/articles/9', 'a block redirect computes its location from params';
+  is $target.status, 302, 'a redirect status can be overridden';
+}
+
+# mounting
+
+{
+  my $app = sub { 'mounted' };
+  my $router = routes { mount $app, at => '/legacy' };
+
+  ok $router.recognize('GET', '/legacy').defined, 'a mount matches its mount point';
+  isa-ok $router.recognize('GET', '/legacy').target, MVC::Keayl::Routing::Mount, 'a mount target is a Mount';
+}
+
+{
+  my $app = sub { 'mounted' };
+  my $router = routes { mount $app, at => '/legacy' };
+
+  ok $router.recognize('GET', '/legacy/users/5').defined, 'a mount matches paths below the mount point';
+  is $router.recognize('GET', '/legacy/users/5').params<mounted_path>, 'users/5', 'a mount captures the sub-path';
+}
+
+{
+  my $app = sub { 'mounted' };
+  my $router = routes { mount $app, at => '/legacy' };
+  is $router.recognize('GET', '/legacy/x').target.app, $app, 'a mount carries the mounted app';
+}
+
+done-testing;

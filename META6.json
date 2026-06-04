@@ -30,10 +30,13 @@
     "MVC::Keayl::Response": "lib/MVC/Keayl/Response.rakumod",
     "MVC::Keayl::Router": "lib/MVC/Keayl/Router.rakumod",
     "MVC::Keayl::Routing": "lib/MVC/Keayl/Routing.rakumod",
+    "MVC::Keayl::Routing::Mount": "lib/MVC/Keayl/Routing/Mount.rakumod",
     "MVC::Keayl::Routing::PathPattern": "lib/MVC/Keayl/Routing/PathPattern.rakumod",
+    "MVC::Keayl::Routing::Redirect": "lib/MVC/Keayl/Routing/Redirect.rakumod",
     "MVC::Keayl::Routing::Resources": "lib/MVC/Keayl/Routing/Resources.rakumod",
     "MVC::Keayl::Routing::Route": "lib/MVC/Keayl/Routing/Route.rakumod",
-    "MVC::Keayl::Routing::RouteMatch": "lib/MVC/Keayl/Routing/RouteMatch.rakumod"
+    "MVC::Keayl::Routing::RouteMatch": "lib/MVC/Keayl/Routing/RouteMatch.rakumod",
+    "MVC::Keayl::Routing::UrlHelpers": "lib/MVC/Keayl/Routing/UrlHelpers.rakumod"
   },
   "resources": [],
   "support": {

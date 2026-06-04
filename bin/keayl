@@ -49,7 +49,33 @@ multi sub MAIN('new', $name) {
 multi sub MAIN('server') { exit not-yet('server'); }
 multi sub MAIN('s')      { exit not-yet('server'); }
 
-multi sub MAIN('routes') { exit not-yet('routes'); }
+multi sub MAIN('routes') { exit print-routes(); }
+
+sub print-routes(--> Int) {
+  my $path = 'config/routes.raku';
+
+  unless $path.IO.e {
+    note "{NAME}: no $path found";
+    return 1;
+  }
+
+  require MVC::Keayl::Routing <&load-routes>;
+  my @table = load-routes($path).route-table;
+
+  my $name-width = max 4, |@table.map({ (.<name> // '').chars });
+  my $verb-width = max 4, |@table.map({ .<verbs>.join(',').chars });
+  my $path-width = max 4, |@table.map({ .<path>.chars });
+
+  for @table -> %row {
+    printf "%-*s  %-*s  %-*s  %s\n",
+      $name-width, %row<name> // '',
+      $verb-width, %row<verbs>.join(','),
+      $path-width, %row<path>,
+      (%row<target> ~~ Str ?? %row<target> !! %row<target>.^name);
+  }
+
+  0
+}
 
 multi sub MAIN('console') { exit not-yet('console'); }
 multi sub MAIN('c')       { exit not-yet('console'); }

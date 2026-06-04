@@ -9,15 +9,8 @@ sub read-ident(Str $source, $pos is rw --> Str) {
   $source.substr($start, $pos - $start)
 }
 
-sub quote-literal(Str $text --> Str) {
-  my $escaped = $text.subst('\\', '\\\\', :g).subst("'", "\\'", :g);
-  "'" ~ $escaped ~ "'"
-}
-
-# Compile one level of the pattern (the top level, or the inside of a `(...)`
-# group) into a Raku regex source fragment, collecting dynamic segment names.
-sub compile-group(Str $source, $pos is rw, @names --> Str) {
-  my @parts;
+sub parse-group(Str $source, $pos is rw --> Array) {
+  my @nodes;
 
   while $pos < $source.chars {
     my $char = $source.substr($pos, 1);
@@ -26,50 +19,97 @@ sub compile-group(Str $source, $pos is rw, @names --> Str) {
       last;
     } elsif $char eq '(' {
       $pos++;
-      my $inner = compile-group($source, $pos, @names);
+      my @inner = parse-group($source, $pos);
       $pos++ if $pos < $source.chars && $source.substr($pos, 1) eq ')';
-      @parts.push("[ $inner ]?");
+      @nodes.push: { type => 'optional', children => @inner };
     } elsif $char eq ':' {
       $pos++;
-      my $name = read-ident($source, $pos);
-      @names.push($name);
-      @parts.push("\$<$name>=[ <-[/.]>+ ]");
+      @nodes.push: { type => 'param', name => read-ident($source, $pos) };
     } elsif $char eq '*' {
       $pos++;
-      my $name = read-ident($source, $pos);
-      @names.push($name);
-      @parts.push("\$<$name>=[ .+ ]");
+      @nodes.push: { type => 'glob', name => read-ident($source, $pos) };
     } else {
-      @parts.push(quote-literal($char));
+      @nodes.push: { type => 'literal', text => $char };
       $pos++;
     }
   }
 
-  @parts.join(' ')
+  @nodes
 }
 
-sub compile-pattern(Str:D $source --> List) {
+sub quote-literal(Str $text --> Str) {
+  my $escaped = $text.subst('\\', '\\\\', :g).subst("'", "\\'", :g);
+  "'" ~ $escaped ~ "'"
+}
+
+sub node-regex(%node --> Str) {
+  given %node<type> {
+    when 'literal'  { quote-literal(%node<text>) }
+    when 'param'    { "\$<{%node<name>}>=[ <-[/.]>+ ]" }
+    when 'glob'     { "\$<{%node<name>}>=[ .+ ]" }
+    when 'optional' { '[ ' ~ %node<children>.map(&node-regex).join(' ') ~ ' ]?' }
+  }
+}
+
+sub names-in(@nodes, :$required --> List) {
   my @names;
-  my $pos = 0;
-  my $body = compile-group($source, $pos, @names);
-
-  ("rx\{ ^ $body \$ }".EVAL, |@names)
+  for @nodes -> %node {
+    given %node<type> {
+      when 'param' | 'glob' { @names.push(%node<name>) }
+      when 'optional' { @names.append(names-in(%node<children>)) unless $required }
+    }
+  }
+  @names.List
 }
 
-has Str   $.source;
+sub generate-part(@nodes, %params, %used --> Str) {
+  my $out = '';
+
+  for @nodes -> %node {
+    given %node<type> {
+      when 'literal' {
+        $out ~= %node<text>;
+      }
+      when 'param' | 'glob' {
+        %used{%node<name>} = True;
+        $out ~= %params{%node<name>} // '';
+      }
+      when 'optional' {
+        my @inner = names-in(%node<children>);
+        $out ~= generate-part(%node<children>, %params, %used)
+          if @inner.grep({ !(%params{$_}.defined) }).elems == 0;
+      }
+    }
+  }
+
+  $out
+}
+
+sub percent-encode(Str $text --> Str) {
+  $text.subst(/<-[A..Za..z0..9._~-]>/, -> $match {
+    $match.Str.encode('utf-8').list.map({ '%' ~ sprintf('%02X', $_) }).join
+  }, :g)
+}
+
+has Str $.source;
 has Regex $.regex;
-has Str   @.names;
-has       %.constraints;
-has       %.defaults;
+has @.ast;
+has Str @.names;
+has Str @.required-names;
+has %.constraints;
+has %.defaults;
 
 submethod BUILD(Str:D :$source, :%constraints, :%defaults, Bool :$format) {
   $!source = $format ?? $source ~ '(.:format)' !! $source;
   %!constraints = %constraints;
   %!defaults = %defaults;
 
-  my ($regex, @names) = compile-pattern($!source);
-  $!regex = $regex;
-  @!names = @names;
+  my $pos = 0;
+  @!ast = parse-group($!source, $pos);
+  @!names = names-in(@!ast);
+  @!required-names = names-in(@!ast, :required);
+
+  $!regex = ("rx\{ ^ " ~ @!ast.map(&node-regex).join(' ') ~ " \$ }").EVAL;
 }
 
 method match(Str:D $path --> Hash) {
@@ -91,4 +131,26 @@ method match(Str:D $path --> Hash) {
   }
 
   %params
+}
+
+method generate(%params, Bool :$trailing = False, :$anchor --> Str) {
+  my %used;
+  my $path = generate-part(@!ast, { %!defaults, %params }, %used);
+
+  $path ~= '/' if $trailing && $path ne '/' && !$path.ends-with('/');
+
+  my @pairs;
+  for %params.kv -> $key, $value {
+    next if %used{$key};
+    next without $value;
+    @pairs.push: $key => $value;
+  }
+
+  my $query = @pairs
+    ?? '?' ~ @pairs.sort(*.key).map({ percent-encode(.key.Str) ~ '=' ~ percent-encode(.value.Str) }).join('&')
+    !! '';
+
+  my $fragment = $anchor.defined ?? '#' ~ $anchor !! '';
+
+  $path ~ $query ~ $fragment
 }

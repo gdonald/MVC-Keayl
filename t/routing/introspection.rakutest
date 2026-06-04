@@ -1,0 +1,63 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing;
+use MVC::Keayl::Routing::UrlHelpers;
+
+sub build-router {
+  routes {
+    resources 'users';
+    get '/about', to => 'pages#about', as => 'about';
+  }
+}
+
+# merged params and target
+
+{
+  my $match = build-router.recognize('GET', '/users/5');
+
+  is $match.controller, 'users', 'recognition exposes the controller';
+  is $match.action, 'show', 'recognition exposes the action';
+  is $match.params<id>, '5', 'recognition exposes the path params';
+}
+
+# 404 vs 405
+
+{
+  my $router = build-router;
+
+  is $router.recognition-status('GET', '/about'), 'found', 'a matching request is found';
+  is $router.recognition-status('POST', '/about'), 'method-not-allowed', 'a known path with a wrong method is method-not-allowed';
+  is $router.recognition-status('GET', '/missing'), 'not-found', 'an unknown path is not-found';
+}
+
+{
+  my $router = build-router;
+  is $router.allowed-methods('/about').grep(* ne 'HEAD').sort.join(','), 'GET', 'allowed-methods lists the verbs a path answers';
+}
+
+# route table
+
+{
+  my @table = build-router.route-table;
+  my $about = @table.first({ .<name> eq 'about' });
+
+  is $about<path>, '/about', 'the route table exposes each pattern';
+  is $about<target>, 'pages#about', 'the route table exposes each target';
+  is $about<verbs>.join(','), 'GET', 'the route table omits HEAD from the verb list';
+}
+
+# recognition and generation round-trip
+
+{
+  my $router = build-router;
+  my $helpers = MVC::Keayl::Routing::UrlHelpers.new(:$router);
+
+  my $path = $helpers.path-for('user', 42);
+  my $match = $router.recognize('GET', $path);
+
+  is $match.action, 'show', 'a generated path recognizes back to its action';
+  is $match.params<id>, '42', 'a generated path round-trips its params';
+}
+
+done-testing;

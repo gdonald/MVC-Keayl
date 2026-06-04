@@ -329,10 +329,73 @@ defaults(format => 'json', {
 });
 ```
 
+## Redirects and mounting
+
+A route can redirect instead of dispatching to a controller. `redirect` takes a
+string or a block that computes the location from the params, and an optional
+status:
+
+```perl6
+get '/stories',     to => redirect('/articles');
+get '/movies/:id',  to => redirect(-> %params { '/films/' ~ %params<id> }, status => 302);
+```
+
+`mount` attaches a sub-app at a path. The mount matches the mount point and
+everything below it, capturing the remainder as `mounted_path`:
+
+```perl6
+mount $rack-app, at => '/legacy';   # matches /legacy and /legacy/...
+```
+
+## URL helpers
+
+`MVC::Keayl::Routing::UrlHelpers` generates paths and URLs from named routes.
+`path-for` fills the segments, turns leftover params into a sorted query string,
+and handles `anchor` and `trailing-slash`:
+
+```perl6
+my $helpers = MVC::Keayl::Routing::UrlHelpers.new(:$router);
+
+$helpers.path-for('user', 5);                       # /users/5
+$helpers.path-for('user', 5, page => 2);            # /users/5?page=2
+$helpers.path-for('user', 5, anchor => 'comments'); # /users/5#comments
+```
+
+`url-for` builds an absolute URL from `default-url-options` (`host`, `protocol`,
+`port`), each overridable per call. The `name-path` and `name-url` helpers also
+resolve through `FALLBACK`:
+
+```perl6
+my $helpers = MVC::Keayl::Routing::UrlHelpers.new(:$router, :default-url-options({ host => 'example.com' }));
+
+$helpers.url-for('user', 5);    # http://example.com/users/5
+$helpers.user-path(5);          # /users/5
+$helpers.users-url;             # http://example.com/users
+```
+
+### Custom and polymorphic helpers
+
+`direct` registers a helper computed by a block. `polymorphic-path` and
+`url-for` dispatch a record to its route by class name and persistence state, and
+`resolve` customizes that mapping:
+
+```perl6
+direct 'homepage', -> { 'https://example.com' };
+resolve 'Basket', -> $basket { ('cart',) };
+```
+
+```perl6
+$helpers.homepage-url;                        # https://example.com
+$helpers.polymorphic-path($persisted-post);   # /posts/7
+$helpers.polymorphic-path($new-post);         # /posts
+$helpers.url-for($post);                       # dispatches polymorphically
+```
+
 ## Recognition
 
 The router answers `recognize($method, $path)`, returning a match or an
-undefined match when nothing fits:
+undefined match when nothing fits. A `context` hash supplies request attributes
+for request constraints:
 
 ```perl6
 my $match = $router.recognize('GET', '/users/42');
@@ -344,4 +407,16 @@ $match.callable;     # the inline handler, or an undefined Callable
 $match.route;        # the matched route
 ```
 
-`route-named($name)` looks a route up by its name.
+`recognition-status` distinguishes a hit from a wrong method and from an unknown
+path, and `allowed-methods` lists the verbs a path answers:
+
+```perl6
+$router.recognition-status('GET', '/about');    # 'found'
+$router.recognition-status('POST', '/about');   # 'method-not-allowed'
+$router.recognition-status('GET', '/missing');  # 'not-found'
+
+$router.allowed-methods('/about');              # ('GET', 'HEAD')
+```
+
+`route-named($name)` looks a route up by its name, and `route-table` returns the
+name / verbs / pattern / target of every route, which `keayl routes` prints.

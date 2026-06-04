@@ -6,6 +6,8 @@ use MVC::Keayl::Routing::PathPattern;
 unit class MVC::Keayl::Router;
 
 has MVC::Keayl::Routing::Route @.routes;
+has %.directs;
+has %.resolvers;
 
 method add-route(
   @verbs,
@@ -36,6 +38,16 @@ method add-route(
   self
 }
 
+method add-direct(Str:D $name, &block --> ::?CLASS:D) {
+  %!directs{$name} = &block;
+  self
+}
+
+method add-resolver(Str:D $class, &block --> ::?CLASS:D) {
+  %!resolvers{$class} = &block;
+  self
+}
+
 method recognize(Str:D $method, Str:D $path, :%context --> MVC::Keayl::Routing::RouteMatch) {
   for @!routes -> $route {
     next unless $route.handles($method);
@@ -51,6 +63,35 @@ method recognize(Str:D $method, Str:D $path, :%context --> MVC::Keayl::Routing::
   MVC::Keayl::Routing::RouteMatch
 }
 
+method allowed-methods(Str:D $path, :%context --> List) {
+  my @verbs;
+
+  for @!routes -> $route {
+    next without $route.match-path($path);
+    next unless $route.matches-request(%context);
+    @verbs.append($route.verbs);
+  }
+
+  @verbs.unique.List
+}
+
+method recognition-status(Str:D $method, Str:D $path, :%context --> Str) {
+  return 'found' if self.recognize($method, $path, :%context).defined;
+  return 'method-not-allowed' if self.allowed-methods($path, :%context);
+  'not-found'
+}
+
 method route-named(Str:D $name --> MVC::Keayl::Routing::Route) {
   @!routes.first({ .name.defined && .name eq $name }) // MVC::Keayl::Routing::Route
+}
+
+method route-table(--> List) {
+  @!routes.map(-> $route {
+    %(
+      name   => $route.name,
+      verbs  => $route.verbs.grep(* ne 'HEAD').List,
+      path   => $route.path,
+      target => $route.target,
+    )
+  }).List
 }

@@ -1,0 +1,92 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Routing;
+use MVC::Keayl::Routing::UrlHelpers;
+
+class Widget { has $.id; method is-persisted { $!id.defined } }
+class Basket { }
+
+sub build-router {
+  routes {
+    resources 'widgets';
+    get '/about', to => 'pages#about', as => 'about';
+    direct 'homepage', -> { 'https://example.com' };
+    resolve 'Basket', -> $b { ('cart',) };
+    get '/cart', to => 'carts#show', as => 'cart';
+  }
+}
+
+sub helpers(%options = {}) {
+  MVC::Keayl::Routing::UrlHelpers.new(:router(build-router), :default-url-options(%options))
+}
+
+# path generation
+
+{
+  is helpers.path-for('widgets'), '/widgets', 'a named collection generates its path';
+  is helpers.path-for('widget', 5), '/widgets/5', 'a positional param fills the segment';
+  is helpers.path-for('widget', 5, page => 2, sort => 'name'), '/widgets/5?page=2&sort=name', 'extra params become a sorted query string';
+  is helpers.path-for('widget', 5, anchor => 'top'), '/widgets/5#top', 'anchor becomes a fragment';
+  is helpers.path-for('widget', 5, q => 'a b'), '/widgets/5?q=a%20b', 'query values are percent-encoded';
+}
+
+{
+  is helpers.path-for('about', trailing-slash => True), '/about/', 'trailing-slash appends a slash';
+}
+
+# url generation
+
+{
+  my $h = helpers({ host => 'ex.com', protocol => 'https' });
+  is $h.url-for('widget', 5), 'https://ex.com/widgets/5', 'url-for builds an absolute URL from default-url-options';
+}
+
+{
+  my $h = helpers({ host => 'ex.com', port => 3000 });
+  is $h.url-for('about'), 'http://ex.com:3000/about', 'url-for includes a non-default port';
+}
+
+{
+  my $h = helpers({ host => 'ex.com' });
+  is $h.url-for('about', host => 'other.com'), 'http://other.com/about', 'a per-call option overrides the default';
+}
+
+# helper injection via FALLBACK
+
+{
+  is helpers.widget-path(5), '/widgets/5', 'the *-path helper resolves through FALLBACK';
+}
+
+{
+  my $h = helpers({ host => 'ex.com' });
+  is $h.widgets-url, 'http://ex.com/widgets', 'the *-url helper resolves through FALLBACK';
+}
+
+# direct helpers
+
+{
+  is helpers.homepage-url, 'https://example.com', 'a direct helper returns its block result';
+}
+
+# polymorphic
+
+{
+  is helpers.polymorphic-path(Widget.new(:id(7))), '/widgets/7', 'a persisted record maps to its member path';
+}
+
+{
+  is helpers.polymorphic-path(Widget.new), '/widgets', 'a new record maps to the collection path';
+}
+
+{
+  is helpers.url-for(Widget.new(:id(3))), 'http:///widgets/3', 'url-for dispatches a record polymorphically';
+}
+
+# resolve
+
+{
+  is helpers.polymorphic-path(Basket.new), '/cart', 'a resolve mapping routes a record to a custom helper';
+}
+
+done-testing;

@@ -1,6 +1,8 @@
 use v6.d;
 use MVC::Keayl::Router;
 use MVC::Keayl::Routing::Resources;
+use MVC::Keayl::Routing::Redirect;
+use MVC::Keayl::Routing::Mount;
 
 unit module MVC::Keayl::Routing;
 
@@ -210,4 +212,21 @@ sub constraints(*@args, *%spec) is export {
 sub defaults(*@args, *%values) is export {
   my $block = @args.first(* ~~ Callable);
   with-context(current-context().merge(:defaults(%values)), $block);
+}
+
+sub redirect($location, Int :$status = 301) is export {
+  MVC::Keayl::Routing::Redirect.new(:$location, :$status)
+}
+
+sub mount($app, Str:D :$at!) is export {
+  current-router.add-route(<GET POST PUT PATCH DELETE OPTIONS HEAD>, $at ~ '(/*mounted_path)',
+    MVC::Keayl::Routing::Mount.new(:$app, :$at))
+}
+
+sub direct(Str:D $name, &block) is export {
+  current-router.add-direct($name, &block)
+}
+
+sub resolve(Str:D $class, &block) is export {
+  current-router.add-resolver($class, &block)
 }
