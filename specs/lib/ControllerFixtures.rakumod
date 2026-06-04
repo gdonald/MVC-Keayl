@@ -64,3 +64,21 @@ class RenderController is MVC::Keayl::Controller is export {
   }
 }
 
+class FlowController is MVC::Keayl::Controller is export {
+  method to-path      { self.redirect-to('/dashboard') }
+  method to-url       { self.redirect-to('https://example.com') }
+  method permanent    { self.redirect-to('/new', status => 301) }
+  method see-other    { self.redirect-to('/x', status => 'see-other') }
+  method go-back      { self.redirect-to(:back) }
+  method back-default { self.redirect-to(:back, fallback => '/home') }
+
+  method gone         { self.head(404) }
+  method made         { self.head('created', location => '/users/5') }
+  method empty        { self.head(204) }
+
+  method redirect-then-render {
+    self.redirect-to('/x');
+    self.render(plain => 'unreachable');
+  }
+}
+

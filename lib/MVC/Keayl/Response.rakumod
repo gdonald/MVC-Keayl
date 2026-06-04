@@ -4,6 +4,7 @@ unit class MVC::Keayl::Response;
 
 has Int $.status is rw;
 has     @!body-parts;
+has     $!binary-body;
 
 has %!headers;
 has @!header-order;
@@ -89,7 +90,7 @@ multi method location(--> Str)                { self.header('location') }
 multi method location(Str:D $value)           { self.set-header('Location', $value) }
 
 method content-length(--> Int) {
-  self.body.encode('utf-8').bytes
+  self!body-blob.bytes
 }
 
 method write(Str:D $chunk) {
@@ -98,13 +99,18 @@ method write(Str:D $chunk) {
 }
 
 multi method body(--> Str)              { @!body-parts.join }
-multi method body(Str:D $value)         { @!body-parts = [$value]; self }
+multi method body(Str:D $value)         { $!binary-body = Nil; @!body-parts = [$value]; self }
+multi method body(Blob:D $value)        { $!binary-body = $value; @!body-parts = []; self }
+
+method !body-blob(--> Blob) {
+  $!binary-body // self.body.encode('utf-8')
+}
 
 method finish(--> List) {
   self.set-header('Content-Type', 'text/html; charset=utf-8')
     unless self.has-header('content-type');
 
-  my $blob = self.body.encode('utf-8');
+  my $blob = self!body-blob;
   self.set-header('Content-Length', $blob.bytes.Str);
 
   ($!status, $(self!header-pairs), $($blob))

@@ -1,0 +1,66 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+# redirect-to
+
+{
+  my $response = FlowController.new.dispatch('to-path');
+  is $response.status, 302, 'redirect-to defaults to status 302';
+  is $response.header('Location'), '/dashboard', 'redirect-to sets the Location to a path';
+}
+
+{
+  is FlowController.new.dispatch('to-url').header('Location'), 'https://example.com', 'redirect-to accepts a full URL';
+}
+
+{
+  is FlowController.new.dispatch('permanent').status, 301, 'redirect-to honours a numeric status';
+}
+
+{
+  is FlowController.new.dispatch('see-other').status, 303, 'redirect-to accepts a named status';
+}
+
+# redirect back
+
+{
+  my $request = MVC::Keayl::Request.new(:headers({ Referer => '/previous' }));
+  is FlowController.new(:$request).dispatch('go-back').header('Location'), '/previous', 'redirect-to back uses the Referer';
+}
+
+{
+  my $request = MVC::Keayl::Request.new;
+  is FlowController.new(:$request).dispatch('back-default').header('Location'), '/home', 'redirect-to back falls back when there is no Referer';
+}
+
+# head
+
+{
+  my $response = FlowController.new.dispatch('gone');
+  is $response.status, 404, 'head sets the status';
+  is $response.body, '', 'head leaves the body empty';
+}
+
+{
+  my $response = FlowController.new.dispatch('made');
+  is $response.status, 201, 'head accepts a named status';
+  is $response.header('Location'), '/users/5', 'head sets named headers';
+}
+
+{
+  is FlowController.new.dispatch('empty').status, 204, 'head sets a no-content status';
+}
+
+# double render after redirect
+
+{
+  throws-like { FlowController.new.dispatch('redirect-then-render') }, Exception, message => /double/,
+    'rendering after a redirect raises a double-render error';
+}
+
+done-testing;

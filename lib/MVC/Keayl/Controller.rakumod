@@ -11,6 +11,68 @@ has      $.params = {};
 has      $.view-renderer;
 has Bool $!performed = False;
 
+my %STATUS-CODES =
+  ok => 200, created => 201, accepted => 202, 'no-content' => 204,
+  'moved-permanently' => 301, found => 302, 'see-other' => 303,
+  'not-modified' => 304, 'temporary-redirect' => 307,
+  'bad-request' => 400, unauthorized => 401, forbidden => 403,
+  'not-found' => 404, 'unprocessable-entity' => 422,
+  'internal-server-error' => 500;
+
+sub status-code($status --> Int) {
+  return $status if $status ~~ Int;
+  %STATUS-CODES{$status} // die "unknown status '$status'"
+}
+
+sub header-name(Str:D $key --> Str) {
+  $key.split(/<[-_]>/).map(*.tc).join('-')
+}
+
+my %MIME-TYPES =
+  html => 'text/html', htm => 'text/html', txt => 'text/plain',
+  css => 'text/css', js => 'application/javascript', json => 'application/json',
+  csv => 'text/csv', xml => 'application/xml',
+  png => 'image/png', jpg => 'image/jpeg', jpeg => 'image/jpeg',
+  gif => 'image/gif', svg => 'image/svg+xml',
+  pdf => 'application/pdf', zip => 'application/zip';
+
+sub mime-for(Str $extension --> Str) {
+  %MIME-TYPES{($extension // '').lc} // 'application/octet-stream'
+}
+
+sub content-disposition(Str:D $disposition, $filename --> Str) {
+  $filename.defined ?? "$disposition; filename=\"$filename\"" !! $disposition
+}
+
+# Parse a single-range `Range: bytes=...` header into a (start, end) pair, or
+# (Nil, Nil) when it is absent or unsatisfiable.
+sub parse-range($range, Int:D $total --> List) {
+  return (Nil, Nil) without $range;
+  return (Nil, Nil) unless $range ~~ /^ 'bytes=' (\d*) '-' (\d*) $/;
+
+  my $from = ~$0;
+  my $to   = ~$1;
+  my ($start, $end);
+
+  if $from ne '' && $to ne '' {
+    $start = +$from;
+    $end   = +$to;
+  } elsif $from ne '' {
+    $start = +$from;
+    $end   = $total - 1;
+  } elsif $to ne '' {
+    $start = $total - +$to;
+    $end   = $total - 1;
+  } else {
+    return (Nil, Nil);
+  }
+
+  $end = $total - 1 if $end > $total - 1;
+  return (Nil, Nil) if $start > $end || $start < 0;
+
+  ($start, $end)
+}
+
 method is-performed(--> Bool) {
   $!performed
 }
@@ -89,6 +151,69 @@ method render(*@positional, *%options --> MVC::Keayl::Response) {
   my $content-type = $explicit-ct // $default-ct;
   $!response.content-type($content-type) if $content-type.defined;
 
+  $!response.status = $status if $status.defined;
+
+  $!response
+}
+
+method redirect-to($location?, Bool :$back, Str :$fallback = '/', :$status = 302 --> MVC::Keayl::Response) {
+  die 'double render: a response was already rendered or redirected' if $!performed;
+  $!performed = True;
+
+  my $target = $back ?? (self.request.header('Referer') // $fallback) !! $location;
+
+  $!response.status = status-code($status);
+  $!response.location($target);
+
+  $!response
+}
+
+method head($status, *%headers --> MVC::Keayl::Response) {
+  die 'double render: a response was already rendered or redirected' if $!performed;
+  $!performed = True;
+
+  $!response.status = status-code($status);
+  $!response.set-header(header-name(.key), ~.value) for %headers;
+
+  $!response
+}
+
+method send-data($data, :$type, :$filename, Str :$disposition = 'attachment', :$status --> MVC::Keayl::Response) {
+  die 'double render: a response was already rendered or redirected' if $!performed;
+  $!performed = True;
+
+  $!response.content-type($type // 'application/octet-stream');
+  $!response.set-header('Content-Disposition', content-disposition($disposition, $filename));
+  $!response.body($data ~~ Blob ?? $data !! ~$data);
+  $!response.status = $status if $status.defined;
+
+  $!response
+}
+
+method send-file($path, :$type, :$filename, Str :$disposition = 'attachment', :$status --> MVC::Keayl::Response) {
+  die 'double render: a response was already rendered or redirected' if $!performed;
+  $!performed = True;
+
+  my $io    = $path.IO;
+  my $bytes = $io.slurp(:bin);
+  my $name  = $filename // $io.basename;
+
+  $!response.content-type($type // mime-for($io.extension));
+  $!response.set-header('Content-Disposition', content-disposition($disposition, $name));
+  $!response.set-header('Accept-Ranges', 'bytes');
+
+  with $!request {
+    my ($start, $end) = parse-range($!request.header('Range'), $bytes.bytes);
+
+    if $start.defined {
+      $!response.status = 206;
+      $!response.set-header('Content-Range', "bytes $start-$end/{$bytes.bytes}");
+      $!response.body($bytes.subbuf($start, $end - $start + 1));
+      return $!response;
+    }
+  }
+
+  $!response.body($bytes);
   $!response.status = $status if $status.defined;
 
   $!response

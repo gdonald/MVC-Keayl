@@ -120,3 +120,31 @@ When a renderer is configured, an action that does not render explicitly
 implicitly renders the template named after the action.
 
 Rendering twice raises a double-render error.
+
+## Redirects and head
+
+`redirect-to` sends a redirect with an empty body. It takes a path or URL, and an
+optional status (numeric or named, defaulting to 302). `:back` redirects to the
+`Referer`, with a fallback when there is none:
+
+```perl6
+self.redirect-to('/dashboard');
+self.redirect-to('https://example.com');
+self.redirect-to('/new', status => 301);
+self.redirect-to('/x', status => 'see-other');   # 303
+self.redirect-to(:back, fallback => '/home');
+```
+
+A named-route redirect is the path a URL helper produces, passed as the target.
+
+`head` sends a status and headers with no body. The status is numeric or named,
+and named arguments become headers (`location` becomes the `Location` header):
+
+```perl6
+self.head(204);
+self.head('not-found');
+self.head('created', location => '/users/5');
+```
+
+A redirect, like a render, marks the response performed, so a render or redirect
+after one raises a double-render error.
