@@ -1,0 +1,49 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+sub render-show {
+  HelperController.new(:view-renderer(StubRenderer.new)).dispatch('show').body
+}
+
+# helper-method and assigns surface to the template
+
+{
+  like render-show, /'current-user=Ada'/, 'a helper-method value is passed to the template';
+}
+
+{
+  like render-show, /'title=Hello'/, 'an assigned value is passed to the template';
+}
+
+# inherited helper from the ApplicationController pattern
+
+{
+  like render-show, /'site-name=Keayl'/, 'a helper-method inherited from a base controller is exposed';
+}
+
+# only registered helpers are exposed
+
+{
+  unlike render-show, /'show='/, 'an action method that is not a helper is not exposed';
+}
+
+# explicit locals override assigns
+
+{
+  my $body = HelperController.new(:view-renderer(StubRenderer.new)).dispatch('override-local').body;
+  like $body, /'title=from-locals'/, 'an explicit local overrides an assigned value';
+}
+
+# the assigns collection is readable
+
+{
+  my $controller = HelperController.new(:view-renderer(StubRenderer.new));
+  $controller.dispatch('show');
+  is $controller.assigns<title>, 'Hello', 'assigns are recorded on the controller';
+}
+
+done-testing;

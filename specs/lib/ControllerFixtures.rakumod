@@ -105,6 +105,26 @@ class FlowController is MVC::Keayl::Controller is export {
   }
 }
 
+class AppController is MVC::Keayl::Controller is export {
+  method site-name { 'Keayl' }
+}
+AppController.helper-method('site-name');
+
+class HelperController is AppController is export {
+  method current-user { 'Ada' }
+
+  method show {
+    self.assign('title', 'Hello');
+    self.render('page');
+  }
+
+  method override-local {
+    self.assign('title', 'from-assign');
+    self.render('page', locals => { title => 'from-locals' });
+  }
+}
+HelperController.helper-method('current-user');
+
 class StrongController is MVC::Keayl::Controller is export {
   method create {
     my $user = self.params.require('user').permit('name', 'email');

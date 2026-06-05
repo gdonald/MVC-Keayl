@@ -11,6 +11,7 @@ has MVC::Keayl::Request  $.request;
 has MVC::Keayl::Response $.response = MVC::Keayl::Response.new;
 has      $.params = MVC::Keayl::Parameters.new({});
 has      $.view-renderer;
+has      %!assigns;
 has Bool $!performed = False;
 
 my %STATUS-CODES =
@@ -82,6 +83,35 @@ my %skip-before{Mu};
 my %skip-after{Mu};
 my %skip-around{Mu};
 my %rescues{Mu};
+my %helper-methods{Mu};
+
+method helper-method(*@names --> ::?CLASS) {
+  (%helper-methods{self} //= []).append(@names.map(*.Str));
+  self
+}
+
+method assign(Str:D $name, $value --> ::?CLASS) {
+  %!assigns{$name} = $value;
+  self
+}
+
+method assigns(--> Hash) {
+  %!assigns
+}
+
+method !helper-method-names(--> List) {
+  my @names;
+  @names.append(|(%helper-methods{$_} // [])) for self.^mro.reverse;
+  @names.unique.List
+}
+
+method !view-locals(%explicit --> Hash) {
+  my %locals;
+  %locals{$_} = self."$_"() for self!helper-method-names;
+  %locals{.key} = .value for %!assigns;
+  %locals{.key} = .value for %explicit;
+  %locals
+}
 
 my @DEFAULT-RESCUES =
   %( type => X::MVC::Keayl::ParameterMissing,      handler => sub ($controller, $error) { $controller.head(400) } ),
@@ -291,9 +321,9 @@ method render(*@positional, *%options --> MVC::Keayl::Response) {
 
   my $status      = %options<status>:delete;
   my $explicit-ct = %options<content-type>:delete;
-  my $has-layout  = %options<layout>:exists;
-  my $layout      = %options<layout>:delete;
-  my %locals      = (%options<locals>:delete) // {};
+  my $has-layout      = %options<layout>:exists;
+  my $layout          = %options<layout>:delete;
+  my %explicit-locals = (%options<locals>:delete) // {};
 
   my $default-ct;
   my $body;
@@ -310,11 +340,13 @@ method render(*@positional, *%options --> MVC::Keayl::Response) {
   } elsif %options<body>:exists {
     $body = ~%options<body>;
   } elsif %options<inline>:exists {
+    my %locals = self!view-locals(%explicit-locals);
     $default-ct = 'text/html; charset=utf-8';
     $body = self!wrap(self.render-inline(~%options<inline>, %locals), $has-layout, $layout, %locals);
   } else {
     my $name = @positional[0] // %options<template> // %options<action>;
     with $name {
+      my %locals = self!view-locals(%explicit-locals);
       $default-ct = 'text/html; charset=utf-8';
       $body = self!wrap(self.render-template(~$name, %locals), $has-layout, $layout, %locals);
     }

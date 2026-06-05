@@ -263,3 +263,48 @@ The base controller ships default mappings: `X::MVC::Keayl::NotFound` becomes a
 404, and `X::MVC::Keayl::ParameterMissing` and
 `X::MVC::Keayl::UnpermittedParameters` become a 400. An exception with no matching
 handler propagates.
+
+## Helpers and shared state
+
+`helper-method` exposes a controller method to the template under its own name:
+
+```perl6
+class UsersController is MVC::Keayl::Controller {
+  method current-user { ... }
+}
+
+UsersController.helper-method('current-user');
+```
+
+`assign` records a value for the template:
+
+```perl6
+method show {
+  self.assign('title', 'Profile');
+  self.render('show');
+}
+```
+
+When an action renders, the template locals are built from the helper-method
+values, then the assigned values, then any explicit `locals` (which win). The
+recorded assigns are also readable through `self.assigns`.
+
+## The ApplicationController pattern
+
+Put shared callbacks, rescue handlers, and helpers on a base controller, and
+subclasses inherit them:
+
+```perl6
+class ApplicationController is MVC::Keayl::Controller {
+  method authenticate { ... }
+  method site-name { ... }
+}
+ApplicationController.before-action('authenticate');
+ApplicationController.helper-method('site-name');
+
+class UsersController is ApplicationController { ... }
+```
+
+Callbacks, `rescue-from` mappings, and `helper-method` declarations all collect
+across the inheritance chain, and a subclass can add to or override what it
+inherits.
