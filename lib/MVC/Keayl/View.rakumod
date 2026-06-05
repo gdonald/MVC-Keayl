@@ -1,5 +1,6 @@
 use v6.d;
 use MVC::Keayl::View::Handler::HAML;
+use MVC::Keayl::SafeString;
 
 unit class MVC::Keayl::View;
 
@@ -150,5 +151,9 @@ method !view-helpers(%locals, :$controller --> Hash) {
     partial      => -> $name, %opts?     { self.render-partial($name, (%opts // {}), :$controller) },
     partial_for  => -> $object, %opts?   { self.render-object($object, (%opts // {}), :$controller) },
     partial_each => -> $name, @items, *%opts { self.render-collection($name, @items, :$controller, |%opts) },
+    escape       => -> $value            { html-escape(~$value) },
+    raw          => -> $value            { ~$value },
+    sanitize     => -> $value, *%opts    { ~sanitize(~$value, |%opts) },
+    json         => -> $value            { json-escape(~$value) },
   )
 }

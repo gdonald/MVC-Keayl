@@ -32,6 +32,7 @@
     "MVC::Keayl::Params": "lib/MVC/Keayl/Params.rakumod",
     "MVC::Keayl::Request": "lib/MVC/Keayl/Request.rakumod",
     "MVC::Keayl::Response": "lib/MVC/Keayl/Response.rakumod",
+    "MVC::Keayl::SafeString": "lib/MVC/Keayl/SafeString.rakumod",
     "MVC::Keayl::View": "lib/MVC/Keayl/View.rakumod",
     "MVC::Keayl::View::Handler": "lib/MVC/Keayl/View/Handler.rakumod",
     "MVC::Keayl::View::Handler::HAML": "lib/MVC/Keayl/View/Handler/HAML.rakumod",

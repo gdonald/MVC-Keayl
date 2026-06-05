@@ -156,3 +156,34 @@ $view.render-collection('greetings/line', @lines, spacer => 'greetings/divider')
 ```
 
 A controller renders a collection with `render(:partial('line'), :collection(@lines))`.
+
+## Output safety
+
+HAML escapes interpolated values by default, so `= $value` is safe and `!= $value`
+emits raw HTML. `MVC::Keayl::SafeString` adds a safe-buffer type and helpers for
+composing and cleaning HTML.
+
+`html-escape` encodes the markup-significant characters. `html-safe` and `raw`
+wrap a string as a `SafeString`, which reports `is-html-safe` and stringifies to
+its raw content. Concatenation escapes anything that is not already safe:
+
+```perl6
+html-safe('<b>a</b>').concat('<unsafe>');     # <b>a</b>&lt;unsafe&gt;
+safe-join([html-safe('<b>a</b>'), '<x>']);    # <b>a</b>&lt;x&gt;
+```
+
+`sanitize` keeps an allowlist of tags and attributes, removes `script` and `style`
+elements with their content, and strips event-handler attributes and
+`javascript:` URLs:
+
+```perl6
+sanitize('<a href="javascript:x()" onclick="y()">hi</a>');   # <a>hi</a>
+sanitize('<b>ok</b>', tags => <b i em>);                     # custom allowlist
+```
+
+`json-escape` encodes the characters that could end a `<script>` block (`<`, `>`,
+`&`, and the line and paragraph separators) as `\uXXXX`, for embedding JSON in a
+script context.
+
+In templates these are available as the `escape`, `raw`, `sanitize`, and `json`
+helpers; pair `sanitize`/`raw` with `!=` so the cleaned HTML is not escaped again.

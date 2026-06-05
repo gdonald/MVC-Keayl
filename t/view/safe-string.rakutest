@@ -1,0 +1,92 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::SafeString;
+use MVC::Keayl::View;
+
+sub view { MVC::Keayl::View.new(:paths(['specs/lib/views'])) }
+
+# html-escape
+
+{
+  is html-escape(q{<a href="x">Tom & Jerry</a>}), '&lt;a href=&quot;x&quot;&gt;Tom &amp; Jerry&lt;/a&gt;',
+    'html-escape replaces the markup-significant characters';
+}
+
+{
+  is html-escape(q{it's}), 'it&#39;s', 'html-escape encodes single quotes';
+}
+
+# safe strings
+
+{
+  ok html-safe('<b>ok</b>').is-html-safe, 'html-safe marks a string as safe';
+}
+
+{
+  is html-safe('<b>ok</b>').Str, '<b>ok</b>', 'a safe string stringifies to its raw content';
+}
+
+{
+  is raw('<i>x</i>').Str, '<i>x</i>', 'raw returns a safe string';
+}
+
+# safe concatenation
+
+{
+  is safe-join([html-safe('<b>a</b>'), '<script>']).Str, '<b>a</b>&lt;script&gt;',
+    'safe-join keeps safe parts raw and escapes unsafe parts';
+}
+
+{
+  is html-safe('<x>').concat('<y>').Str, '<x>&lt;y&gt;',
+    'concatenating onto a safe string escapes the appended unsafe value';
+}
+
+# sanitize
+
+{
+  is sanitize('<script>alert(1)</script>hello').Str, 'hello', 'sanitize removes script elements and their content';
+}
+
+{
+  is sanitize('<b>bold</b> <blink>no</blink>').Str, '<b>bold</b> no', 'sanitize keeps allowed tags and strips disallowed ones';
+}
+
+{
+  is sanitize('<a href="/ok" onclick="evil()">link</a>').Str, '<a href="/ok">link</a>',
+    'sanitize drops event-handler attributes';
+}
+
+{
+  is sanitize('<a href="javascript:evil()">x</a>').Str, '<a>x</a>', 'sanitize strips a javascript: URL';
+}
+
+# json-escape
+
+{
+  is json-escape('</script>'), '\\u003c/script\\u003e', 'json-escape escapes angle brackets for a script context';
+}
+
+{
+  is json-escape('a & b'), 'a \\u0026 b', 'json-escape escapes ampersands';
+}
+
+# template integration
+
+{
+  my $out = view.render-template('greetings/safety', { danger => '<i>x</i>', markup => '<b>ok</b>' });
+  like $out, /'&lt;i&gt;x&lt;/i&gt;'/, 'a template escapes interpolated values by default';
+}
+
+{
+  my $out = view.render-template('greetings/safety', { danger => 'x', markup => '<b>ok</b><script>bad()</script>' });
+  like $out, /'<b>ok</b>'/, 'the sanitize helper keeps allowed markup';
+}
+
+{
+  my $out = view.render-template('greetings/safety', { danger => 'x', markup => '<b>ok</b><script>bad()</script>' });
+  unlike $out, /'bad()'/, 'the sanitize helper removes script content';
+}
+
+done-testing;
