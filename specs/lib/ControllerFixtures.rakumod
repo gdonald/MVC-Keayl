@@ -67,6 +67,19 @@ class StubRenderer is export {
   method layout-exists($name) {
     False
   }
+
+  method render-partial(Str $name, %locals, :$controller) {
+    my $locals = %locals ?? ' ' ~ %locals.sort(*.key).map({ .key ~ '=' ~ .value }).join(',') !! '';
+    'partial:' ~ $name ~ $locals
+  }
+
+  method render-object($object, %locals, :$controller) {
+    'object:' ~ $object.^name
+  }
+
+  method render-collection(Str $name, @collection, :$spacer, :$controller, *%locals) {
+    'collection:' ~ $name ~ '[' ~ @collection.elems ~ ']' ~ ($spacer.defined ?? ' spacer=' ~ $spacer !! '')
+  }
 }
 
 class RenderController is MVC::Keayl::Controller is export {

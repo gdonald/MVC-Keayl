@@ -97,3 +97,62 @@ with `yield`:
 
 `$yield()` returns the main body; `$yield(name)` returns the matching
 `content_for` capture, or an empty string when none was set.
+
+## Partials
+
+A partial is a template whose file name begins with an underscore. It is referred
+to without the underscore. `render-partial` renders one with locals:
+
+```perl6
+$view.render-partial('users/form', { user => $user });   # renders users/_form
+```
+
+A name with no path segment resolves under the controller's view path; a name
+with a `/` resolves from the views root, so `shared/menu` renders
+`shared/_menu` from any controller.
+
+Inside a template, the `partial` helper embeds a partial. Use `!=` so its HTML is
+not escaped:
+
+```haml
+%ul
+  != $partial('users/row', %( user => $user ))
+```
+
+### Object partials
+
+`render-object` derives the partial from an object. By default the partial name
+and the local both come from the object's class name; an object can override the
+path with a `to-partial-path` method:
+
+```perl6
+class Post {
+  method to-partial-path { 'posts/post' }   # renders posts/_post, local `post`
+}
+
+$view.render-object($post);                  # in a template: != $partial_for($post)
+```
+
+A controller renders an object directly with `render($post)`.
+
+### Collection partials
+
+`render-collection` renders a partial once per item. Each render receives the
+item under the partial's local name and a zero-based `{local}_counter`:
+
+```haml
+-# greetings/_line.html.haml
+%p= $line ~ ' #' ~ $line_counter
+```
+
+```haml
+!= $partial_each('greetings/line', $lines)
+```
+
+A `spacer` partial renders between items:
+
+```perl6
+$view.render-collection('greetings/line', @lines, spacer => 'greetings/divider');
+```
+
+A controller renders a collection with `render(:partial('line'), :collection(@lines))`.

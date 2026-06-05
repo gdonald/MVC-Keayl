@@ -314,6 +314,21 @@ method render-inline(Str:D $template, %locals --> Str) {
   $!view-renderer.render-inline($template, %locals, controller => self)
 }
 
+method render-partial(Str:D $name, %locals --> Str) {
+  die 'no view renderer configured' without $!view-renderer;
+  $!view-renderer.render-partial($name, %locals, controller => self)
+}
+
+method render-object($object, %locals --> Str) {
+  die 'no view renderer configured' without $!view-renderer;
+  $!view-renderer.render-object($object, %locals, controller => self)
+}
+
+method render-collection(Str:D $name, @collection, $spacer, %locals --> Str) {
+  die 'no view renderer configured' without $!view-renderer;
+  $!view-renderer.render-collection($name, @collection, spacer => $spacer, controller => self, |%locals)
+}
+
 method render-layout(Str:D $layout, Str:D $content, %locals --> Str) {
   die 'no view renderer configured' without $!view-renderer;
   $!view-renderer.render-layout($layout, $content, %locals, controller => self)
@@ -384,6 +399,19 @@ method render(*@positional, *%options --> MVC::Keayl::Response) {
     my %locals = self!view-locals(%explicit-locals);
     $default-ct = 'text/html; charset=utf-8';
     $body = self!wrap(self.render-inline(~%options<inline>, %locals), $effective-layout, %locals);
+  } elsif %options<partial>:exists {
+    my %locals = self!view-locals(%explicit-locals);
+    $default-ct = 'text/html; charset=utf-8';
+
+    if %options<collection>:exists {
+      $body = self.render-collection(~%options<partial>, (%options<collection>:delete).list, %options<spacer>:delete, %locals);
+    } else {
+      $body = self.render-partial(~%options<partial>, %locals);
+    }
+  } elsif @positional[0].defined && @positional[0] !~~ Str {
+    my %locals = self!view-locals(%explicit-locals);
+    $default-ct = 'text/html; charset=utf-8';
+    $body = self.render-object(@positional[0], %locals);
   } else {
     my $name = @positional[0] // %options<template> // %options<action>;
     with $name {

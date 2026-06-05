@@ -1,0 +1,93 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::View;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+class Post {
+  has $.title;
+  method to-partial-path { 'posts/post' }
+}
+
+class PartialController is MVC::Keayl::Controller {
+  method just-partial { self.render(:partial('form'), :locals({ id => 1 })) }
+  method object-render { self.render(Post.new(title => 'Hi')) }
+  method collection-render { self.render(:partial('post'), :collection([1, 2, 3])) }
+  method spaced-collection { self.render(:partial('post'), :collection([1, 2]), :spacer('divider')) }
+}
+
+sub view { MVC::Keayl::View.new(:paths(['specs/lib/views'])) }
+
+sub stubbed($action) {
+  PartialController.new(:view-renderer(StubRenderer.new)).dispatch($action).body
+}
+
+# named partial with locals
+
+{
+  is view.render-partial('greetings/item', { label => 'Hi' }).trim, '<li>Hi</li>',
+    'render-partial resolves a leading-underscore file and renders it with locals';
+}
+
+# shared partial across paths
+
+{
+  like view.render-partial('shared/menu', {}), /'Menu'/, 'a partial with a path segment resolves outside the controller path';
+}
+
+# partial embedded in a template
+
+{
+  like view.render-template('greetings/embeds', {}), /'<li>Embedded</li>'/, 'a template embeds a partial through the partial helper';
+}
+
+# object partial
+
+{
+  like view.render-object(Post.new(title => 'Hello')), /'<h2>Hello</h2>'/, 'render-object derives the partial path and local from the object';
+}
+
+# collection partial with counter
+
+{
+  my $out = view.render-collection('greetings/line', ['a', 'b']);
+  like $out, /'a-0'/, 'a collection partial exposes a zero-based counter for the first item';
+}
+
+{
+  my $out = view.render-collection('greetings/line', ['a', 'b']);
+  like $out, /'b-1'/, 'the counter increments across the collection';
+}
+
+# spacer template between collection items
+
+{
+  my $out = view.render-collection('greetings/line', ['a', 'b'], spacer => 'greetings/divider');
+  like $out, /'<hr'/, 'a spacer template renders between collection items';
+}
+
+# controller rendering a partial as the response
+
+{
+  is stubbed('just-partial'), 'partial:form id=1', 'a controller renders a partial as the response with locals';
+}
+
+# controller rendering an object
+
+{
+  ok stubbed('object-render').starts-with('object:'), 'a controller renders a bare object as an object partial';
+}
+
+# controller rendering a collection
+
+{
+  is stubbed('collection-render'), 'collection:post[3]', 'a controller renders a partial over a collection';
+}
+
+{
+  is stubbed('spaced-collection'), 'collection:post[2] spacer=divider', 'a controller passes a spacer template to a collection render';
+}
+
+done-testing;
