@@ -241,3 +241,25 @@ parameters permitted and keeps every key.
 Unpermitted keys are dropped. The action taken is configurable, globally with
 `MVC::Keayl::Parameters.unpermitted-action('raise')` or per call with
 `permit(..., :on-unpermitted<raise>)`, which raises instead of dropping.
+
+## Rescuing exceptions
+
+`rescue-from` maps an exception type to a handler, a method name or a block, that
+turns the exception into a response:
+
+```perl6
+class ArticlesController is MVC::Keayl::Controller {
+  method not-found($error) { self.head(404) }
+}
+
+ArticlesController.rescue-from(X::MVC::Keayl::NotFound, 'not-found');
+```
+
+Lookup is inheritance-aware: when more than one registered type matches a raised
+exception, the most specific handler wins. A subclass inherits its parents'
+mappings and can override them.
+
+The base controller ships default mappings: `X::MVC::Keayl::NotFound` becomes a
+404, and `X::MVC::Keayl::ParameterMissing` and
+`X::MVC::Keayl::UnpermittedParameters` become a 400. An exception with no matching
+handler propagates.

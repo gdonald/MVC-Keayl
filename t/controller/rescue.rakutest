@@ -1,0 +1,50 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+# default mappings
+
+{
+  is RescueController.new.dispatch('missing-record').status, 404,
+    'a NotFound error is rescued to 404 by default';
+}
+
+{
+  is RescueController.new.dispatch('missing-param').status, 400,
+    'a missing required param is rescued to 400 by default';
+}
+
+# rescue-from
+
+{
+  my $response = RescueController.new.dispatch('base-error');
+  is $response.status, 500, 'rescue-from invokes the registered handler';
+  is $response.body, 'base:base', 'the handler receives the exception';
+}
+
+# inheritance-aware lookup, most specific wins
+
+{
+  my $response = RescueController.new.dispatch('child-error');
+  is $response.status, 422, 'the most specific handler wins over a parent handler';
+  is $response.body, 'child:child', 'the specific handler runs for the derived exception';
+}
+
+# unhandled exceptions propagate
+
+{
+  throws-like { RescueController.new.dispatch('unhandled') }, X::Demo::Unhandled,
+    'an exception with no rescue handler propagates';
+}
+
+# a subclass can override a default mapping
+
+{
+  is OverrideRescueController.new.dispatch('missing-record').status, 410,
+    'a subclass rescue-from overrides an inherited default';
+}
+
+done-testing;

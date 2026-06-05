@@ -1,7 +1,30 @@
 use v6.d;
 use MVC::Keayl::Controller;
+use MVC::Keayl::Errors;
 
 unit module ControllerFixtures;
+
+class X::Demo::Base is Exception { method message(--> Str) { 'base' } }
+class X::Demo::Child is X::Demo::Base { method message(--> Str) { 'child' } }
+class X::Demo::Unhandled is Exception { method message(--> Str) { 'unhandled' } }
+
+class RescueController is MVC::Keayl::Controller is export {
+  method missing-record { X::MVC::Keayl::NotFound.new.throw }
+  method missing-param  { self.params.require('user') }
+  method base-error     { X::Demo::Base.new.throw }
+  method child-error    { X::Demo::Child.new.throw }
+  method unhandled      { X::Demo::Unhandled.new.throw }
+
+  method on-base($error)  { self.render(plain => 'base:' ~ $error.message, status => 500) }
+  method on-child($error) { self.render(plain => 'child:' ~ $error.message, status => 422) }
+}
+RescueController.rescue-from(X::Demo::Base, 'on-base');
+RescueController.rescue-from(X::Demo::Child, 'on-child');
+
+class OverrideRescueController is RescueController is export {
+  method on-missing($error) { self.head(410) }
+}
+OverrideRescueController.rescue-from(X::MVC::Keayl::NotFound, 'on-missing');
 
 class GreetController is MVC::Keayl::Controller is export {
   method index {

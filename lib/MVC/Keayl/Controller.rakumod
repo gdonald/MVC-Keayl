@@ -2,12 +2,14 @@ use v6.d;
 use JSON::Fast;
 use MVC::Keayl::Request;
 use MVC::Keayl::Response;
+use MVC::Keayl::Parameters;
+use MVC::Keayl::Errors;
 
 unit class MVC::Keayl::Controller;
 
 has MVC::Keayl::Request  $.request;
 has MVC::Keayl::Response $.response = MVC::Keayl::Response.new;
-has      $.params = {};
+has      $.params = MVC::Keayl::Parameters.new({});
 has      $.view-renderer;
 has Bool $!performed = False;
 
@@ -79,6 +81,17 @@ my %around-actions{Mu};
 my %skip-before{Mu};
 my %skip-after{Mu};
 my %skip-around{Mu};
+my %rescues{Mu};
+
+my @DEFAULT-RESCUES =
+  %( type => X::MVC::Keayl::ParameterMissing,      handler => sub ($controller, $error) { $controller.head(400) } ),
+  %( type => X::MVC::Keayl::UnpermittedParameters, handler => sub ($controller, $error) { $controller.head(400) } ),
+  %( type => X::MVC::Keayl::NotFound,              handler => sub ($controller, $error) { $controller.head(404) } );
+
+method rescue-from($type, $handler --> ::?CLASS) {
+  (%rescues{self} //= []).push: %( :$type, :$handler );
+  self
+}
 
 sub action-set($value) {
   return Nil without $value;
@@ -203,10 +216,51 @@ method !is-action(Str:D $name --> Bool) {
   self.^can($name).so && !$reserved{$name}
 }
 
+method !collect-rescues(--> List) {
+  my @entries;
+  @entries.push($_) for @DEFAULT-RESCUES;
+
+  for self.^mro.reverse -> $class {
+    @entries.push($_) for (%rescues{$class} // []).list;
+  }
+
+  @entries
+}
+
+method !rescue-handler-for($exception) {
+  my @mro = $exception.^mro.map(*.^name);
+  my %rank;
+  %rank{@mro[$_]} //= $_ for ^@mro;
+
+  my @matching = self!collect-rescues().grep({ %rank{$_<type>.^name}:exists });
+  return Nil unless @matching;
+
+  my $best = @matching.shift;
+  $best = $_ if %rank{$_<type>.^name} <= %rank{$best<type>.^name} for @matching;
+
+  $best<handler>
+}
+
+method !invoke-rescue($handler, $exception) {
+  $!performed = False;
+  $handler ~~ Callable ?? $handler(self, $exception) !! self."$handler"($exception);
+}
+
 method dispatch(Str:D $action --> MVC::Keayl::Response) {
   die "unknown action '$action'" unless self!is-action($action);
 
-  self!run-with-callbacks($action);
+  {
+    CATCH {
+      default {
+        my $exception = $_;
+        my $handler = self!rescue-handler-for($exception);
+        $exception.rethrow without $handler;
+        self!invoke-rescue($handler, $exception);
+      }
+    }
+
+    self!run-with-callbacks($action);
+  }
 
   $!response
 }
