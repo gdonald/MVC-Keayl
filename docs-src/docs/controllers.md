@@ -211,3 +211,33 @@ PublicController.skip-before-action('authenticate');
 
 A before or around callback that renders or redirects halts the chain: the action
 and the remaining callbacks do not run.
+
+## Strong parameters
+
+`require` and `permit` whitelist params before they reach the model. `require`
+returns the value at a key, raising when it is missing or empty. `permit` returns
+a new `Parameters` containing only the listed keys:
+
+```perl6
+my $attrs = self.params.require('user').permit('name', 'email');
+```
+
+`permit` accepts scalar keys, arrays (an empty-array spec), nested hashes, and
+arrays of hashes:
+
+```perl6
+self.params.require('user').permit(
+  'name', 'email',
+  roles   => [],              # an array of scalars
+  address => <street city>,   # a nested hash with these keys
+  tags    => <id name>,       # an array of hashes with these keys
+);
+```
+
+A value that is not a permitted scalar (a nested hash or array) is dropped unless
+it is permitted explicitly. `permit-all` is the escape hatch that marks the
+parameters permitted and keeps every key.
+
+Unpermitted keys are dropped. The action taken is configurable, globally with
+`MVC::Keayl::Parameters.unpermitted-action('raise')` or per call with
+`permit(..., :on-unpermitted<raise>)`, which raises instead of dropping.

@@ -82,6 +82,13 @@ class FlowController is MVC::Keayl::Controller is export {
   }
 }
 
+class StrongController is MVC::Keayl::Controller is export {
+  method create {
+    my $user = self.params.require('user').permit('name', 'email');
+    self.render(plain => $user<name> ~ ':' ~ ($user<admin> // 'no-admin'));
+  }
+}
+
 class CallbackController is MVC::Keayl::Controller is export {
   has @.trail;
 

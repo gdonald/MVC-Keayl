@@ -1,0 +1,106 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Parameters;
+use MVC::Keayl::Params;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+sub params(%store) {
+  MVC::Keayl::Parameters.new(%store)
+}
+
+# require
+
+{
+  my $user = params({ user => { name => 'Ada' } }).require('user');
+  isa-ok $user, MVC::Keayl::Parameters, 'require returns a Parameters for a nested value';
+  is $user<name>, 'Ada', 'require exposes the nested value';
+}
+
+{
+  is params({ id => '5' }).require('id'), '5', 'require returns a scalar value directly';
+}
+
+{
+  throws-like { params({}).require('user') }, X::MVC::Keayl::ParameterMissing,
+    'require raises when the key is absent';
+}
+
+{
+  throws-like { params({ user => '' }).require('user') }, X::MVC::Keayl::ParameterMissing,
+    'require raises when the value is empty';
+}
+
+# permit
+
+{
+  my $permitted = params({ name => 'Ada', email => 'a@b', admin => True }).permit('name', 'email');
+  is-deeply $permitted.Hash, { name => 'Ada', email => 'a@b' }, 'permit keeps only the listed scalar keys';
+}
+
+{
+  my $permitted = params({ name => 'Ada', role => { admin => True } }).permit('name', 'role');
+  nok $permitted<role>.defined, 'permit drops a hash value listed as a scalar';
+}
+
+{
+  my $permitted = params({ roles => ['a', 'b'] }).permit(roles => []);
+  is-deeply $permitted<roles>, ['a', 'b'], 'permit allows an array of scalars with an empty-array spec';
+}
+
+{
+  my $permitted = params({ address => { street => '1 Main', secret => 'z' } }).permit(address => <street>);
+  is-deeply $permitted<address>, { street => '1 Main' }, 'permit allows a nested hash with the listed keys';
+}
+
+{
+  my $permitted = MVC::Keayl::Parameters.new(parse-urlencoded('items[][name]=a&items[][qty]=1')).permit(items => <name>);
+  is $permitted<items>[0].keys.join(','), 'name', 'permit allows an array of hashes, dropping unlisted keys';
+}
+
+{
+  ok params({ name => 'Ada' }).permit('name').is-permitted, 'a permitted Parameters reports as permitted';
+}
+
+# permit-all
+
+{
+  my $all = params({ a => 1, b => 2 }).permit-all;
+  ok $all.is-permitted, 'permit-all marks the parameters permitted';
+  is $all.keys.sort.join(','), 'a,b', 'permit-all keeps every key';
+}
+
+# unpermitted handling
+
+{
+  is-deeply params({ name => 'x', danger => 'y' }).permit('name', :on-unpermitted<log>).Hash, { name => 'x' },
+    'unpermitted keys are dropped silently in log mode';
+}
+
+{
+  throws-like { params({ name => 'x', danger => 'y' }).permit('name', :on-unpermitted<raise>) },
+    X::MVC::Keayl::UnpermittedParameters, message => /danger/,
+    'in raise mode an unpermitted key raises';
+}
+
+{
+  is MVC::Keayl::Parameters.unpermitted-action, 'log', 'the unpermitted action defaults to log';
+}
+
+# controller integration
+
+{
+  my $request = MVC::Keayl::Request.new(
+    :method<POST>,
+    :headers({ 'Content-Type' => 'application/x-www-form-urlencoded' }),
+    :body('user[name]=Ada&user[admin]=1'),
+  );
+  my $controller = StrongController.new(:params(build-params({}, $request)));
+
+  is $controller.dispatch('create').body, 'Ada:no-admin', 'a controller permits the request params, dropping the rest';
+}
+
+done-testing;
