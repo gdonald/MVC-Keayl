@@ -84,6 +84,7 @@ my %skip-after{Mu};
 my %skip-around{Mu};
 my %rescues{Mu};
 my %helper-methods{Mu};
+my %controller-layouts{Mu};
 
 method helper-method(*@names --> ::?CLASS) {
   (%helper-methods{self} //= []).append(@names.map(*.Str));
@@ -318,8 +319,36 @@ method render-layout(Str:D $layout, Str:D $content, %locals --> Str) {
   $!view-renderer.render-layout($layout, $content, %locals, controller => self)
 }
 
-method !wrap(Str:D $content, Bool $has-layout, $layout, %locals --> Str) {
-  return $content unless $has-layout && $layout ~~ Str:D;
+method layout($name --> ::?CLASS) {
+  %controller-layouts{self} = $name;
+  self
+}
+
+method !controller-layout {
+  for self.^mro -> $class {
+    return %controller-layouts{$class} if %controller-layouts{$class}:exists;
+  }
+
+  Nil
+}
+
+method !default-layout-applies(--> Bool) {
+  $!view-renderer.defined
+    && $!view-renderer.^can('layout-exists')
+    && ?$!view-renderer.layout-exists('application')
+}
+
+method !effective-layout(Bool $has-layout, $layout) {
+  return $layout if $has-layout;
+
+  my $declared = self!controller-layout;
+  return $declared if $declared.defined;
+
+  self!default-layout-applies ?? 'application' !! False
+}
+
+method !wrap(Str:D $content, $layout, %locals --> Str) {
+  return $content unless $layout ~~ Str:D;
   self.render-layout($layout, $content, %locals)
 }
 
@@ -332,6 +361,10 @@ method render(*@positional, *%options --> MVC::Keayl::Response) {
   my $has-layout      = %options<layout>:exists;
   my $layout          = %options<layout>:delete;
   my %explicit-locals = (%options<locals>:delete) // {};
+
+  my $effective-layout = self!effective-layout($has-layout, $layout);
+
+  my $*KEAYL-CONTENT = {};
 
   my $default-ct;
   my $body;
@@ -350,13 +383,13 @@ method render(*@positional, *%options --> MVC::Keayl::Response) {
   } elsif %options<inline>:exists {
     my %locals = self!view-locals(%explicit-locals);
     $default-ct = 'text/html; charset=utf-8';
-    $body = self!wrap(self.render-inline(~%options<inline>, %locals), $has-layout, $layout, %locals);
+    $body = self!wrap(self.render-inline(~%options<inline>, %locals), $effective-layout, %locals);
   } else {
     my $name = @positional[0] // %options<template> // %options<action>;
     with $name {
       my %locals = self!view-locals(%explicit-locals);
       $default-ct = 'text/html; charset=utf-8';
-      $body = self!wrap(self.render-template(~$name, %locals), $has-layout, $layout, %locals);
+      $body = self!wrap(self.render-template(~$name, %locals), $effective-layout, %locals);
     }
   }
 

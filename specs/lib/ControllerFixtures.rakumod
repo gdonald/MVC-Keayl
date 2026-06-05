@@ -63,6 +63,10 @@ class StubRenderer is export {
   method render-layout(Str $layout, Str $content, %locals, :$controller) {
     'layout(' ~ $layout ~ '){' ~ $content ~ '}'
   }
+
+  method layout-exists($name) {
+    False
+  }
 }
 
 class RenderController is MVC::Keayl::Controller is export {

@@ -48,7 +48,52 @@ Setting `cache => False` disables caching so every render recompiles:
 my $view = MVC::Keayl::View.new(:paths(['app/views']), :!reload);   # trust the cache
 ```
 
-## Inline and layouts
+## Inline rendering
 
-`render-inline` renders a template string directly. `render-layout` renders a
-layout from `layouts/` with the wrapped content available as the `content` local.
+`render-inline` renders a template string directly, without resolving a file.
+
+## Layouts
+
+When an action renders a template, the rendered body is wrapped in a layout from
+`layouts/`. With no layout chosen, the `application` layout is used if it exists;
+otherwise the template renders on its own. Inside the layout, the wrapped body is
+available as the `content` local and through `yield`:
+
+```haml
+%html
+  %body
+    != $yield()
+```
+
+Choose a layout per action with the `:layout` option, or for every action of a
+controller with the class-level `layout` declaration:
+
+```perl6
+self.render('show', :layout('print'));   # this action only
+
+class AdminController is MVC::Keayl::Controller { }
+AdminController.layout('admin');          # every action
+
+self.render('show', :layout(False));      # no layout
+```
+
+An action-level `:layout` overrides a controller declaration, which overrides the
+`application` default.
+
+## content-for and yield
+
+A template captures named content with `content_for`, and the layout places it
+with `yield`:
+
+```haml
+-# in the template
+= $content_for('title', 'Dashboard')
+
+-# in the layout
+%title= $yield('title')
+%body
+  != $yield()
+```
+
+`$yield()` returns the main body; `$yield(name)` returns the matching
+`content_for` capture, or an empty string when none was set.

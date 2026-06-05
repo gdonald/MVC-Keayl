@@ -65,14 +65,35 @@ method render-template(Str:D $name, %locals, Str :$format, :$controller --> Str)
   die 'template not found: ' ~ $lookup ~ '.' ~ $fmt unless $file.defined && $file.e;
 
   my ($compiled, $handler) = self!compiled-for($file);
-  $handler.render($compiled, %locals)
+  $handler.render($compiled, self!template-locals(%locals))
 }
 
 method render-inline(Str:D $template, %locals, :$controller --> Str) {
   my $handler = %!handlers{$!default-handler} // die "no view handler '$!default-handler'";
-  $handler.render($handler.compile($template), %locals)
+  $handler.render($handler.compile($template), self!template-locals(%locals))
 }
 
 method render-layout(Str:D $layout, Str:D $content, %locals, :$controller --> Str) {
-  self.render-template('layouts/' ~ $layout, { %locals, content => $content }, :$controller)
+  my $file = self.resolve('layouts/' ~ $layout, $!default-format);
+  return $content unless $file.defined && $file.e;
+
+  my ($compiled, $handler) = self!compiled-for($file);
+  $handler.render($compiled, self!layout-locals(%locals, $content))
+}
+
+method layout-exists(Str:D $name --> Bool) {
+  my $file = self.resolve('layouts/' ~ $name, $!default-format);
+  $file.defined && $file.e
+}
+
+method !template-locals(%locals --> Hash) {
+  { %locals, content_for => -> $name, $value { $*KEAYL-CONTENT{$name} = $value; '' } }
+}
+
+method !layout-locals(%locals, Str:D $content --> Hash) {
+  {
+    %locals,
+    content => $content,
+    yield   => -> $name? { $name.defined ?? ($*KEAYL-CONTENT{$name} // '') !! $content },
+  }
 }
