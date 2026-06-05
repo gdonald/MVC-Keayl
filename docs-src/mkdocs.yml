@@ -9,6 +9,7 @@ nav:
   - Server adapters: adapters.md
   - Routing: routing.md
   - Controllers: controllers.md
+  - Views: views.md
 theme:
   name: 'material'
 markdown_extensions:

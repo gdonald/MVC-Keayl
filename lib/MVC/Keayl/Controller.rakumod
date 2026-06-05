@@ -237,6 +237,14 @@ method !run-with-callbacks(Str:D $action) {
   }
 }
 
+sub underscore(Str:D $word --> Str) {
+  $word.subst(/<?after .> <:Lu>/, { '_' ~ $/.Str }, :g).lc
+}
+
+method controller-path(--> Str) {
+  self.^name.subst(/^ 'GLOBAL::' /, '').subst(/'Controller'$/, '').split('::').map(&underscore).join('/')
+}
+
 method is-performed(--> Bool) {
   $!performed
 }

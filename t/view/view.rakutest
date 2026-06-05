@@ -1,0 +1,122 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::View;
+use MVC::Keayl::View::Handler;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+class CountingHandler does MVC::Keayl::View::Handler {
+  has $.compiles = 0;
+  method compile(Str:D $source) { $!compiles++; $source }
+  method render($compiled, %locals --> Str) { 'rendered:' ~ $compiled.trim }
+}
+
+class BlogPostsController is MVC::Keayl::Controller { }
+
+class GreetingsController is MVC::Keayl::Controller {
+  method show {
+    self.assign('name', 'Ada');
+    self.render('show');
+  }
+}
+
+sub view(*%opts) {
+  MVC::Keayl::View.new(:paths(['specs/lib/views']), |%opts)
+}
+
+# resolution
+
+{
+  is view.resolve('greetings/show', 'html').basename, 'show.html.haml',
+    'resolve finds a template by name, format, and handler extension';
+}
+
+{
+  nok view.resolve('greetings/missing', 'html').defined, 'resolve returns an undefined path when nothing matches';
+}
+
+# rendering through the HAML handler
+
+{
+  like view.render-template('greetings/show', { name => 'Ada' }), /'Hello, Ada'/,
+    'render-template renders a HAML template with locals';
+}
+
+# format precedence
+
+{
+  like view.render-template('greetings/show', { name => 'Ada' }, :format('txt')), /'Plain greeting'/,
+    'a different format resolves a different template';
+}
+
+# inline and layout
+
+{
+  like view.render-inline('%em Inline', {}), /'<em>Inline</em>'/, 'render-inline renders an inline template';
+}
+
+{
+  like view.render-layout('main', '<h1>body</h1>', {}), /'<h1>body</h1>'/, 'render-layout injects the content into the layout';
+}
+
+# pluggable handler registry
+
+{
+  my $view = view;
+  $view.register-handler('count', CountingHandler.new);
+  is $view.render-template('cached/widget', {}), 'rendered:WIDGET',
+    'a registered custom handler renders its templates';
+}
+
+# caching
+
+{
+  my $handler = CountingHandler.new;
+  my $view = view;
+  $view.register-handler('count', $handler);
+
+  $view.render-template('cached/widget', {});
+  $view.render-template('cached/widget', {});
+
+  is $handler.compiles, 1, 'a cached template is compiled once across renders';
+}
+
+{
+  my $handler = CountingHandler.new;
+  my $view = view(:cache(False));
+  $view.register-handler('count', $handler);
+
+  $view.render-template('cached/widget', {});
+  $view.render-template('cached/widget', {});
+
+  is $handler.compiles, 2, 'with caching off a template is compiled on each render';
+}
+
+# template not found
+
+{
+  throws-like { view.render-template('greetings/missing', {}) }, Exception, message => /missing/,
+    'rendering a missing template raises';
+}
+
+# controller path derivation
+
+{
+  is GreetingsController.new.controller-path, 'greetings', 'a controller path is derived from the class name';
+}
+
+{
+  is BlogPostsController.new.controller-path, 'blog_posts', 'a multi-word controller path is underscored';
+}
+
+# controller integration
+
+{
+  my $controller = GreetingsController.new(:view-renderer(view));
+  like $controller.dispatch('show').body, /'Hello, Ada'/,
+    'a controller renders a template resolved from its controller path';
+}
+
+done-testing;

@@ -23,3 +23,4 @@ default adapter built on [Cro](https://cro.raku.org/).
 - [Server adapters](adapters.md): the abstract adapter contract, plus the Cro and in-memory test adapters.
 - [Routing](routing.md): the routes file DSL and request recognition.
 - [Controllers](controllers.md): the base controller, per-request state, and action dispatch.
+- [Views](views.md): template resolution, handlers, and caching.
