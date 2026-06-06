@@ -17,6 +17,37 @@ tag('input', %( type => 'text', disabled => True )); # <input disabled type="tex
 
 String content is escaped; a `SafeString` is emitted as-is.
 
+### Nested data and aria attributes
+
+A `data` or `aria` value that is a hash expands to dasherized attributes, and a
+structured value is JSON encoded:
+
+```perl6
+content-tag('div', 'x', %( data => %( user_id => 5, toggle => 'modal' ) ));
+# <div data-toggle="modal" data-user-id="5">x</div>
+
+content-tag('div', 'x', %( data => %( ids => [1, 2] ) ));
+# <div data-ids="[1,2]">x</div>
+```
+
+`data-attributes` builds the same dasherized keys as a hash for merging into
+other attributes.
+
+### Class helper
+
+A `class` attribute accepts an array of tokens or a hash of conditional tokens,
+and `class-names` builds the same token list on its own:
+
+```perl6
+tag('span', %( class => ['a', 'b'] ));                       # class="a b"
+content-tag('div', 'x', %( class => %( active => $on ) ));   # class="active" when $on
+
+class-names('btn', %( active => True, disabled => False ));  # "btn active"
+class-names(['a', 'b'], 'a', 'c');                           # "a b c"
+```
+
+Falsy and duplicate tokens are dropped, and an empty class attribute is omitted.
+
 ## URL helpers
 
 `url-for` turns a target into a URL string. It passes a string through and reads

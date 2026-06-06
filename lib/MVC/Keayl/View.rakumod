@@ -164,6 +164,8 @@ method !view-helpers(%locals, :$controller --> Hash) {
     url_for      => -> $target                 { url-for($target) },
     tag          => -> $name, %opts?           { ~tag($name, (%opts // {})) },
     content_tag  => -> $name, $inner?, %opts?  { ~content-tag($name, $inner, (%opts // {})) },
+    class_names  => -> *@tokens                { class-names(|@tokens) },
+    data_attributes => -> %data                { data-attributes(%data) },
     image_tag    => -> $source, %opts?         { ~image-tag($source, (%opts // {}), :resolver(&!asset-resolver)) },
     asset_path   => -> $source, %opts?         { asset-path($source, :resolver(&!asset-resolver), |(%opts // {})) },
     stylesheet_link_tag    => -> *@sources, *%opts { ~stylesheet-link-tag(|@sources, :resolver(&!asset-resolver), |%opts) },

@@ -1,0 +1,81 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Helpers::Tag;
+
+# boolean and omitted attributes
+
+{
+  is tag('input', %( type => 'text', checked => True, name => 'q' )).Str, '<input checked name="q" type="text" />',
+    'a true attribute renders as a bare name';
+}
+
+{
+  is tag('input', %( type => 'text', checked => False )).Str, '<input type="text" />', 'a false attribute is omitted';
+}
+
+# nested data attributes
+
+{
+  is content-tag('div', 'x', %( data => %( user_id => 5, toggle => 'modal' ) )).Str,
+    '<div data-toggle="modal" data-user-id="5">x</div>', 'a data hash expands to dasherized data attributes';
+}
+
+# nested aria attributes
+
+{
+  is content-tag('button', 'Go', %( aria => %( label => 'Go', expanded => 'false' ) )).Str,
+    '<button aria-expanded="false" aria-label="Go">Go</button>', 'an aria hash expands to aria attributes';
+}
+
+# structured data value
+
+{
+  like content-tag('div', 'x', %( data => %( ids => [1, 2] ) )).Str, /'data-ids="[1,2]"'/,
+    'a structured data value is JSON encoded';
+}
+
+# class as an array
+
+{
+  is tag('span', %( class => ['a', 'b'] )).Str, '<span class="a b" />', 'a class array joins into a class attribute';
+}
+
+# class as a conditional hash
+
+{
+  is content-tag('div', 'x', %( class => %( active => True, off => False ) )).Str, '<div class="active">x</div>',
+    'a class hash keeps the keys whose conditions are true';
+}
+
+# empty class is omitted
+
+{
+  is tag('span', %( class => %( off => False ) )).Str, '<span />', 'an empty class attribute is omitted';
+}
+
+# class-names helper
+
+{
+  is class-names('btn', 'btn-primary'), 'btn btn-primary', 'class-names joins string tokens';
+}
+
+{
+  is class-names('btn', %( active => True, disabled => False )), 'btn active', 'class-names applies conditional tokens';
+}
+
+{
+  is class-names('a', 'a', 'b'), 'a b', 'class-names removes duplicates';
+}
+
+{
+  is class-names(['a', 'b'], 'c'), 'a b c', 'class-names flattens nested token lists';
+}
+
+# data-attributes helper
+
+{
+  is data-attributes(%( user_id => 1 )), %( 'data-user-id' => 1 ), 'data-attributes builds dasherized data keys';
+}
+
+done-testing;
