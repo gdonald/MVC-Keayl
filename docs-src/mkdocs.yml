@@ -12,6 +12,7 @@ nav:
   - Views: views.md
   - View helpers: helpers.md
   - Cookies: cookies.md
+  - Sessions: sessions.md
 theme:
   name: 'material'
 markdown_extensions:

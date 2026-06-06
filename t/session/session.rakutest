@@ -1,0 +1,151 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Session;
+use MVC::Keayl::Cookies;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Request;
+
+# indifferent access
+
+{
+  my $session = MVC::Keayl::Session.new;
+  $session<user-id> = 7;
+  is $session{'user-id'}, 7, 'a session value is read back with an equivalent key';
+}
+
+{
+  my $session = MVC::Keayl::Session.new;
+  $session{42} = 'x';
+  is $session<42>, 'x', 'session keys are coerced to strings for indifferent access';
+}
+
+{
+  my $session = MVC::Keayl::Session.new;
+  nok $session.dirty, 'a fresh session is not dirty';
+}
+
+{
+  my $session = MVC::Keayl::Session.new;
+  $session<a> = 1;
+  ok $session.dirty, 'writing a value marks the session dirty';
+}
+
+# cookie store round-trip via a signed cookie
+
+sub controller-cookies(*%args) { MVC::Keayl::Cookies.new(|%args) }
+
+{
+  my $store   = MVC::Keayl::Session::CookieStore.new;
+  my $cookies = controller-cookies(secret => 'k');
+  my $session = MVC::Keayl::Session.new(data => $store.load($cookies));
+
+  $session<user-id> = 99;
+  $store.commit($cookies, $session);
+
+  my $next-cookies = MVC::Keayl::Cookies.parse($cookies.set-cookie-headers[0], secret => 'k');
+  my $loaded = MVC::Keayl::Session.new(data => $store.load($next-cookies));
+
+  is $loaded<user-id>, 99, 'a cookie-stored session round-trips through a signed cookie';
+}
+
+{
+  my $store   = MVC::Keayl::Session::CookieStore.new;
+  my $cookies = controller-cookies(secret => 'k');
+  my $session = MVC::Keayl::Session.new;
+
+  $store.commit($cookies, $session);
+  is $cookies.set-cookie-headers.elems, 0, 'an untouched session writes no cookie';
+}
+
+{
+  my $store   = MVC::Keayl::Session::CookieStore.new;
+  my $cookies = controller-cookies(secret => 'k');
+  my $session = MVC::Keayl::Session.new(data => %( a => 1 ));
+
+  $session.reset;
+  $store.commit($cookies, $session);
+
+  like $cookies.set-cookie-headers[0], /'Max-Age=0'/, 'resetting to an empty session deletes the cookie';
+}
+
+# encrypted cookie store keeps the contents confidential
+
+{
+  my $store   = MVC::Keayl::Session::CookieStore.new(serializer => 'encrypted');
+  my $cookies = controller-cookies(secret => 'k');
+  my $session = MVC::Keayl::Session.new;
+
+  $session<token> = 'super-secret';
+  $store.commit($cookies, $session);
+
+  unlike $cookies.set-cookie-headers[0], /'super-secret'/, 'an encrypted session does not expose its contents';
+}
+
+# pluggable server-side store
+
+{
+  my $backend = MVC::Keayl::Session::MemoryBackend.new;
+  my $store   = MVC::Keayl::Session::ServerSideStore.new(:$backend);
+  my $cookies = controller-cookies(secret => 'k');
+
+  my $session = MVC::Keayl::Session.new(data => $store.load($cookies));
+  $session<role> = 'admin';
+  $store.commit($cookies, $session);
+
+  is $backend.sessions.values.elems, 1, 'a server-side store writes the data to its backend';
+}
+
+{
+  my $backend = MVC::Keayl::Session::MemoryBackend.new;
+  my $store   = MVC::Keayl::Session::ServerSideStore.new(:$backend);
+  my $cookies = controller-cookies(secret => 'k');
+
+  my $session = MVC::Keayl::Session.new(data => $store.load($cookies));
+  $session<role> = 'admin';
+  $store.commit($cookies, $session);
+
+  unlike $cookies.set-cookie-headers[0], /admin/, 'a server-side store keeps the data out of the cookie';
+}
+
+{
+  my $backend = MVC::Keayl::Session::MemoryBackend.new;
+  my $store   = MVC::Keayl::Session::ServerSideStore.new(:$backend);
+  my $cookies = controller-cookies(secret => 'k');
+
+  my $session = MVC::Keayl::Session.new(data => $store.load($cookies));
+  $session<role> = 'admin';
+  $store.commit($cookies, $session);
+
+  my $next-cookies = MVC::Keayl::Cookies.parse($cookies.set-cookie-headers[0], secret => 'k');
+  is $store.load($next-cookies)<role>, 'admin', 'a server-side session is reloaded by its id';
+}
+
+# controller integration
+
+{
+  my class LoginController is MVC::Keayl::Controller {
+    method create {
+      self.session<user-id> = 7;
+      self.render(:plain('in'));
+    }
+  }
+
+  my $response = LoginController.new.dispatch('create');
+  like $response.header('Set-Cookie'), /'_session='/, 'a controller persists the session as a cookie';
+}
+
+{
+  my class ResetController is MVC::Keayl::Controller {
+    method logout {
+      self.session<user-id> = 7;
+      self.reset-session;
+      self.render(:plain('out'));
+    }
+  }
+
+  my $response = ResetController.new.dispatch('logout');
+  like $response.header('Set-Cookie'), /'Max-Age=0'/, 'reset-session clears the session cookie';
+}
+
+done-testing;
