@@ -30,3 +30,5 @@ default adapter built on [Cro](https://cro.raku.org/).
 - [Flash](flash.md): short messages that survive one redirect.
 - [CSRF protection](csrf.md): authenticity tokens and forgery protection.
 - [Parameter filtering](parameter-filtering.md): redacting sensitive parameters for logs.
+- [Transport & host security](transport-security.md): SSL, host authorization, and secure headers.
+- [Secrets](secrets.md): secret resolution and key derivation.

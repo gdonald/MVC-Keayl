@@ -16,6 +16,8 @@ nav:
   - Flash: flash.md
   - CSRF protection: csrf.md
   - Parameter filtering: parameter-filtering.md
+  - Transport & host security: transport-security.md
+  - Secrets: secrets.md
 theme:
   name: 'material'
 markdown_extensions:

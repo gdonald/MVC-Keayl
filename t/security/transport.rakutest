@@ -1,0 +1,119 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Endpoint;
+use MVC::Keayl::Request;
+use MVC::Keayl::Response;
+use MVC::Keayl::Middleware::SSL;
+use MVC::Keayl::Middleware::HostAuthorization;
+use MVC::Keayl::Middleware::SecureHeaders;
+
+class StubApp does MVC::Keayl::Endpoint {
+  has @.preset-headers;
+  method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
+    my $response = MVC::Keayl::Response.new;
+    $response.status = 200;
+    $response.body('app');
+    $response.add-header(.key, .value) for @!preset-headers;
+    $response
+  }
+}
+
+sub request(*%args) { MVC::Keayl::Request.new(|%args) }
+sub https-headers(%extra = {}) { %( 'x-forwarded-proto' => 'https', |%extra ) }
+
+# SSL: redirect plain requests
+
+{
+  my $ssl = MVC::Keayl::Middleware::SSL.new(app => StubApp.new);
+  my $response = $ssl.call(request(method => 'GET', path => '/dashboard', headers => %( host => 'example.com' )));
+  is $response.status, 301, 'a plain GET is redirected with 301';
+}
+
+{
+  my $ssl = MVC::Keayl::Middleware::SSL.new(app => StubApp.new);
+  my $response = $ssl.call(request(method => 'GET', path => '/dashboard', query-string => 'a=1', headers => %( host => 'example.com' )));
+  is $response.header('Location'), 'https://example.com/dashboard?a=1', 'the redirect preserves host, path, and query';
+}
+
+{
+  my $ssl = MVC::Keayl::Middleware::SSL.new(app => StubApp.new);
+  my $response = $ssl.call(request(method => 'POST', path => '/x', headers => %( host => 'example.com' )));
+  is $response.status, 307, 'a plain POST is redirected with 307 to preserve the method';
+}
+
+# SSL: HSTS on secure requests
+
+{
+  my $ssl = MVC::Keayl::Middleware::SSL.new(app => StubApp.new);
+  my $response = $ssl.call(request(method => 'GET', path => '/', headers => https-headers));
+  is $response.body, 'app', 'a secure request reaches the app';
+}
+
+{
+  my $ssl = MVC::Keayl::Middleware::SSL.new(app => StubApp.new);
+  my $response = $ssl.call(request(method => 'GET', path => '/', headers => https-headers));
+  is $response.header('Strict-Transport-Security'), 'max-age=31536000; includeSubDomains', 'a secure response gets an HSTS header';
+}
+
+{
+  my $ssl = MVC::Keayl::Middleware::SSL.new(app => StubApp.new, hsts => False);
+  my $response = $ssl.call(request(method => 'GET', path => '/', headers => https-headers));
+  nok $response.has-header('Strict-Transport-Security'), 'HSTS can be disabled';
+}
+
+# Host authorization
+
+{
+  my $guard = MVC::Keayl::Middleware::HostAuthorization.new(app => StubApp.new, allowed => ['example.com']);
+  is $guard.call(request(headers => %( host => 'example.com' ))).status, 200, 'an allowed host is permitted';
+}
+
+{
+  my $guard = MVC::Keayl::Middleware::HostAuthorization.new(app => StubApp.new, allowed => ['example.com']);
+  is $guard.call(request(headers => %( host => 'evil.com' ))).status, 403, 'a disallowed host is blocked';
+}
+
+{
+  my $guard = MVC::Keayl::Middleware::HostAuthorization.new(app => StubApp.new, allowed => ['.example.com']);
+  is $guard.call(request(headers => %( host => 'api.example.com' ))).status, 200, 'a leading-dot entry matches subdomains';
+}
+
+{
+  my $guard = MVC::Keayl::Middleware::HostAuthorization.new(app => StubApp.new, allowed => [/example/]);
+  is $guard.call(request(headers => %( host => 'staging.example.com' ))).status, 200, 'a regex entry matches hosts';
+}
+
+{
+  my $guard = MVC::Keayl::Middleware::HostAuthorization.new(app => StubApp.new);
+  is $guard.call(request(headers => %( host => 'anything.com' ))).status, 200, 'an empty allowlist permits any host';
+}
+
+# Secure headers
+
+{
+  my $secure = MVC::Keayl::Middleware::SecureHeaders.new(app => StubApp.new);
+  is $secure.call(request).header('X-Frame-Options'), 'SAMEORIGIN', 'default secure headers are applied';
+}
+
+{
+  my $secure = MVC::Keayl::Middleware::SecureHeaders.new(app => StubApp.new);
+  is $secure.call(request).header('X-Content-Type-Options'), 'nosniff', 'the nosniff header is applied';
+}
+
+{
+  my $secure = MVC::Keayl::Middleware::SecureHeaders.new(app => StubApp.new(preset-headers => ['X-Frame-Options' => 'DENY']));
+  is $secure.call(request).header('X-Frame-Options'), 'DENY', 'an app-set header is not overridden';
+}
+
+{
+  my $secure = MVC::Keayl::Middleware::SecureHeaders.new(app => StubApp.new, also => %( 'Content-Security-Policy' => "default-src 'self'" ));
+  is $secure.call(request).header('Content-Security-Policy'), "default-src 'self'", 'an extra header is added';
+}
+
+{
+  my $secure = MVC::Keayl::Middleware::SecureHeaders.new(app => StubApp.new, also => %( 'X-Frame-Options' => Nil ));
+  nok $secure.call(request).has-header('X-Frame-Options'), 'a default header can be removed';
+}
+
+done-testing;
