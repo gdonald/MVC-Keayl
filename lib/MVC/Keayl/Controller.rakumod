@@ -7,6 +7,7 @@ use MVC::Keayl::Errors;
 use MVC::Keayl::Cookies;
 use MVC::Keayl::Session;
 use MVC::Keayl::Flash;
+use MVC::Keayl::CSRF;
 
 unit class MVC::Keayl::Controller;
 
@@ -93,6 +94,7 @@ my %skip-around{Mu};
 my %rescues{Mu};
 my %helper-methods{Mu};
 my %controller-layouts{Mu};
+my %forgery-strategy{Mu};
 
 method helper-method(*@names --> ::?CLASS) {
   (%helper-methods{self} //= []).append(@names.map(*.Str));
@@ -126,7 +128,8 @@ method !view-locals(%explicit --> Hash) {
 my @DEFAULT-RESCUES =
   %( type => X::MVC::Keayl::ParameterMissing,      handler => sub ($controller, $error) { $controller.head(400) } ),
   %( type => X::MVC::Keayl::UnpermittedParameters, handler => sub ($controller, $error) { $controller.head(400) } ),
-  %( type => X::MVC::Keayl::NotFound,              handler => sub ($controller, $error) { $controller.head(404) } );
+  %( type => X::MVC::Keayl::NotFound,              handler => sub ($controller, $error) { $controller.head(404) } ),
+  %( type => X::MVC::Keayl::InvalidAuthenticityToken, handler => sub ($controller, $error) { $controller.head(422) } );
 
 method rescue-from($type, $handler --> ::?CLASS) {
   (%rescues{self} //= []).push: %( :$type, :$handler );
@@ -351,6 +354,64 @@ method !commit-flash {
 method !commit-session {
   return without $!session;
   $!session-store.commit(self.cookies, $!session);
+}
+
+method protect-from-forgery(:$with = 'exception' --> ::?CLASS) {
+  %forgery-strategy{self} = $with;
+  self.before-action('verify-authenticity-token');
+  self
+}
+
+method skip-forgery-protection(:$only, :$except --> ::?CLASS) {
+  self.skip-before-action('verify-authenticity-token', :$only, :$except);
+  self
+}
+
+method !forgery-strategy(--> Str) {
+  for self.^mro -> $class {
+    return %forgery-strategy{$class} if %forgery-strategy{$class}:exists;
+  }
+
+  'exception'
+}
+
+method csrf-token(--> Str) {
+  my $real = self.session<_csrf_token>;
+
+  without $real {
+    $real = generate-token();
+    self.session<_csrf_token> = $real;
+  }
+
+  mask-token($real)
+}
+
+method verify-authenticity-token {
+  return if self!request-safe;
+  return if self!valid-authenticity-token;
+  self!handle-unverified-request;
+}
+
+method !request-safe(--> Bool) {
+  return True without $!request;
+  ($!request.method // 'GET').uc (elem) <GET HEAD OPTIONS TRACE>
+}
+
+method !valid-authenticity-token(--> Bool) {
+  my $real = self.session<_csrf_token>;
+  return False without $real;
+
+  my $submitted = self.params<authenticity_token>
+    // ($!request.defined ?? $!request.header('X-CSRF-Token') !! Str);
+
+  valid-token($submitted, $real)
+}
+
+method !handle-unverified-request {
+  given self!forgery-strategy {
+    when 'null-session' | 'reset-session' { self.reset-session }
+    default                               { die X::MVC::Keayl::InvalidAuthenticityToken.new }
+  }
 }
 
 method !flush-cookies {

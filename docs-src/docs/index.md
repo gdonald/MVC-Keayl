@@ -28,3 +28,4 @@ default adapter built on [Cro](https://cro.raku.org/).
 - [Cookies](cookies.md): the cookie jar with signed and encrypted variants.
 - [Sessions](sessions.md): the session abstraction with cookie and server-side stores.
 - [Flash](flash.md): short messages that survive one redirect.
+- [CSRF protection](csrf.md): authenticity tokens and forgery protection.

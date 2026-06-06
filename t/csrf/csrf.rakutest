@@ -1,0 +1,134 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::CSRF;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Request;
+use MVC::Keayl::Parameters;
+
+# token generation and masking
+
+{
+  my $real = generate-token();
+  isnt mask-token($real), mask-token($real), 'each masked token is different';
+}
+
+{
+  my $real = generate-token();
+  ok valid-token(mask-token($real), $real), 'a masked token validates against its real token';
+}
+
+{
+  my $real = generate-token();
+  ok valid-token($real, $real), 'an unmasked token validates against itself';
+}
+
+{
+  my $real  = generate-token();
+  my $other = generate-token();
+  nok valid-token(mask-token($other), $real), 'a masked token from another real token is rejected';
+}
+
+{
+  my $real = generate-token();
+  nok valid-token('garbage', $real), 'a malformed token is rejected';
+}
+
+# controllers
+
+my class ProtectedController is MVC::Keayl::Controller {
+  method create { self.render(:plain('created')) }
+  method index  { self.render(:plain('listed')) }
+}
+ProtectedController.protect-from-forgery;
+
+my class ResetController is MVC::Keayl::Controller {
+  method create { self.render(:plain('proceeded')) }
+}
+ResetController.protect-from-forgery(with => 'reset-session');
+
+my class ApiController is MVC::Keayl::Controller {
+  method create { self.render(:plain('api ok')) }
+}
+ApiController.protect-from-forgery;
+ApiController.skip-forgery-protection(only => ['create']);
+
+sub posting($class, %params, *%request) {
+  my $controller = $class.new(
+    secret  => 'k',
+    request => MVC::Keayl::Request.new(method => 'POST', |%request),
+    params  => MVC::Keayl::Parameters.new(%params),
+  );
+  $controller
+}
+
+# verification on unsafe verbs
+
+{
+  my $real = generate-token();
+  my $controller = posting(ProtectedController, %( authenticity_token => mask-token($real) ));
+  $controller.session<_csrf_token> = $real;
+
+  is $controller.dispatch('create').body, 'created', 'a POST with a valid token runs the action';
+}
+
+{
+  my $real = generate-token();
+  my $controller = posting(ProtectedController, %( authenticity_token => mask-token(generate-token()) ));
+  $controller.session<_csrf_token> = $real;
+
+  is $controller.dispatch('create').status, 422, 'a POST with an invalid token is rejected with 422';
+}
+
+# token from a request header
+
+{
+  my $real = generate-token();
+  my $controller = ProtectedController.new(
+    secret  => 'k',
+    request => MVC::Keayl::Request.new(method => 'POST', headers => %( 'x-csrf-token' => mask-token($real) )),
+  );
+  $controller.session<_csrf_token> = $real;
+
+  is $controller.dispatch('create').body, 'created', 'a POST with a token in the X-CSRF-Token header runs the action';
+}
+
+# safe verbs are not checked
+
+{
+  my $controller = ProtectedController.new(
+    secret  => 'k',
+    request => MVC::Keayl::Request.new(method => 'GET'),
+  );
+
+  is $controller.dispatch('index').body, 'listed', 'a GET is not checked for a token';
+}
+
+# reset-session strategy proceeds without raising
+
+{
+  my $real = generate-token();
+  my $controller = posting(ResetController, %( authenticity_token => 'bad' ));
+  $controller.session<_csrf_token> = $real;
+
+  is $controller.dispatch('create').body, 'proceeded', 'the reset-session strategy lets the request proceed';
+}
+
+# per-action skip
+
+{
+  my $controller = posting(ApiController, %());
+
+  is $controller.dispatch('create').body, 'api ok', 'a skipped action runs without a token';
+}
+
+# csrf-token persists a real token in the session
+
+{
+  my $controller = ProtectedController.new(secret => 'k');
+  my $masked = $controller.csrf-token;
+
+  ok valid-token($masked, $controller.session<_csrf_token>), 'csrf-token returns a masked token for the session real token';
+}
+
+done-testing;

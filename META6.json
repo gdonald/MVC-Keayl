@@ -29,6 +29,7 @@
     "MVC::Keayl::Adapter::Test": "lib/MVC/Keayl/Adapter/Test.rakumod",
     "MVC::Keayl::Controller": "lib/MVC/Keayl/Controller.rakumod",
     "MVC::Keayl::Cookies": "lib/MVC/Keayl/Cookies.rakumod",
+    "MVC::Keayl::CSRF": "lib/MVC/Keayl/CSRF.rakumod",
     "MVC::Keayl::Endpoint": "lib/MVC/Keayl/Endpoint.rakumod",
     "MVC::Keayl::Errors": "lib/MVC/Keayl/Errors.rakumod",
     "MVC::Keayl::Flash": "lib/MVC/Keayl/Flash.rakumod",
