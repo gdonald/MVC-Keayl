@@ -25,3 +25,4 @@ default adapter built on [Cro](https://cro.raku.org/).
 - [Controllers](controllers.md): the base controller, per-request state, and action dispatch.
 - [Views](views.md): template resolution, handlers, and caching.
 - [View helpers](helpers.md): URL, asset, and tag-building helpers.
+- [Cookies](cookies.md): the cookie jar with signed and encrypted variants.

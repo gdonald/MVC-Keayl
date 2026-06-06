@@ -8,6 +8,10 @@
   "auth": "zef:gdonald",
   "depends": [
     "Cro::HTTP",
+    "Crypt::Random",
+    "Digest::HMAC",
+    "Digest::SHA1::Native",
+    "OpenSSL",
     "ORM::ActiveRecord:auth<zef:gdonald>",
     "Template::HAML:auth<zef:gdonald>"
   ],
@@ -24,6 +28,7 @@
     "MVC::Keayl::Adapter::Cro": "lib/MVC/Keayl/Adapter/Cro.rakumod",
     "MVC::Keayl::Adapter::Test": "lib/MVC/Keayl/Adapter/Test.rakumod",
     "MVC::Keayl::Controller": "lib/MVC/Keayl/Controller.rakumod",
+    "MVC::Keayl::Cookies": "lib/MVC/Keayl/Cookies.rakumod",
     "MVC::Keayl::Endpoint": "lib/MVC/Keayl/Endpoint.rakumod",
     "MVC::Keayl::Errors": "lib/MVC/Keayl/Errors.rakumod",
     "MVC::Keayl::Helpers::Asset": "lib/MVC/Keayl/Helpers/Asset.rakumod",

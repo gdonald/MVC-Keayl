@@ -4,6 +4,7 @@ use MVC::Keayl::Request;
 use MVC::Keayl::Response;
 use MVC::Keayl::Parameters;
 use MVC::Keayl::Errors;
+use MVC::Keayl::Cookies;
 
 unit class MVC::Keayl::Controller;
 
@@ -11,7 +12,9 @@ has MVC::Keayl::Request  $.request;
 has MVC::Keayl::Response $.response = MVC::Keayl::Response.new;
 has      $.params = MVC::Keayl::Parameters.new({});
 has      $.view-renderer;
+has Str  $.secret = '';
 has      %!assigns;
+has      $!cookies;
 has Bool $!performed = False;
 
 my %STATUS-CODES =
@@ -301,7 +304,21 @@ method dispatch(Str:D $action --> MVC::Keayl::Response) {
     self!run-with-callbacks($action);
   }
 
+  self!flush-cookies;
+
   $!response
+}
+
+method cookies(--> MVC::Keayl::Cookies) {
+  $!cookies //= MVC::Keayl::Cookies.parse(
+    ($!request.defined ?? $!request.header('cookie') !! Str),
+    secret => $!secret,
+  )
+}
+
+method !flush-cookies {
+  return without $!cookies;
+  $!response.add-header('Set-Cookie', $_) for self.cookies.set-cookie-headers;
 }
 
 method render-template(Str:D $name, %locals --> Str) {

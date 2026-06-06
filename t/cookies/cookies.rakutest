@@ -1,0 +1,171 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Cookies;
+
+sub jar(*%args) { MVC::Keayl::Cookies.new(|%args) }
+
+# reading incoming cookies
+
+{
+  my $cookies = MVC::Keayl::Cookies.parse('session=abc; theme=dark');
+  is $cookies<theme>, 'dark', 'an incoming cookie is read by name';
+}
+
+{
+  my $cookies = MVC::Keayl::Cookies.parse('a=1');
+  nok $cookies<missing>.defined, 'a missing cookie reads as undefined';
+}
+
+{
+  my $cookies = MVC::Keayl::Cookies.parse('greeting=hello%20world');
+  is $cookies<greeting>, 'hello world', 'an incoming cookie value is url-decoded';
+}
+
+# writing cookies
+
+{
+  my $cookies = jar;
+  $cookies<theme> = 'dark';
+  is $cookies<theme>, 'dark', 'a written cookie reads back within the request';
+}
+
+{
+  my $cookies = jar;
+  $cookies<theme> = 'dark';
+  is $cookies.set-cookie-headers, ('theme=dark',), 'a written cookie produces a Set-Cookie header';
+}
+
+# attributes
+
+{
+  my $cookies = jar;
+  $cookies.set('session', 'abc', path => '/', http-only => True, same-site => 'Lax', secure => True);
+  is $cookies.set-cookie-headers[0], 'session=abc; Path=/; SameSite=Lax; Secure; HttpOnly',
+    'cookie attributes are emitted in the Set-Cookie header';
+}
+
+{
+  my $cookies = jar;
+  $cookies.set('n', 'v', max-age => 3600);
+  like $cookies.set-cookie-headers[0], /'Max-Age=3600'/, 'a max-age attribute is emitted';
+}
+
+{
+  my $cookies = jar;
+  $cookies.set('n', 'v', expires => DateTime.new(:2021year, :6month, :9day, :10hour, :18minute, :14second));
+  like $cookies.set-cookie-headers[0], /'Expires=Wed, 09 Jun 2021 10:18:14 GMT'/, 'an expires DateTime is formatted as an HTTP date';
+}
+
+# assigning a hash sets value plus options
+
+{
+  my $cookies = jar;
+  $cookies<session> = { value => 'abc', path => '/admin' };
+  is $cookies.set-cookie-headers[0], 'session=abc; Path=/admin', 'assigning a hash sets the value and options';
+}
+
+# url-encoding of the value
+
+{
+  my $cookies = jar;
+  $cookies.set('q', 'a b&c');
+  is $cookies.set-cookie-headers[0], 'q=a%20b%26c', 'a written value is url-encoded';
+}
+
+# delete
+
+{
+  my $cookies = MVC::Keayl::Cookies.parse('theme=dark');
+  $cookies.delete('theme');
+  like $cookies.set-cookie-headers[0], /'Max-Age=0'/, 'deleting a cookie emits an expiry';
+}
+
+# signed cookies
+
+{
+  my $cookies = jar(secret => 's3cret');
+  $cookies.signed.set('user-id', '42');
+  my $stored = $cookies.set-cookie-headers[0];
+  like $stored, /'user-id='/, 'a signed cookie is written with a signature';
+
+  my $back = MVC::Keayl::Cookies.parse($stored.subst(/';'.*/, ''), secret => 's3cret');
+  is $back.signed<user-id>, '42', 'a signed cookie round-trips to its value';
+}
+
+{
+  my $cookies = jar(secret => 's3cret');
+  $cookies.signed.set('user-id', '42');
+  my $value = $cookies.set-cookie-headers[0].subst(/^ 'user-id='/, '').subst(/';'.*/, '');
+
+  my $tampered = MVC::Keayl::Cookies.new(incoming => %( 'user-id' => 'X' ~ $value ), secret => 's3cret');
+  nok $tampered.signed<user-id>.defined, 'a tampered signed cookie is rejected';
+}
+
+{
+  my $cookies = jar(secret => 's3cret');
+  $cookies.signed.set('user-id', '42');
+  my $value = $cookies.set-cookie-headers[0].subst(/^ 'user-id='/, '').subst(/';'.*/, '');
+
+  my $wrong-secret = MVC::Keayl::Cookies.new(incoming => %( 'user-id' => $value ), secret => 'different');
+  nok $wrong-secret.signed<user-id>.defined, 'a signed cookie under a different secret is rejected';
+}
+
+# encrypted cookies
+
+{
+  my $cookies = jar(secret => 's3cret');
+  $cookies.encrypted.set('card', '4111-1111');
+  my $stored = $cookies.set-cookie-headers[0];
+  unlike $stored, /'4111'/, 'an encrypted cookie does not expose its plaintext';
+
+  my $value = $stored.subst(/^ 'card='/, '').subst(/';'.*/, '');
+  my $back  = MVC::Keayl::Cookies.new(incoming => %( card => MVC::Keayl::Cookies.parse("card=$value").incoming<card> ), secret => 's3cret');
+  is $back.encrypted<card>, '4111-1111', 'an encrypted cookie round-trips to its value';
+}
+
+{
+  my $cookies = jar(secret => 's3cret');
+  $cookies.encrypted.set('card', 'secret-data');
+  my $value = $cookies.set-cookie-headers[0].subst(/^ 'card='/, '').subst(/';'.*/, '');
+
+  my $wrong = MVC::Keayl::Cookies.new(incoming => %( card => $value ), secret => 'different');
+  nok $wrong.encrypted<card>.defined, 'an encrypted cookie under a different secret does not decrypt';
+}
+
+# controller integration
+
+{
+  use MVC::Keayl::Controller;
+  use MVC::Keayl::Request;
+
+  my class CookieController is MVC::Keayl::Controller {
+    method show {
+      self.cookies<seen> = 'yes';
+      self.render(:plain('ok'));
+    }
+  }
+
+  my $request  = MVC::Keayl::Request.new(headers => %( cookie => 'theme=dark' ));
+  my $response = CookieController.new(:$request).dispatch('show');
+
+  is $response.header('Set-Cookie'), 'seen=yes', 'a controller flushes its cookies to the response';
+}
+
+{
+  use MVC::Keayl::Controller;
+  use MVC::Keayl::Request;
+
+  my class ReadCookieController is MVC::Keayl::Controller {
+    method show {
+      self.render(:plain(self.cookies<theme> // 'none'));
+    }
+  }
+
+  my $request  = MVC::Keayl::Request.new(headers => %( cookie => 'theme=dark' ));
+  my $response = ReadCookieController.new(:$request).dispatch('show');
+
+  is $response.body, 'dark', 'a controller reads incoming request cookies';
+}
+
+done-testing;
