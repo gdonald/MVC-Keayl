@@ -24,3 +24,4 @@ default adapter built on [Cro](https://cro.raku.org/).
 - [Routing](routing.md): the routes file DSL and request recognition.
 - [Controllers](controllers.md): the base controller, per-request state, and action dispatch.
 - [Views](views.md): template resolution, handlers, and caching.
+- [View helpers](helpers.md): URL, asset, and tag-building helpers.

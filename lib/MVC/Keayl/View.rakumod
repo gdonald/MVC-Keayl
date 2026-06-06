@@ -1,6 +1,9 @@
 use v6.d;
 use MVC::Keayl::View::Handler::HAML;
 use MVC::Keayl::SafeString;
+use MVC::Keayl::Helpers::Tag;
+use MVC::Keayl::Helpers::Url;
+use MVC::Keayl::Helpers::Asset;
 
 unit class MVC::Keayl::View;
 
@@ -10,6 +13,7 @@ has Str  $.default-handler = 'haml';
 has Str  $.default-format  = 'html';
 has Bool $.cache  = True;
 has Bool $.reload = True;
+has      &.asset-resolver = &default-asset-path;
 has      %!store;
 
 submethod TWEAK {
@@ -155,5 +159,14 @@ method !view-helpers(%locals, :$controller --> Hash) {
     raw          => -> $value            { ~$value },
     sanitize     => -> $value, *%opts    { ~sanitize(~$value, |%opts) },
     json         => -> $value            { json-escape(~$value) },
+    link_to      => -> $body, $url?, %opts?    { ~link-to($body, $url, (%opts // {})) },
+    button_to    => -> $body, $url, %opts?     { ~button-to($body, $url, (%opts // {})) },
+    url_for      => -> $target                 { url-for($target) },
+    tag          => -> $name, %opts?           { ~tag($name, (%opts // {})) },
+    content_tag  => -> $name, $inner?, %opts?  { ~content-tag($name, $inner, (%opts // {})) },
+    image_tag    => -> $source, %opts?         { ~image-tag($source, (%opts // {}), :resolver(&!asset-resolver)) },
+    asset_path   => -> $source, %opts?         { asset-path($source, :resolver(&!asset-resolver), |(%opts // {})) },
+    stylesheet_link_tag    => -> *@sources, *%opts { ~stylesheet-link-tag(|@sources, :resolver(&!asset-resolver), |%opts) },
+    javascript_include_tag => -> *@sources, *%opts { ~javascript-include-tag(|@sources, :resolver(&!asset-resolver), |%opts) },
   )
 }

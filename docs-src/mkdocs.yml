@@ -10,6 +10,7 @@ nav:
   - Routing: routing.md
   - Controllers: controllers.md
   - Views: views.md
+  - View helpers: helpers.md
 theme:
   name: 'material'
 markdown_extensions:

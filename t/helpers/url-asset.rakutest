@@ -1,0 +1,126 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Helpers::Tag;
+use MVC::Keayl::Helpers::Url;
+use MVC::Keayl::Helpers::Asset;
+use MVC::Keayl::View;
+
+sub view { MVC::Keayl::View.new(:paths(['specs/lib/views'])) }
+
+# tag building
+
+{
+  is content-tag('p', 'hi', %( class => 'lead' )).Str, '<p class="lead">hi</p>', 'content-tag builds an element with attributes';
+}
+
+{
+  is content-tag('span', '<b>x</b>').Str, '<span>&lt;b&gt;x&lt;/b&gt;</span>', 'content-tag escapes string content';
+}
+
+{
+  is tag('input', %( type => 'text', disabled => True, name => 'q' )).Str, '<input disabled name="q" type="text" />',
+    'tag renders a boolean attribute as a bare name and self-closes';
+}
+
+{
+  is tag('input', %( type => 'text', disabled => False )).Str, '<input type="text" />', 'a false attribute is omitted';
+}
+
+# url-for
+
+{
+  is url-for('/posts'), '/posts', 'url-for passes a string path through';
+}
+
+{
+  is url-for({ path => '/x' }), '/x', 'url-for reads a path from a hash';
+}
+
+# link-to
+
+{
+  is link-to('Posts', '/posts').Str, '<a href="/posts">Posts</a>', 'link-to builds an anchor';
+}
+
+{
+  is link-to('Posts', '/posts', %( class => 'nav' )).Str, '<a class="nav" href="/posts">Posts</a>',
+    'link-to merges html options';
+}
+
+{
+  is link-to('/only').Str, '<a href="/only">/only</a>', 'link-to uses the body as the url when none is given';
+}
+
+# button-to
+
+{
+  like button-to('Delete', '/posts/1', %( method => 'delete' )).Str, /'name="_method" type="hidden" value="delete"'/,
+    'button-to adds a hidden method override for non-post verbs';
+}
+
+{
+  like button-to('Save', '/posts').Str, /'<form action="/posts" method="post">'/, 'button-to posts to the url by default';
+}
+
+# asset-path
+
+{
+  is asset-path('logo.png'), '/assets/logo.png', 'asset-path prefixes a bare source';
+}
+
+{
+  is asset-path('/already/absolute.png'), '/already/absolute.png', 'asset-path leaves an absolute path alone';
+}
+
+{
+  is asset-path('https://cdn/x.png'), 'https://cdn/x.png', 'asset-path leaves an external url alone';
+}
+
+{
+  is asset-path('app', :type('css')), '/assets/app.css', 'asset-path adds a type extension when missing';
+}
+
+# pluggable resolver
+
+{
+  my &resolver = -> $source, $type { 'https://cdn.example/' ~ $source };
+  is asset-path('logo.png', :&resolver), 'https://cdn.example/logo.png', 'a custom resolver overrides asset-path';
+}
+
+# image-tag
+
+{
+  is image-tag('logo.png', %( alt => 'Logo' )).Str, '<img alt="Logo" src="/assets/logo.png" />', 'image-tag builds an img with a resolved src';
+}
+
+{
+  is image-tag('my_logo.png').Str, '<img alt="My Logo" src="/assets/my_logo.png" />', 'image-tag derives a default alt from the filename';
+}
+
+# stylesheet and javascript tags
+
+{
+  is stylesheet-link-tag('app').Str, '<link href="/assets/app.css" rel="stylesheet" />', 'stylesheet-link-tag links a css asset';
+}
+
+{
+  is javascript-include-tag('app').Str, '<script src="/assets/app.js"></script>', 'javascript-include-tag includes a js asset';
+}
+
+{
+  like stylesheet-link-tag('app', 'admin').Str, /'app.css'.*'admin.css'/, 'stylesheet-link-tag handles multiple sources';
+}
+
+# template integration
+
+{
+  like view.render-template('greetings/helpers', {}), /'<a href="/">Home</a>'/, 'a template emits a link through the link_to helper';
+}
+
+{
+  like view.render-template('greetings/helpers', {}), /'<img alt="Logo" src="/assets/logo.png" />'/,
+    'a template emits an image through the image_tag helper';
+}
+
+done-testing;
