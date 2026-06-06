@@ -6,6 +6,7 @@ use MVC::Keayl::Parameters;
 use MVC::Keayl::Errors;
 use MVC::Keayl::Cookies;
 use MVC::Keayl::Session;
+use MVC::Keayl::Flash;
 
 unit class MVC::Keayl::Controller;
 
@@ -18,6 +19,7 @@ has      $.session-store = MVC::Keayl::Session::CookieStore.new;
 has      %!assigns;
 has      $!cookies;
 has      $!session;
+has      $!flash;
 has Bool $!performed = False;
 
 my %STATUS-CODES =
@@ -116,6 +118,7 @@ method !view-locals(%explicit --> Hash) {
   my %locals;
   %locals{$_} = self."$_"() for self!helper-method-names;
   %locals{.key} = .value for %!assigns;
+  %locals<flash> = self.flash.to-hash if self.flash.keys;
   %locals{.key} = .value for %explicit;
   %locals
 }
@@ -307,6 +310,7 @@ method dispatch(Str:D $action --> MVC::Keayl::Response) {
     self!run-with-callbacks($action);
   }
 
+  self!commit-flash;
   self!commit-session;
   self!flush-cookies;
 
@@ -326,6 +330,22 @@ method session(--> MVC::Keayl::Session) {
 
 method reset-session {
   self.session.reset;
+}
+
+method flash(--> MVC::Keayl::Flash) {
+  $!flash //= MVC::Keayl::Flash.from-session(self.session<_flash> // {})
+}
+
+method !commit-flash {
+  return without $!flash;
+
+  my %value = $!flash.to-session-value;
+
+  if %value {
+    self.session<_flash> = %value;
+  } elsif self.session<_flash>:exists {
+    self.session<_flash>:delete;
+  }
 }
 
 method !commit-session {

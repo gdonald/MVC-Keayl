@@ -1,0 +1,108 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Flash;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Request;
+
+# a freshly written flash survives to the session
+
+{
+  my $flash = MVC::Keayl::Flash.new;
+  $flash<notice> = 'Saved';
+  is $flash.to-session-value, %( notice => 'Saved' ), 'a written flash is carried to the session';
+}
+
+# a flash loaded from the session is available this request
+
+{
+  my $flash = MVC::Keayl::Flash.from-session(%( notice => 'Saved' ));
+  is $flash<notice>, 'Saved', 'a flash from the session is readable this request';
+}
+
+# a loaded flash is discarded after this request (survives exactly one hop)
+
+{
+  my $flash = MVC::Keayl::Flash.from-session(%( notice => 'Saved' ));
+  is $flash.to-session-value, {}, 'a flash that was shown this request is not carried again';
+}
+
+# keep retains a flash for another request
+
+{
+  my $flash = MVC::Keayl::Flash.from-session(%( notice => 'Saved' ));
+  $flash.keep;
+  is $flash.to-session-value, %( notice => 'Saved' ), 'keep carries a flash for another request';
+}
+
+{
+  my $flash = MVC::Keayl::Flash.from-session(%( notice => 'Saved', alert => 'Oops' ));
+  $flash.keep('notice');
+  is $flash.to-session-value, %( notice => 'Saved' ), 'keep with a key retains only that entry';
+}
+
+# discard drops a fresh flash before it is saved
+
+{
+  my $flash = MVC::Keayl::Flash.new;
+  $flash<notice> = 'Saved';
+  $flash.discard('notice');
+  is $flash.to-session-value, {}, 'discard drops an entry from the session';
+}
+
+# flash.now is available this request but not carried
+
+{
+  my $flash = MVC::Keayl::Flash.new;
+  $flash.now<alert> = 'Right now';
+  is $flash<alert>, 'Right now', 'flash.now is readable this request';
+}
+
+{
+  my $flash = MVC::Keayl::Flash.new;
+  $flash.now<alert> = 'Right now';
+  is $flash.to-session-value, {}, 'flash.now is not carried to the next request';
+}
+
+# controller cycle: flash set in one request is shown on the next, then gone
+
+{
+  my class WriteController is MVC::Keayl::Controller {
+    method create {
+      self.flash<notice> = 'Created';
+      self.render(:plain('ok'));
+    }
+  }
+
+  my class ReadController is MVC::Keayl::Controller {
+    method show {
+      self.render(:plain(self.flash<notice> // 'none'));
+    }
+  }
+
+  my $first   = WriteController.new(secret => 'k').dispatch('create');
+  my $cookies = $first.header('Set-Cookie');
+
+  my $second  = ReadController.new(secret => 'k', request => MVC::Keayl::Request.new(headers => %( cookie => $cookies.subst(/';'.*/, '') ))).dispatch('show');
+  is $second.body, 'Created', 'a flash set in one request is shown on the next';
+
+  my $third   = ReadController.new(secret => 'k', request => MVC::Keayl::Request.new(headers => %( cookie => $second.header('Set-Cookie') // $cookies.subst(/';'.*/, '') ))).dispatch('show');
+  is $third.body, 'none', 'the flash is gone on the request after that';
+}
+
+# flash is exposed to views when present
+
+{
+  my class FlashViewController is MVC::Keayl::Controller {
+    method show {
+      self.flash<notice> = 'Hi';
+      self.render(:inline('placeholder'));
+    }
+  }
+
+  my $controller = FlashViewController.new;
+  $controller.flash<notice> = 'Hi';
+  ok $controller.flash.keys.so, 'a controller exposes a flash with content';
+}
+
+done-testing;
