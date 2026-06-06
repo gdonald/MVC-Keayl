@@ -160,3 +160,43 @@ long-text names `body`/`content`/`description`/`notes`), then a boolean model
 value, defaulting to a string input. A required attribute marks the wrapper and
 adds a `*` to the label, and an attribute with errors marks the wrapper and
 appends the messages.
+
+## Formatting helpers
+
+### Text
+
+`truncate` cuts a string to a length (counting the omission) and can break at a
+separator. `pluralize` pairs a count with a singular or pluralized word, using a
+small inflector with irregulars and an explicit `plural` override.
+`simple-format` wraps text in paragraphs, turning blank lines into new paragraphs
+and single newlines into `<br />`, escaping the content:
+
+```perl6
+truncate('This is a long sentence', length => 12);   # This is a...
+pluralize(2, 'person');                               # 2 people
+simple-format("Para one\n\nPara two");                # <p>Para one</p>\n<p>Para two</p>
+```
+
+### Numbers
+
+```perl6
+number-with-delimiter(1234567);     # 1,234,567
+number-to-currency(1234.5);         # $1,234.50
+number-to-percentage(66.666, precision => 1);   # 66.7%
+number-to-human-size(1536);         # 1.5 KB
+```
+
+`number-to-currency` accepts `unit`, `precision`, `delimiter`, `separator`, and a
+`format` string (`%u` for the unit, `%n` for the number).
+
+### Date and time
+
+`distance-of-time-in-words` describes the gap between two times in words, with an
+optional `include-seconds` for finer detail under a minute. `time-ago-in-words`
+is the same measured against the current time (or an explicit reference):
+
+```perl6
+distance-of-time-in-words($from, $to);                 # about 5 hours
+distance-of-time-in-words($from, $to, include-seconds => True);   # less than 5 seconds
+time-ago-in-words($posted-at);
+```

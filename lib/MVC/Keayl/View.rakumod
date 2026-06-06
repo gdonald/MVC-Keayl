@@ -5,6 +5,9 @@ use MVC::Keayl::Helpers::Tag;
 use MVC::Keayl::Helpers::Url;
 use MVC::Keayl::Helpers::Asset;
 use MVC::Keayl::Helpers::Form;
+use MVC::Keayl::Helpers::Text;
+use MVC::Keayl::Helpers::Number;
+use MVC::Keayl::Helpers::DateTime;
 
 unit class MVC::Keayl::View;
 
@@ -173,5 +176,14 @@ method !view-helpers(%locals, :$controller --> Hash) {
     asset_path   => -> $source, %opts?         { asset-path($source, :resolver(&!asset-resolver), |(%opts // {})) },
     stylesheet_link_tag    => -> *@sources, *%opts { ~stylesheet-link-tag(|@sources, :resolver(&!asset-resolver), |%opts) },
     javascript_include_tag => -> *@sources, *%opts { ~javascript-include-tag(|@sources, :resolver(&!asset-resolver), |%opts) },
+    truncate        => -> $text, *%opts        { truncate($text, |%opts) },
+    pluralize       => -> $count, $singular, *%opts { pluralize($count, $singular, |%opts) },
+    simple_format   => -> $text, *%opts        { ~simple-format($text, |%opts) },
+    number_with_delimiter => -> $number, *%opts { number-with-delimiter($number, |%opts) },
+    number_to_currency    => -> $number, *%opts { number-to-currency($number, |%opts) },
+    number_to_percentage  => -> $number, *%opts { number-to-percentage($number, |%opts) },
+    number_to_human_size  => -> $number, *%opts { number-to-human-size($number, |%opts) },
+    time_ago_in_words     => -> $from, *%opts   { time-ago-in-words($from, |%opts) },
+    distance_of_time_in_words => -> $from, $to, *%opts { distance-of-time-in-words($from, $to, |%opts) },
   )
 }

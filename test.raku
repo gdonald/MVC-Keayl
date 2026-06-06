@@ -57,7 +57,7 @@ sub warm-precomp() {
   return unless @modules;
 
   say "==> [{format-ts()}] warming precompilation (@modules.elems() modules)";
-  run 'raku', '-Ilib', '-e', @modules.map({ "use $_;" }).join("\n");
+  run 'raku', '-Ilib', '-e', @modules.map({ "need $_;" }).join("\n");
   say '';
 }
 

@@ -1,0 +1,161 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Helpers::Text;
+use MVC::Keayl::Helpers::Number;
+use MVC::Keayl::Helpers::DateTime;
+
+# truncate
+
+{
+  is truncate('This is a long sentence that needs trimming', length => 20), 'This is a long se...', 'truncate cuts to the length including the omission';
+}
+
+{
+  is truncate('short'), 'short', 'truncate leaves a short string alone';
+}
+
+{
+  is truncate('one two three four', length => 12, separator => ' '), 'one two...', 'truncate breaks at a separator';
+}
+
+# pluralize
+
+{
+  is pluralize(1, 'person'), '1 person', 'pluralize keeps the singular for one';
+}
+
+{
+  is pluralize(2, 'person'), '2 people', 'pluralize uses an irregular plural';
+}
+
+{
+  is pluralize(0, 'category'), '0 categories', 'pluralize applies the consonant-y rule';
+}
+
+{
+  is pluralize(3, 'box'), '3 boxes', 'pluralize applies the -es rule';
+}
+
+{
+  is pluralize(5, 'octopus', plural => 'octopi'), '5 octopi', 'pluralize honours an explicit plural';
+}
+
+# simple-format
+
+{
+  is simple-format("Hello world").Str, '<p>Hello world</p>', 'simple-format wraps text in a paragraph';
+}
+
+{
+  is simple-format("Line one\nLine two").Str, '<p>Line one<br />Line two</p>', 'simple-format turns single newlines into breaks';
+}
+
+{
+  is simple-format("Para one\n\nPara two").Str, "<p>Para one</p>\n<p>Para two</p>", 'simple-format splits paragraphs on blank lines';
+}
+
+{
+  like simple-format("<script>x</script>").Str, /'&lt;script&gt;'/, 'simple-format escapes its content';
+}
+
+# number-with-delimiter
+
+{
+  is number-with-delimiter(1234567), '1,234,567', 'number-with-delimiter groups thousands';
+}
+
+{
+  is number-with-delimiter(-1234.56), '-1,234.56', 'number-with-delimiter keeps the sign and decimals';
+}
+
+# number-to-currency
+
+{
+  is number-to-currency(1234.5), '$1,234.50', 'number-to-currency formats with a unit and delimiter';
+}
+
+{
+  is number-to-currency(-9.99), '-$9.99', 'number-to-currency handles negatives';
+}
+
+{
+  is number-to-currency(1000, unit => '€', format => '%n%u', precision => 0), '1,000€', 'number-to-currency honours unit and format';
+}
+
+# number-to-percentage
+
+{
+  is number-to-percentage(100), '100.00%', 'number-to-percentage appends a percent sign';
+}
+
+{
+  is number-to-percentage(66.666, precision => 1), '66.7%', 'number-to-percentage rounds to the precision';
+}
+
+# number-to-human-size
+
+{
+  is number-to-human-size(512), '512 Bytes', 'human size reports bytes below a kilobyte';
+}
+
+{
+  is number-to-human-size(1), '1 Byte', 'human size uses a singular byte';
+}
+
+{
+  is number-to-human-size(1024), '1 KB', 'human size scales to kilobytes';
+}
+
+{
+  is number-to-human-size(1536), '1.5 KB', 'human size keeps a fractional part';
+}
+
+{
+  is number-to-human-size(1048576), '1 MB', 'human size scales to megabytes';
+}
+
+# distance-of-time-in-words (fixed times, no wall clock)
+
+sub at(*@parts) { DateTime.new(|@parts) }
+
+{
+  my $from = DateTime.new(:2020year, :1month, :1day, :12hour, :0minute, :0second);
+  my $to   = $from.later(seconds => 20);
+  is distance-of-time-in-words($from, $to), 'less than a minute', 'a short gap is less than a minute';
+}
+
+{
+  my $from = DateTime.new(:2020year, :1month, :1day, :12hour, :0minute, :0second);
+  is distance-of-time-in-words($from, $from.later(minutes => 5)), '5 minutes', 'a few minutes are reported in minutes';
+}
+
+{
+  my $from = DateTime.new(:2020year, :1month, :1day, :12hour, :0minute, :0second);
+  is distance-of-time-in-words($from, $from.later(minutes => 60)), 'about 1 hour', 'an hour is reported as about 1 hour';
+}
+
+{
+  my $from = DateTime.new(:2020year, :1month, :1day, :12hour, :0minute, :0second);
+  is distance-of-time-in-words($from, $from.later(hours => 5)), 'about 5 hours', 'several hours are reported as about n hours';
+}
+
+{
+  my $from = DateTime.new(:2020year, :1month, :1day, :12hour, :0minute, :0second);
+  is distance-of-time-in-words($from, $from.later(days => 3)), '3 days', 'several days are reported in days';
+}
+
+{
+  my $from = DateTime.new(:2020year, :1month, :1day, :12hour, :0minute, :0second);
+  is distance-of-time-in-words($from, $from.later(seconds => 3), include-seconds => True), 'less than 5 seconds',
+    'with seconds enabled a very short gap is finer';
+}
+
+# time-ago-in-words delegates with an explicit reference
+
+{
+  my $from = DateTime.new(:2020year, :1month, :1day, :12hour, :0minute, :0second);
+  is time-ago-in-words($from, $from.later(minutes => 10)), '10 minutes', 'time-ago-in-words measures against a reference time';
+}
+
+done-testing;
