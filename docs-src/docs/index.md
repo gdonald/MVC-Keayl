@@ -29,3 +29,4 @@ default adapter built on [Cro](https://cro.raku.org/).
 - [Sessions](sessions.md): the session abstraction with cookie and server-side stores.
 - [Flash](flash.md): short messages that survive one redirect.
 - [CSRF protection](csrf.md): authenticity tokens and forgery protection.
+- [Parameter filtering](parameter-filtering.md): redacting sensitive parameters for logs.

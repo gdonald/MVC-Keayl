@@ -15,6 +15,7 @@ nav:
   - Sessions: sessions.md
   - Flash: flash.md
   - CSRF protection: csrf.md
+  - Parameter filtering: parameter-filtering.md
 theme:
   name: 'material'
 markdown_extensions:

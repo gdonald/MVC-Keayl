@@ -1,0 +1,96 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::ParameterFilter;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Parameters;
+
+# default filtering
+
+{
+  my $filter = MVC::Keayl::ParameterFilter.new;
+  is $filter.filter(%( password => 'secret', name => 'Ada' )), %( password => '[FILTERED]', name => 'Ada' ),
+    'a password parameter is filtered and others are kept';
+}
+
+{
+  my $filter = MVC::Keayl::ParameterFilter.new;
+  is $filter.filter(%( api_token => 'abc' ))<api_token>, '[FILTERED]', 'a token parameter is filtered by substring match';
+}
+
+{
+  my $filter = MVC::Keayl::ParameterFilter.new;
+  is $filter.filter(%( ssn => '123' ))<ssn>, '[FILTERED]', 'a default-sensitive key is filtered';
+}
+
+# nested filtering
+
+{
+  my $filter = MVC::Keayl::ParameterFilter.new;
+  my %out = $filter.filter(%( user => %( password => 'x', name => 'Ada' ) ));
+  is %out<user><password>, '[FILTERED]', 'a nested sensitive parameter is filtered';
+}
+
+{
+  my $filter = MVC::Keayl::ParameterFilter.new;
+  my %out = $filter.filter(%( user => %( password => 'x', name => 'Ada' ) ));
+  is %out<user><name>, 'Ada', 'a nested non-sensitive parameter is kept';
+}
+
+# filtering inside arrays
+
+{
+  my $filter = MVC::Keayl::ParameterFilter.new;
+  my %out = $filter.filter(%( accounts => [ %( secret => 'a' ), %( secret => 'b' ) ] ));
+  is %out<accounts>[0]<secret>, '[FILTERED]', 'a sensitive parameter inside an array is filtered';
+}
+
+# a matched key with a hash value is redacted entirely
+
+{
+  my $filter = MVC::Keayl::ParameterFilter.new;
+  is $filter.filter(%( token => %( nested => 'x' ) ))<token>, '[FILTERED]', 'a matched key redacts its whole value';
+}
+
+# configurable filter list
+
+{
+  my $filter = MVC::Keayl::ParameterFilter.new(also => ['pin']);
+  is $filter.filter(%( pin => '1234' ))<pin>, '[FILTERED]', 'an additional filter name is honoured';
+}
+
+{
+  my $filter = MVC::Keayl::ParameterFilter.new(filters => ['only-this']);
+  is $filter.filter(%( password => 'x' ))<password>, 'x', 'an explicit filter list replaces the defaults';
+}
+
+# regex filter
+
+{
+  my $filter = MVC::Keayl::ParameterFilter.new(filters => [/^ card /]);
+  is $filter.filter(%( card_number => '4111' ))<card_number>, '[FILTERED]', 'a regex filter matches keys';
+}
+
+# the original is not mutated
+
+{
+  my %original = %( password => 'secret' );
+  MVC::Keayl::ParameterFilter.new.filter(%original);
+  is %original<password>, 'secret', 'filtering does not mutate the original parameters';
+}
+
+# controller integration
+
+{
+  my class WidgetController is MVC::Keayl::Controller {
+  }
+  WidgetController.filter-parameters('pin');
+
+  my $controller = WidgetController.new(params => MVC::Keayl::Parameters.new(%( password => 'p', pin => '9', name => 'Ada' )));
+  my %filtered = $controller.filtered-params;
+
+  is %filtered, %( password => '[FILTERED]', pin => '[FILTERED]', name => 'Ada' ),
+    'a controller filters default and configured parameters';
+}
+
+done-testing;

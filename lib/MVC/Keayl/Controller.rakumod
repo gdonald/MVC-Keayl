@@ -8,6 +8,7 @@ use MVC::Keayl::Cookies;
 use MVC::Keayl::Session;
 use MVC::Keayl::Flash;
 use MVC::Keayl::CSRF;
+use MVC::Keayl::ParameterFilter;
 
 unit class MVC::Keayl::Controller;
 
@@ -95,6 +96,7 @@ my %rescues{Mu};
 my %helper-methods{Mu};
 my %controller-layouts{Mu};
 my %forgery-strategy{Mu};
+my %param-filters{Mu};
 
 method helper-method(*@names --> ::?CLASS) {
   (%helper-methods{self} //= []).append(@names.map(*.Str));
@@ -412,6 +414,21 @@ method !handle-unverified-request {
     when 'null-session' | 'reset-session' { self.reset-session }
     default                               { die X::MVC::Keayl::InvalidAuthenticityToken.new }
   }
+}
+
+method filter-parameters(*@names --> ::?CLASS) {
+  (%param-filters{self} //= []).append(@names);
+  self
+}
+
+method !configured-param-filters(--> List) {
+  my @filters;
+  @filters.append(|(%param-filters{$_} // [])) for self.^mro.reverse;
+  @filters.List
+}
+
+method filtered-params(--> Hash) {
+  MVC::Keayl::ParameterFilter.new(also => self!configured-param-filters).filter(self.params.Hash)
 }
 
 method !flush-cookies {
