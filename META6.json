@@ -27,6 +27,7 @@
     "MVC::Keayl::Endpoint": "lib/MVC/Keayl/Endpoint.rakumod",
     "MVC::Keayl::Errors": "lib/MVC/Keayl/Errors.rakumod",
     "MVC::Keayl::Helpers::Asset": "lib/MVC/Keayl/Helpers/Asset.rakumod",
+    "MVC::Keayl::Helpers::Form": "lib/MVC/Keayl/Helpers/Form.rakumod",
     "MVC::Keayl::Helpers::Tag": "lib/MVC/Keayl/Helpers/Tag.rakumod",
     "MVC::Keayl::Helpers::Url": "lib/MVC/Keayl/Helpers/Url.rakumod",
     "MVC::Keayl::Middleware": "lib/MVC/Keayl/Middleware.rakumod",

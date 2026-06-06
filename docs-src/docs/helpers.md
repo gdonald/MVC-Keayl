@@ -95,3 +95,68 @@ my $view = MVC::Keayl::View.new(
   asset-resolver => -> $source, $type { 'https://cdn.example/' ~ $source },
 );
 ```
+
+## Forms
+
+`form-with` builds a form around a `FormBuilder`. The builder is passed to a
+`content` callback and scopes field names to the model (or an explicit `scope`),
+prefills values, and annotates errors. The form posts by default, adding a
+`_method` override for other verbs and an `authenticity_token` field when a
+`csrf-token` is given:
+
+```perl6
+form-with(
+  model      => $post,
+  url        => '/posts/1',
+  method     => 'patch',
+  csrf-token => $token,
+  content    => -> $f {
+    $f.text-field('title') ~ $f.submit('Save')
+  },
+);
+```
+
+### Field helpers
+
+The builder provides `text-field`, `password-field`, `hidden-field`,
+`text-area`, `check-box`, `radio-button`, `select`, `label`, `submit`, and
+`button`. Field names are scoped (`post[title]`) and ids derived
+(`post_title`). A `check-box` renders a hidden companion for its unchecked
+value, a `select` marks the option matching the model value, and a
+`password-field` never emits a value. `fields-for` builds a nested builder whose
+names are scoped under the parent:
+
+```perl6
+$form.fields-for('author', block => -> $author {
+  $author.text-field('name')   # name="post[author][name]"
+});
+```
+
+### Model awareness
+
+When the builder has a model, fields prefill from it (calling the
+attribute-named method), an explicit `value` overrides the model, and a field
+whose attribute reports errors gets a `field-with-errors` class. The builder
+reads errors through the model's `errors-on($attribute)` method, and
+`errors-for` renders the messages.
+
+## simple_form-style inputs
+
+`SimpleFormBuilder` adds an `input` method that assembles a label, control, hint,
+and error into a wrapper, inferring the control type. `simple-form-for` wraps it
+in a form like `form-with`:
+
+```perl6
+simple-form-for($post, url => '/posts', required => ['title'], content => -> $f {
+  $f.input('title', hint => 'Keep it short')
+    ~ $f.input('body')          # textarea, inferred
+    ~ $f.input('published')     # checkbox, inferred from a boolean value
+    ~ $f.input('state', as => 'select', collection => ['draft', 'live'])
+});
+```
+
+The type is taken from `as`, then the attribute name (`password`, `email`, the
+long-text names `body`/`content`/`description`/`notes`), then a boolean model
+value, defaulting to a string input. A required attribute marks the wrapper and
+adds a `*` to the label, and an attribute with errors marks the wrapper and
+appends the messages.

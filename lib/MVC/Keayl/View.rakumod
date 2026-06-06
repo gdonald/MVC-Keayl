@@ -4,6 +4,7 @@ use MVC::Keayl::SafeString;
 use MVC::Keayl::Helpers::Tag;
 use MVC::Keayl::Helpers::Url;
 use MVC::Keayl::Helpers::Asset;
+use MVC::Keayl::Helpers::Form;
 
 unit class MVC::Keayl::View;
 
@@ -166,6 +167,8 @@ method !view-helpers(%locals, :$controller --> Hash) {
     content_tag  => -> $name, $inner?, %opts?  { ~content-tag($name, $inner, (%opts // {})) },
     class_names  => -> *@tokens                { class-names(|@tokens) },
     data_attributes => -> %data                { data-attributes(%data) },
+    form_with       => -> *%opts               { ~form-with(|%opts) },
+    simple_form_for => -> $model, *%opts       { ~simple-form-for($model, |%opts) },
     image_tag    => -> $source, %opts?         { ~image-tag($source, (%opts // {}), :resolver(&!asset-resolver)) },
     asset_path   => -> $source, %opts?         { asset-path($source, :resolver(&!asset-resolver), |(%opts // {})) },
     stylesheet_link_tag    => -> *@sources, *%opts { ~stylesheet-link-tag(|@sources, :resolver(&!asset-resolver), |%opts) },
