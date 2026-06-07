@@ -1,0 +1,72 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Mime;
+
+# registry
+
+{
+  is mime-type('json'), 'application/json', 'a format maps to its MIME type';
+}
+
+{
+  is mime-format('text/html'), 'html', 'a MIME type maps back to its format';
+}
+
+{
+  is mime-format('application/javascript'), 'js', 'an aliased MIME type maps to its format';
+}
+
+{
+  is mime-format('application/json; charset=utf-8'), 'json', 'a MIME type with parameters maps to its format';
+}
+
+# registering a custom type
+
+{
+  register-mime('msgpack', 'application/msgpack');
+  is mime-format('application/msgpack'), 'msgpack', 'a registered custom type is resolvable';
+}
+
+# accept parsing with quality values
+
+{
+  is parse-accept('text/html, application/json'), ('text/html', 'application/json'), 'accept entries are returned in order';
+}
+
+{
+  is parse-accept('application/json;q=0.5, text/html;q=0.9'), ('text/html', 'application/json'),
+    'accept entries are ordered by quality';
+}
+
+{
+  is parse-accept('text/html, application/xml;q=0.9, */*;q=0.8')[0], 'text/html', 'the highest-quality type comes first';
+}
+
+# negotiation
+
+{
+  is negotiate(['html', 'json'], 'application/json'), 'json', 'negotiation picks the matching format';
+}
+
+{
+  is negotiate(['html', 'json'], 'application/json;q=0.4, text/html;q=0.8'), 'html', 'negotiation respects quality ordering';
+}
+
+{
+  is negotiate(['json', 'html'], '*/*'), 'json', 'a wildcard accepts the first available format';
+}
+
+{
+  is negotiate(['json', 'html'], 'text/*'), 'html', 'a type wildcard matches by MIME prefix';
+}
+
+{
+  is negotiate(['json'], 'text/html'), Str, 'negotiation returns nothing when no format matches';
+}
+
+{
+  is negotiate(['html', 'json'], Str), 'html', 'no accept header falls back to the first available format';
+}
+
+done-testing;

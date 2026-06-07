@@ -32,3 +32,4 @@ default adapter built on [Cro](https://cro.raku.org/).
 - [Parameter filtering](parameter-filtering.md): redacting sensitive parameters for logs.
 - [Transport & host security](transport-security.md): SSL, host authorization, and secure headers.
 - [Secrets](secrets.md): secret resolution and key derivation.
+- [Content negotiation](content-negotiation.md): MIME types, `respond-to`, and API controllers.

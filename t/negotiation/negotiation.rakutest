@@ -1,0 +1,110 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Controller;
+use MVC::Keayl::APIController;
+use MVC::Keayl::Request;
+
+class Article {
+  has $.title;
+  method to-hash { %( title => $!title ) }
+}
+
+class NegotiatingController is MVC::Keayl::Controller {
+  method show {
+    self.respond-to([
+      html => { self.render(:html('<h1>Post</h1>')) },
+      json => { self.render(:json({ ok => True })) },
+    ])
+  }
+}
+
+class PostsAPIController is MVC::Keayl::APIController {
+  method show     { self.render(Article.new(title => 'Hi')) }
+  method index    { self.render([ Article.new(title => 'A'), Article.new(title => 'B') ]) }
+  method made     { self.render(Article.new(title => 'New'), :status(201)) }
+  method plain-ish { self.render(:plain('still text')) }
+}
+
+sub negotiating(*%request) {
+  NegotiatingController.new(request => MVC::Keayl::Request.new(|%request)).dispatch('show')
+}
+
+# respond-to: Accept header negotiation
+
+{
+  is negotiating(method => 'GET', path => '/posts', headers => %( accept => 'application/json' )).body, '{"ok":true}',
+    'respond-to dispatches to the JSON block for a JSON Accept header';
+}
+
+{
+  is negotiating(method => 'GET', path => '/posts', headers => %( accept => 'text/html' )).body, '<h1>Post</h1>',
+    'respond-to dispatches to the HTML block for an HTML Accept header';
+}
+
+# respond-to: format from path extension takes precedence
+
+{
+  is negotiating(method => 'GET', path => '/posts.json', headers => %( accept => 'text/html' )).body, '{"ok":true}',
+    'a path extension overrides the Accept header';
+}
+
+# respond-to: default when no Accept header
+
+{
+  is negotiating(method => 'GET', path => '/posts').body, '<h1>Post</h1>', 'the first declared format is the default';
+}
+
+# respond-to: 406 when nothing matches
+
+{
+  is negotiating(method => 'GET', path => '/posts', headers => %( accept => 'application/xml' )).status, 406,
+    'an unsupported Accept header yields 406';
+}
+
+{
+  is negotiating(method => 'GET', path => '/posts.csv').status, 406, 'an unsupported path extension yields 406';
+}
+
+# API controller: bare object renders JSON
+
+{
+  my $response = PostsAPIController.new.dispatch('show');
+  is $response.body, '{"title":"Hi"}', 'an API controller renders a bare object as JSON';
+}
+
+{
+  my $response = PostsAPIController.new.dispatch('show');
+  is $response.content-type, 'application/json', 'an API controller sets a JSON content type';
+}
+
+# API controller: a collection of objects
+
+{
+  is PostsAPIController.new.dispatch('index').body, '[{"title":"A"},{"title":"B"}]',
+    'an API controller serializes a collection of objects';
+}
+
+# API controller: options still apply
+
+{
+  is PostsAPIController.new.dispatch('made').status, 201, 'render options pass through on an API controller';
+}
+
+# API controller: explicit render options are respected
+
+{
+  is PostsAPIController.new.dispatch('plain-ish').body, 'still text', 'an explicit render option is not coerced to JSON';
+}
+
+# API controller: custom serializer hook
+
+{
+  my class CustomController is MVC::Keayl::APIController {
+    method show { self.render(Article.new(title => 'x')) }
+  }
+  my $response = CustomController.new(serializer => -> $value { %( custom => $value.title ) }).dispatch('show');
+  is $response.body, '{"custom":"x"}', 'a serializer hook controls the JSON shape';
+}
+
+done-testing;

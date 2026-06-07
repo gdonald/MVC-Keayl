@@ -9,6 +9,7 @@ use MVC::Keayl::Session;
 use MVC::Keayl::Flash;
 use MVC::Keayl::CSRF;
 use MVC::Keayl::ParameterFilter;
+use MVC::Keayl::Mime;
 
 unit class MVC::Keayl::Controller;
 
@@ -429,6 +430,34 @@ method !configured-param-filters(--> List) {
 
 method filtered-params(--> Hash) {
   MVC::Keayl::ParameterFilter.new(also => self!configured-param-filters).filter(self.params.Hash)
+}
+
+method respond-to(@formats --> MVC::Keayl::Response) {
+  my @available = @formats.map(*.key.Str);
+  my $format    = self!negotiate-format(@available);
+
+  return self.head(406) without $format;
+
+  @formats.first(*.key.Str eq $format).value.();
+
+  $!response
+}
+
+method request-format(--> Str) {
+  return Str without $!request;
+
+  my $path = $!request.path // '';
+  $path ~~ / '.' (\w+) $/ ?? ~$0 !! Str
+}
+
+method !negotiate-format(@available --> Str) {
+  with self.request-format -> $extension {
+    return @available.first(* eq $extension) // Str;
+  }
+
+  my $accept = $!request.defined ?? $!request.header('accept') !! Str;
+
+  negotiate(@available, $accept)
 }
 
 method !flush-cookies {
