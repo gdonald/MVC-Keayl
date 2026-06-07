@@ -34,3 +34,4 @@ default adapter built on [Cro](https://cro.raku.org/).
 - [Secrets](secrets.md): secret resolution and key derivation.
 - [Content negotiation](content-negotiation.md): MIME types, `respond-to`, and API controllers.
 - [Caching & streaming](caching.md): conditional GET, cache headers, fragment caching, and streaming.
+- [Application & configuration](application.md): the application object, config, boot, and dispatch.

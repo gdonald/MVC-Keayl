@@ -1,0 +1,17 @@
+{
+  "shared": {
+    "app-name": "Keayl",
+    "view-paths": ["app/views"]
+  },
+  "development": {
+    "database": { "adapter": "sqlite", "name": "dev.db" },
+    "log-level": "debug"
+  },
+  "test": {
+    "database": { "adapter": "sqlite", "name": ":memory:" },
+    "log-level": "warn"
+  },
+  "production": {
+    "log-level": "error"
+  }
+}

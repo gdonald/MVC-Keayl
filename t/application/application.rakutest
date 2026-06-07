@@ -1,0 +1,176 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Application;
+use MVC::Keayl::Config;
+use MVC::Keayl::Dispatcher;
+use MVC::Keayl::Router;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Request;
+use MVC::Keayl::Routing;
+
+class WidgetsController is MVC::Keayl::Controller {
+  method index { self.render(:plain('all widgets')) }
+  method show  { self.render(:plain('widget ' ~ self.params<id>)) }
+  method boom  { die 'kaboom' }
+}
+
+sub request($method, $path, *%args) {
+  MVC::Keayl::Request.new(:$method, :$path, |%args)
+}
+
+# dispatcher: route to a controller action
+
+{
+  my $router = routes {
+    get '/widgets',     to => 'widgets#index';
+    get '/widgets/:id', to => 'widgets#show';
+    get '/boom',        to => 'widgets#boom';
+  };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [WidgetsController]);
+
+  is $dispatcher.call(request('GET', '/widgets')).body, 'all widgets', 'a request is dispatched to a controller action';
+}
+
+# dispatcher: route params reach the controller
+
+{
+  my $router = routes { get '/widgets/:id', to => 'widgets#show' };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [WidgetsController]);
+
+  is $dispatcher.call(request('GET', '/widgets/42')).body, 'widget 42', 'route parameters are available to the action';
+}
+
+# dispatcher: unknown route is 404
+
+{
+  my $router = routes { get '/widgets', to => 'widgets#index' };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [WidgetsController]);
+
+  is $dispatcher.call(request('GET', '/nope')).status, 404, 'an unmatched route returns 404';
+}
+
+# dispatcher: wrong verb is 405
+
+{
+  my $router = routes { get '/widgets', to => 'widgets#index' };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [WidgetsController]);
+
+  is $dispatcher.call(request('POST', '/widgets')).status, 405, 'a known path with the wrong verb returns 405';
+}
+
+# dispatcher: callable route
+
+{
+  my $router = routes { get '/ping', to => sub ($req) { MVC::Keayl::Response.new(body => 'pong') } };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [WidgetsController]);
+
+  is $dispatcher.call(request('GET', '/ping')).body, 'pong', 'a callable route is invoked';
+}
+
+# dispatcher: unhandled error becomes 500
+
+{
+  my $router = routes { get '/boom', to => 'widgets#boom' };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [WidgetsController]);
+
+  is $dispatcher.call(request('GET', '/boom')).status, 500, 'an unhandled error becomes a 500';
+}
+
+{
+  my $router = routes { get '/boom', to => 'widgets#boom' };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [WidgetsController], verbose-errors => True);
+
+  like $dispatcher.call(request('GET', '/boom')).body, /kaboom/, 'verbose errors include the message';
+}
+
+{
+  my $router = routes { get '/boom', to => 'widgets#boom' };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [WidgetsController], verbose-errors => False);
+
+  unlike $dispatcher.call(request('GET', '/boom')).body, /kaboom/, 'terse errors hide the message';
+}
+
+# application: owns router, middleware, config
+
+{
+  my $app = MVC::Keayl::Application.new(controllers => [WidgetsController]);
+  $app.draw-routes({ get '/widgets', to => 'widgets#index' });
+
+  is $app.endpoint.call(request('GET', '/widgets')).body, 'all widgets', 'the application endpoint dispatches requests';
+}
+
+# application: ordered initializers run at boot
+
+{
+  my @ran;
+  my $app = MVC::Keayl::Application.new;
+  $app.initializer('first',  -> $a { @ran.push('first') });
+  $app.initializer('second', -> $a { @ran.push('second') });
+  $app.boot;
+
+  is @ran, ['first', 'second'], 'initializers run in registration order at boot';
+}
+
+{
+  my $count = 0;
+  my $app = MVC::Keayl::Application.new;
+  $app.initializer('once', -> $a { $count++ });
+  $app.boot;
+  $app.boot;
+
+  is $count, 1, 'booting twice runs initializers once';
+}
+
+# application: default initializers wire a view renderer
+
+{
+  my $app = MVC::Keayl::Application.new;
+  $app.boot;
+
+  ok $app.controller-options<view-renderer>.defined, 'a default initializer wires a view renderer';
+}
+
+{
+  my $app = MVC::Keayl::Application.new;
+  ok $app.initializer-names.grep('template-haml'), 'the template-haml initializer is registered by default';
+}
+
+# application: environment-derived behavior
+
+{
+  my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(environment => 'production'));
+  $app.boot;
+
+  nok $app.controller-options<view-renderer>.reload, 'templates are not reloaded in production';
+}
+
+{
+  my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(environment => 'development'));
+  $app.boot;
+
+  ok $app.controller-options<view-renderer>.reload, 'templates are reloaded in development';
+}
+
+# application: active-record initializer connects when a database is configured
+
+{
+  my %connected;
+  my $app = MVC::Keayl::Application.new(
+    config             => MVC::Keayl::Config.new(settings => %( database => %( adapter => 'sqlite' ) )),
+    database-connector => -> %db { %connected = %db },
+  );
+  $app.boot;
+
+  is %connected<adapter>, 'sqlite', 'the active-record initializer connects with the database config';
+}
+
+{
+  my $called = 0;
+  my $app = MVC::Keayl::Application.new(database-connector => -> %db { $called++ });
+  $app.boot;
+
+  is $called, 0, 'the active-record initializer is a no-op without a database config';
+}
+
+done-testing;

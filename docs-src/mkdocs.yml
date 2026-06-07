@@ -20,6 +20,7 @@ nav:
   - Secrets: secrets.md
   - Content negotiation: content-negotiation.md
   - Caching & streaming: caching.md
+  - Application & configuration: application.md
 theme:
   name: 'material'
 markdown_extensions:

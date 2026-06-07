@@ -1,0 +1,61 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Config;
+
+# environment selection
+
+{
+  is MVC::Keayl::Config.environment-from(%( KEAYL_ENV => 'production' )), 'production', 'the environment comes from KEAYL_ENV';
+}
+
+{
+  is MVC::Keayl::Config.environment-from(%( RAKU_ENV => 'staging' )), 'staging', 'RAKU_ENV is a fallback';
+}
+
+{
+  is MVC::Keayl::Config.environment-from(%()), 'development', 'the environment defaults to development';
+}
+
+# loading a layered config
+
+{
+  my $config = MVC::Keayl::Config.load('specs/lib/config/application.json', environment => 'test');
+  is $config.environment, 'test', 'the loaded config records its environment';
+}
+
+{
+  my $config = MVC::Keayl::Config.load('specs/lib/config/application.json', environment => 'test');
+  is $config<app-name>, 'Keayl', 'a shared setting is present in every environment';
+}
+
+{
+  my $config = MVC::Keayl::Config.load('specs/lib/config/application.json', environment => 'test');
+  is $config<log-level>, 'warn', 'an environment-specific setting overrides the shared layer';
+}
+
+{
+  my $config = MVC::Keayl::Config.load('specs/lib/config/application.json', environment => 'development');
+  is $config.get('database.adapter'), 'sqlite', 'a nested setting is read by dotted path';
+}
+
+{
+  my $config = MVC::Keayl::Config.load('specs/lib/config/application.json', environment => 'production');
+  nok $config<database>.defined, 'a setting absent from an environment is undefined';
+}
+
+# explicit overrides layer on top
+
+{
+  my $config = MVC::Keayl::Config.new(settings => %( a => 1, nested => %( x => 1 ) ));
+  my $merged = $config.merge(%( a => 2, nested => %( y => 2 ) ));
+  is $merged<a>, 2, 'an override replaces a scalar setting';
+}
+
+{
+  my $config = MVC::Keayl::Config.new(settings => %( nested => %( x => 1 ) ));
+  my $merged = $config.merge(%( nested => %( y => 2 ) ));
+  is $merged.get('nested.x'), 1, 'a deep merge keeps untouched nested keys';
+}
+
+done-testing;
