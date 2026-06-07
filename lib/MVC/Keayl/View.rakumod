@@ -8,6 +8,7 @@ use MVC::Keayl::Helpers::Form;
 use MVC::Keayl::Helpers::Text;
 use MVC::Keayl::Helpers::Number;
 use MVC::Keayl::Helpers::DateTime;
+use MVC::Keayl::Cache;
 
 unit class MVC::Keayl::View;
 
@@ -18,6 +19,7 @@ has Str  $.default-format  = 'html';
 has Bool $.cache  = True;
 has Bool $.reload = True;
 has      &.asset-resolver = &default-asset-path;
+has      $.cache-store = MVC::Keayl::Cache::MemoryStore.new;
 has      %!store;
 
 submethod TWEAK {
@@ -103,6 +105,10 @@ method render-layout(Str:D $layout, Str:D $content, %locals, :$controller --> St
 method layout-exists(Str:D $name --> Bool) {
   my $file = self.resolve('layouts/' ~ $name, $!default-format);
   $file.defined && $file.e
+}
+
+method cache-fragment(@key-parts, &producer, Str :$digest --> Str) {
+  ~$!cache-store.fetch(cache-key(|@key-parts, :$digest), &producer)
 }
 
 method render-partial(Str:D $name, %locals = {}, :$controller --> Str) {

@@ -19,6 +19,7 @@ nav:
   - Transport & host security: transport-security.md
   - Secrets: secrets.md
   - Content negotiation: content-negotiation.md
+  - Caching & streaming: caching.md
 theme:
   name: 'material'
 markdown_extensions:

@@ -1,0 +1,105 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Response;
+use MVC::Keayl::Cache;
+use MVC::Keayl::View;
+
+# expires-in / expires-now
+
+{
+  my class TtlController is MVC::Keayl::Controller {
+    method show { self.expires-in(3600); self.render(:plain('x')) }
+  }
+  is TtlController.new.dispatch('show').header('Cache-Control'), 'private, max-age=3600', 'expires-in sets a private max-age';
+}
+
+{
+  my class PublicTtlController is MVC::Keayl::Controller {
+    method show { self.expires-in(60, public => True, must-revalidate => True); self.render(:plain('x')) }
+  }
+  is PublicTtlController.new.dispatch('show').header('Cache-Control'), 'public, max-age=60, must-revalidate',
+    'expires-in honours public and extra directives';
+}
+
+{
+  my class NoCacheController is MVC::Keayl::Controller {
+    method show { self.expires-now; self.render(:plain('x')) }
+  }
+  is NoCacheController.new.dispatch('show').header('Cache-Control'), 'no-cache', 'expires-now sets no-cache';
+}
+
+{
+  my class NoStoreController is MVC::Keayl::Controller {
+    method show { self.expires-now(no-store => True); self.render(:plain('x')) }
+  }
+  is NoStoreController.new.dispatch('show').header('Cache-Control'), 'no-store', 'expires-now can set no-store';
+}
+
+# cache key derivation
+
+{
+  is cache-key('home', 'sidebar'), 'views/home/sidebar', 'a cache key joins its parts under views';
+}
+
+{
+  is cache-key('home', digest => 'abc123'), 'views/home/abc123', 'a digest is appended to the cache key';
+}
+
+{
+  my class Model { method cache-key { 'posts/1-2021' } }
+  is cache-key(Model.new), 'views/posts/1-2021', 'an object contributes its own cache key';
+}
+
+# memory store fetch
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+  my $calls = 0;
+  $store.fetch('k', { $calls++; 'value' });
+  $store.fetch('k', { $calls++; 'value' });
+  is $calls, 1, 'fetch computes once and caches the result';
+}
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+  is $store.fetch('k', { 'computed' }), 'computed', 'fetch returns the produced value';
+}
+
+# view fragment caching
+
+{
+  my $view  = MVC::Keayl::View.new(:paths(['specs/lib/views']));
+  my $calls = 0;
+  $view.cache-fragment(['home'], { $calls++; 'fragment' });
+  my $second = $view.cache-fragment(['home'], { $calls++; 'fragment' });
+  is $calls, 1, 'a view fragment is produced once';
+}
+
+{
+  my $view = MVC::Keayl::View.new(:paths(['specs/lib/views']));
+  is $view.cache-fragment(['home'], { 'fragment' }), 'fragment', 'a view fragment returns the produced content';
+}
+
+# streaming responses
+
+{
+  my $response = MVC::Keayl::Response.new;
+  $response.stream(('a', 'b', 'c'));
+  ok $response.is-streaming, 'a response with a stream source reports streaming';
+}
+
+{
+  my $response = MVC::Keayl::Response.new;
+  $response.stream(('a', 'b', 'c'));
+  is $response.stream-chunks.map(*.decode('utf-8')).join, 'abc', 'stream chunks materialize to the body';
+}
+
+{
+  my $response = MVC::Keayl::Response.new;
+  $response.stream((1, 2, 3).map(* x 2));
+  is $response.stream-chunks.elems, 3, 'a streamed sequence yields each chunk';
+}
+
+done-testing;

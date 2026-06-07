@@ -1,0 +1,110 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Caching;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Request;
+
+class Record {
+  has $.cache-key;
+}
+
+class CachingController is MVC::Keayl::Controller {
+  has $.tag = 'abc';
+  method show {
+    self.render(:plain('rendered')) if self.is-stale(etag => $!tag);
+  }
+}
+
+sub showing(*%request) {
+  CachingController.new(request => MVC::Keayl::Request.new(method => 'GET', |%request))
+}
+
+# etag-for
+
+{
+  ok etag-for('x').starts-with('W/"'), 'a weak etag is prefixed with W/';
+}
+
+{
+  ok etag-for('x', weak => False).starts-with('"'), 'a strong etag has no weak prefix';
+}
+
+{
+  is etag-for(Record.new(cache-key => 'rec/1')), etag-for(Record.new(cache-key => 'rec/1')),
+    'the same cache key produces the same etag';
+}
+
+{
+  isnt etag-for('a'), etag-for('b'), 'different values produce different etags';
+}
+
+# http date round-trip
+
+{
+  my $when = DateTime.new(:2021year, :6month, :9day, :10hour, :18minute, :14second, :timezone(0));
+  is http-date($when), 'Wed, 09 Jun 2021 10:18:14 GMT', 'a DateTime formats as an HTTP date';
+}
+
+{
+  is parse-http-date('Wed, 09 Jun 2021 10:18:14 GMT').year, 2021, 'an HTTP date parses back to a DateTime';
+}
+
+# fresh-when sets the etag header
+
+{
+  my $controller = showing();
+  $controller.fresh-when(etag => 'abc');
+  ok $controller.response.header('ETag').defined, 'fresh-when sets an ETag header';
+}
+
+# conditional GET: matching etag yields 304
+
+{
+  my $etag = etag-for('abc');
+  my $response = showing(headers => %( 'if-none-match' => $etag )).dispatch('show');
+  is $response.status, 304, 'a matching If-None-Match yields 304';
+}
+
+{
+  my $etag = etag-for('abc');
+  my $response = showing(headers => %( 'if-none-match' => $etag )).dispatch('show');
+  is $response.body, '', 'a 304 response has an empty body';
+}
+
+# conditional GET: non-matching etag renders
+
+{
+  my $response = showing(headers => %( 'if-none-match' => etag-for('different') )).dispatch('show');
+  is $response.body, 'rendered', 'a non-matching etag renders the body';
+}
+
+# wildcard If-None-Match matches
+
+{
+  my $response = showing(headers => %( 'if-none-match' => '*' )).dispatch('show');
+  is $response.status, 304, 'a wildcard If-None-Match yields 304';
+}
+
+# last-modified conditional
+
+{
+  my $controller = showing(headers => %( 'if-modified-since' => 'Wed, 09 Jun 2021 10:18:14 GMT' ));
+  my $fresh = $controller.fresh-when(last-modified => DateTime.new(:2021year, :6month, :9day, :10hour, :0minute, :0second, :timezone(0)));
+  ok $fresh, 'a resource not modified since the request is fresh';
+}
+
+{
+  my $controller = showing(headers => %( 'if-modified-since' => 'Wed, 09 Jun 2021 10:18:14 GMT' ));
+  my $fresh = $controller.fresh-when(last-modified => DateTime.new(:2021year, :6month, :9day, :11hour, :0minute, :0second, :timezone(0)));
+  nok $fresh, 'a resource modified after the request is stale';
+}
+
+# no conditional headers: not fresh
+
+{
+  my $controller = showing();
+  nok $controller.fresh-when(etag => 'abc'), 'without conditional request headers the response is not fresh';
+}
+
+done-testing;

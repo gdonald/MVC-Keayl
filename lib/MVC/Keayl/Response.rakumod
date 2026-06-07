@@ -8,6 +8,7 @@ has     $!binary-body;
 
 has %!headers;
 has @!header-order;
+has $!stream-source;
 
 submethod BUILD(Int :$status = 200, :%headers, :$body) {
   $!status = $status;
@@ -96,6 +97,20 @@ method content-length(--> Int) {
 method write(Str:D $chunk) {
   @!body-parts.push($chunk);
   self
+}
+
+method stream($source --> ::?CLASS) {
+  $!stream-source = $source;
+  self
+}
+
+method is-streaming(--> Bool) {
+  $!stream-source.defined
+}
+
+method stream-chunks(--> Seq) {
+  return ().Seq without $!stream-source;
+  $!stream-source.map({ $_ ~~ Blob ?? $_ !! .Str.encode('utf-8') }).Seq
 }
 
 multi method body(--> Str)              { $!binary-body.defined ?? $!binary-body.decode('utf-8') !! @!body-parts.join }

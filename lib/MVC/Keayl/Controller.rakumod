@@ -10,6 +10,7 @@ use MVC::Keayl::Flash;
 use MVC::Keayl::CSRF;
 use MVC::Keayl::ParameterFilter;
 use MVC::Keayl::Mime;
+use MVC::Keayl::Caching;
 
 unit class MVC::Keayl::Controller;
 
@@ -458,6 +459,88 @@ method !negotiate-format(@available --> Str) {
   my $accept = $!request.defined ?? $!request.header('accept') !! Str;
 
   negotiate(@available, $accept)
+}
+
+method fresh-when(:$etag, :$last-modified, Bool :$weak = True, :$cache-control --> Bool) {
+  with $etag {
+    my $value = ($_ ~~ Str && ($_.starts-with('"') || $_.starts-with('W/'))) ?? $_ !! etag-for($_, :$weak);
+    $!response.set-header('ETag', $value);
+  }
+
+  with $last-modified {
+    $!response.set-header('Last-Modified', $_ ~~ DateTime ?? http-date($_) !! ~$_);
+  }
+
+  $!response.set-header('Cache-Control', $cache-control) with $cache-control;
+
+  my $fresh = self!request-fresh;
+
+  if $fresh {
+    $!response.status = 304;
+    $!response.body('');
+    $!performed = True;
+  }
+
+  $fresh
+}
+
+method is-stale(*%args --> Bool) {
+  !self.fresh-when(|%args)
+}
+
+method expires-in($seconds, Bool :$public, *%directives --> ::?CLASS) {
+  my @parts = $public ?? 'public' !! 'private';
+  @parts.push('max-age=' ~ $seconds.Int);
+
+  for %directives.sort(*.key) -> $directive {
+    next unless $directive.value;
+    @parts.push($directive.key.subst('_', '-', :g) ~ ($directive.value === True ?? '' !! '=' ~ $directive.value));
+  }
+
+  $!response.set-header('Cache-Control', @parts.join(', '));
+  self
+}
+
+method expires-now(Bool :$no-store --> ::?CLASS) {
+  $!response.set-header('Cache-Control', $no-store ?? 'no-store' !! 'no-cache');
+  self
+}
+
+method !request-fresh(--> Bool) {
+  return False without $!request;
+  return False unless ($!request.method // 'GET').uc eq 'GET' | 'HEAD';
+
+  my $if-none-match     = $!request.header('if-none-match');
+  my $if-modified-since = $!request.header('if-modified-since');
+
+  return False unless $if-none-match.defined || $if-modified-since.defined;
+
+  my $result = True;
+  $result = $result && self!etag-matches($!response.header('ETag'), $if-none-match) if $if-none-match.defined;
+  $result = $result && self!not-modified-since($!response.header('Last-Modified'), $if-modified-since) if $if-modified-since.defined;
+  $result
+}
+
+method !etag-matches($etag, Str:D $if-none-match --> Bool) {
+  return False without $etag;
+
+  my @client = $if-none-match.split(',').map(*.trim);
+  return True if @client.first(* eq '*');
+
+  my $normalized = $etag.subst(/^ 'W/'/, '');
+  so @client.first({ .subst(/^ 'W/'/, '') eq $normalized })
+}
+
+method !not-modified-since($last-modified, Str:D $if-modified-since --> Bool) {
+  return False without $last-modified;
+
+  my $modified = parse-http-date($last-modified);
+  my $since    = parse-http-date($if-modified-since);
+
+  return False without $modified;
+  return False without $since;
+
+  $modified.Instant <= $since.Instant
 }
 
 method !flush-cookies {
