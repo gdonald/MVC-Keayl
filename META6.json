@@ -30,6 +30,7 @@
     "MVC::Keayl::APIController": "lib/MVC/Keayl/APIController.rakumod",
     "MVC::Keayl::Application": "lib/MVC/Keayl/Application.rakumod",
     "MVC::Keayl::Cache": "lib/MVC/Keayl/Cache.rakumod",
+    "MVC::Keayl::CLI": "lib/MVC/Keayl/CLI.rakumod",
     "MVC::Keayl::Caching": "lib/MVC/Keayl/Caching.rakumod",
     "MVC::Keayl::Config": "lib/MVC/Keayl/Config.rakumod",
     "MVC::Keayl::Controller": "lib/MVC/Keayl/Controller.rakumod",

@@ -21,6 +21,7 @@ nav:
   - Content negotiation: content-negotiation.md
   - Caching & streaming: caching.md
   - Application & configuration: application.md
+  - Command-line interface: cli.md
 theme:
   name: 'material'
 markdown_extensions:

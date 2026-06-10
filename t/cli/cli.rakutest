@@ -1,0 +1,204 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::CLI;
+use MVC::Keayl::Application;
+use MVC::Keayl::Routing;
+use CLIFixtures;
+
+# program-name
+
+is program-name(), 'keayl', 'the program name is keayl';
+
+# version
+
+{
+  my $dir = temp-dir('version');
+  write-file($dir.add('META6.json'), '{ "version": "9.8.7" }');
+
+  is version($dir), '9.8.7', 'version reads the version from META6.json';
+}
+
+{
+  my $dir = temp-dir('version-missing-meta');
+
+  is version($dir), 'unknown', 'version is unknown without a META6.json';
+}
+
+{
+  my $dir = temp-dir('version-no-field');
+  write-file($dir.add('META6.json'), '{ "name": "X" }');
+
+  is version($dir), 'unknown', 'version is unknown when META6.json has no version';
+}
+
+# usage
+
+{
+  my $text = usage();
+
+  like $text, /'Usage: keayl'/, 'usage shows the program invocation';
+  like $text, /server/,         'usage lists the server command';
+  like $text, /console/,        'usage lists the console command';
+}
+
+# routes-table
+
+{
+  is routes-table([]), '', 'an empty route table renders an empty string';
+}
+
+{
+  my @table =
+    %( name => 'root',  verbs => ['GET'],         path => '/',      target => 'home#index' ),
+    %( name => 'users', verbs => ['GET', 'POST'], path => '/users', target => 'users#index' );
+
+  my $text = routes-table(@table);
+
+  like $text, /'home#index'/,    'the route table renders a string target';
+  like $text, /'GET,POST'/,      'the route table joins verbs with a comma';
+  like $text, /'/users'/,        'the route table renders the path';
+}
+
+{
+  my @table = %( name => Str, verbs => ['GET'], path => '/', target => MVC::Keayl::Application );
+
+  like routes-table(@table), /'MVC::Keayl::Application'/, 'a non-string target renders its type name';
+}
+
+# print-routes
+
+{
+  my $out = StringSink.new;
+  my $err = StringSink.new;
+
+  is print-routes('specs/lib/routes-fixture.raku', :$out, :$err), 0, 'print-routes succeeds for an existing routes file';
+  like $out.text, /'users#index'/, 'print-routes prints the route table';
+}
+
+{
+  my $out = StringSink.new;
+  my $err = StringSink.new;
+
+  is print-routes('does/not/exist.raku', :$out, :$err), 1, 'print-routes fails when the routes file is missing';
+  like $err.text, /'no does/not/exist.raku'/, 'print-routes reports the missing file';
+}
+
+# load-application
+
+{
+  my $err = StringSink.new;
+  my $app = load-application('does/not/exist.raku', :$err);
+
+  nok $app.defined, 'load-application returns an undefined application when the file is missing';
+  like $err.text, /'no does'/, 'load-application reports the missing file';
+}
+
+{
+  my $dir  = temp-dir('load-app');
+  my $file = minimal-app-file($dir);
+  my $app  = load-application($file);
+
+  isa-ok $app, MVC::Keayl::Application, 'load-application evaluates the file into an application';
+}
+
+# build-server
+
+{
+  my $app     = MVC::Keayl::Application.new;
+  my $adapter = build-server($app);
+
+  is $adapter.host, '127.0.0.1', 'build-server defaults the host to localhost';
+  is $adapter.port, 3000,        'build-server defaults the port to 3000';
+}
+
+{
+  my $app     = MVC::Keayl::Application.new;
+  my $adapter = build-server($app, host => '0.0.0.0', port => 8080, scheme => 'https');
+
+  is $adapter.host,   '0.0.0.0', 'build-server honors a custom host';
+  is $adapter.port,   8080,      'build-server honors a custom port';
+  is $adapter.scheme, 'https',   'build-server honors a custom scheme';
+}
+
+# console
+
+{
+  my $dir  = temp-dir('console-eval');
+  my $file = minimal-app-file($dir);
+
+  my $in  = LineSource.new(input => ['1 + 1']);
+  my $out = StringSink.new;
+  my $err = StringSink.new;
+
+  is console($file, :$in, :$out, :$err), 0, 'console returns success after reading input';
+  like $out.text, /'console (development)'/, 'console announces the environment';
+  like $out.text, /'2'/, 'console evaluates and prints a result';
+}
+
+{
+  my $dir  = temp-dir('console-app');
+  my $file = minimal-app-file($dir);
+
+  my $in  = LineSource.new(input => ['$*KEAYL-APP.environment']);
+  my $out = StringSink.new;
+
+  console($file, :$in, :$out, err => StringSink.new);
+
+  like $out.text, /development/, 'console exposes the booted app as a dynamic variable';
+}
+
+{
+  my $dir  = temp-dir('console-error');
+  my $file = minimal-app-file($dir);
+
+  my $in  = LineSource.new(input => ['die "boom"']);
+  my $out = StringSink.new;
+  my $err = StringSink.new;
+
+  console($file, :$in, :$out, :$err);
+
+  like $err.text, /boom/, 'console reports an evaluation error without stopping';
+}
+
+{
+  my $dir  = temp-dir('console-blank');
+  my $file = minimal-app-file($dir);
+
+  my $in  = LineSource.new(input => ['', '   ']);
+  my $out = StringSink.new;
+
+  is console($file, :$in, :$out, err => StringSink.new), 0, 'console skips blank input lines';
+}
+
+{
+  my $out = StringSink.new;
+  my $err = StringSink.new;
+
+  is console('does/not/exist.raku', in => LineSource.new, :$out, :$err), 1,
+    'console fails when the application file is missing';
+}
+
+# scaffold-app
+
+{
+  my $dir     = temp-dir('scaffold');
+  my @created = scaffold-app('blog', into => $dir);
+
+  ok @created.elems > 0, 'scaffold-app reports the files it created';
+  ok $dir.add('blog/config/routes.raku').e, 'scaffold-app writes the routes file';
+  ok $dir.add('blog/app/controllers/HomeController.rakumod').e, 'scaffold-app writes the home controller';
+  like $dir.add('blog/README.md').slurp, /blog/, 'scaffold-app names the app in the README';
+}
+
+{
+  my $dir = temp-dir('scaffold-routes');
+  scaffold-app('shop', into => $dir);
+
+  my @table = load-routes($dir.add('shop/config/routes.raku')).route-table;
+
+  is @table.first(*<name> eq 'root')<target>, 'home#index', 'the scaffolded routes file is loadable and defines a root';
+}
+
+done-testing;

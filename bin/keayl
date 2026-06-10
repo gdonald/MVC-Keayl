@@ -1,91 +1,54 @@
 #!/usr/bin/env raku
 
 use v6.d;
+use MVC::Keayl::CLI;
 
-my constant NAME = 'keayl';
+my $NAME = program-name();
 
-sub version(--> Str) {
-  my $meta = $*PROGRAM.parent.parent.add('META6.json');
-  return 'unknown' unless $meta.e;
-
-  my $text = $meta.slurp;
-  with $text ~~ / '"version"' \s* ':' \s* '"' (<-["]>+) '"' / {
-    return ~$0;
-  }
-
-  'unknown';
-}
-
-sub usage(--> Str) {
-  qq:to/USAGE/.chomp;
-    Usage: {NAME} <command> [options]
-
-    Commands:
-      new <name>              create a new application skeleton
-      server                  boot the application (alias: s)
-      routes                  print the route table
-      console                 open a REPL with the app loaded (alias: c)
-      generate <type> <name>  run a generator (alias: g)
-                                types: controller, scaffold
-      version                 print the {NAME} version
-      help                    show this message
-
-    Run `{NAME} <command> --help` for command-specific options.
-    USAGE
-}
+sub app-base(--> IO::Path) { $*PROGRAM.parent.parent }
 
 sub not-yet(Str:D $command --> Int) {
-  note "{NAME}: `$command` is not implemented yet.";
+  note "$NAME: `$command` is not implemented yet.";
   1;
 }
 
-multi sub MAIN('version') { say version(); }
+multi sub MAIN('version') { say version(app-base()); }
 multi sub MAIN('help')    { say usage(); }
 
 multi sub MAIN('new', $name) {
-  exit not-yet("new $name");
+  my @created = scaffold-app($name);
+  say "created $name/$_" for @created;
+  exit 0;
 }
 
-multi sub MAIN('server') { exit not-yet('server'); }
-multi sub MAIN('s')      { exit not-yet('server'); }
+multi sub MAIN('server', Str :$host = '127.0.0.1', Int :$port = 3000) { exit serve(:$host, :$port); }
+multi sub MAIN('s',      Str :$host = '127.0.0.1', Int :$port = 3000) { exit serve(:$host, :$port); }
 
-multi sub MAIN('routes') { exit print-routes(); }
+sub serve(Str:D :$host, Int:D :$port --> Int) {
+  my $app = load-application();
+  return 1 unless $app.defined;
 
-sub print-routes(--> Int) {
-  my $path = 'config/routes.raku';
+  my $adapter = build-server($app, :$host, :$port);
+  $adapter.start;
 
-  unless $path.IO.e {
-    note "{NAME}: no $path found";
-    return 1;
-  }
+  say "$NAME: listening on http://$host:$port ($app.environment())";
 
-  require MVC::Keayl::Routing <&load-routes>;
-  my @table = load-routes($path).route-table;
-
-  my $name-width = max 4, |@table.map({ (.<name> // '').chars });
-  my $verb-width = max 4, |@table.map({ .<verbs>.join(',').chars });
-  my $path-width = max 4, |@table.map({ .<path>.chars });
-
-  for @table -> %row {
-    printf "%-*s  %-*s  %-*s  %s\n",
-      $name-width, %row<name> // '',
-      $verb-width, %row<verbs>.join(','),
-      $path-width, %row<path>,
-      (%row<target> ~~ Str ?? %row<target> !! %row<target>.^name);
-  }
+  react { whenever signal(SIGINT) { $adapter.stop; done } }
 
   0
 }
 
-multi sub MAIN('console') { exit not-yet('console'); }
-multi sub MAIN('c')       { exit not-yet('console'); }
+multi sub MAIN('routes') { exit print-routes(); }
+
+multi sub MAIN('console') { exit console(); }
+multi sub MAIN('c')       { exit console(); }
 
 multi sub MAIN('generate', $type, $name) { exit generate($type, $name); }
 multi sub MAIN('g',        $type, $name) { exit generate($type, $name); }
 
 sub generate(Str:D $type, Str:D $name --> Int) {
   unless $type eq 'controller' || $type eq 'scaffold' {
-    note "{NAME}: unknown generator '$type' (expected: controller, scaffold)";
+    note "$NAME: unknown generator '$type' (expected: controller, scaffold)";
     return 2;
   }
 
@@ -94,7 +57,7 @@ sub generate(Str:D $type, Str:D $name --> Int) {
 
 multi sub MAIN(Bool :$version) {
   if $version {
-    say version();
+    say version(app-base());
   } else {
     say usage();
   }
