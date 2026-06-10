@@ -9,6 +9,7 @@ use MVC::Keayl::Session;
 use MVC::Keayl::Flash;
 use MVC::Keayl::CSRF;
 use MVC::Keayl::ParameterFilter;
+use MVC::Keayl::Notifications;
 use MVC::Keayl::Mime;
 use MVC::Keayl::Caching;
 
@@ -560,24 +561,30 @@ method !timed(Str:D $kind, &block) {
   $event.time($kind, &block)
 }
 
+method !render-traced(Str:D $kind, Str:D $name, &block) {
+  self!timed('view', {
+    MVC::Keayl::Notifications.instrument('render.keayl', %( :$kind, :$name ), &block)
+  })
+}
+
 method render-template(Str:D $name, %locals --> Str) {
   die 'no view renderer configured' without $!view-renderer;
-  self!timed('view', { $!view-renderer.render-template($name, %locals, controller => self) })
+  self!render-traced('template', $name, { $!view-renderer.render-template($name, %locals, controller => self) })
 }
 
 method render-inline(Str:D $template, %locals --> Str) {
   die 'no view renderer configured' without $!view-renderer;
-  self!timed('view', { $!view-renderer.render-inline($template, %locals, controller => self) })
+  self!render-traced('inline', 'inline', { $!view-renderer.render-inline($template, %locals, controller => self) })
 }
 
 method render-partial(Str:D $name, %locals --> Str) {
   die 'no view renderer configured' without $!view-renderer;
-  self!timed('view', { $!view-renderer.render-partial($name, %locals, controller => self) })
+  self!render-traced('partial', $name, { $!view-renderer.render-partial($name, %locals, controller => self) })
 }
 
 method render-object($object, %locals --> Str) {
   die 'no view renderer configured' without $!view-renderer;
-  self!timed('view', { $!view-renderer.render-object($object, %locals, controller => self) })
+  self!render-traced('object', $object.^name, { $!view-renderer.render-object($object, %locals, controller => self) })
 }
 
 method render-collection(Str:D $name, @collection, $spacer, %locals --> Str) {

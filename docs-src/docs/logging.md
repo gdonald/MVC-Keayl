@@ -25,8 +25,11 @@ at `silent` shows nothing. Per-request lines are logged at `info`.
 ## The request line
 
 ```
-GET /posts/42 → posts#show 200 in 12.30ms action=8.10ms view=4.00ms params={id=42}
+[a1b2c3…] GET /posts/42 → posts#show 200 in 12.30ms action=8.10ms view=4.00ms params={id=42}
 ```
+
+The leading `[…]` is the [request id](instrumentation.md), present when the
+request-id middleware ran ahead of the logger.
 
 - `action` is the time spent in the controller action.
 - `view` is the time spent rendering templates, partials, and objects. When a

@@ -4,6 +4,7 @@ use MVC::Keayl::Request;
 use MVC::Keayl::Response;
 use MVC::Keayl::Router;
 use MVC::Keayl::Params;
+use MVC::Keayl::Notifications;
 
 unit class MVC::Keayl::Dispatcher does MVC::Keayl::Endpoint;
 
@@ -35,7 +36,17 @@ method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
   my $class = self!resolve($match.controller);
   return self!not-found($request) if $class =:= Mu;
 
-  self!invoke($class, $match, $request)
+  MVC::Keayl::Notifications.instrument(
+    'dispatch.keayl',
+    %(
+      controller => $match.controller,
+      action     => $match.action,
+      method     => $request.method,
+      path       => $request.path,
+      request-id => ($*KEAYL-REQUEST-ID // Str),
+    ),
+    { self!invoke($class, $match, $request) },
+  )
 }
 
 method !invoke($class, $match, MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {

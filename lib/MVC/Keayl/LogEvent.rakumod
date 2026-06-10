@@ -5,6 +5,7 @@ unit class MVC::Keayl::LogEvent;
 has Str $.method;
 has Str $.path;
 has Str $.target is rw;
+has Str $.request-id is rw;
 has Int $.status is rw;
 has     %.params;
 has     %!timings;

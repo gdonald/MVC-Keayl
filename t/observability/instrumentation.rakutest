@@ -1,0 +1,233 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Notifications;
+use MVC::Keayl::Middleware::RequestId;
+use MVC::Keayl::Middleware::Logger;
+use MVC::Keayl::Logger;
+use MVC::Keayl::Application;
+use MVC::Keayl::Dispatcher;
+use MVC::Keayl::Router;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Request;
+use MVC::Keayl::Response;
+use MVC::Keayl::View;
+use MVC::Keayl::Routing;
+use CLIFixtures;
+use LoggingFixtures;
+
+sub request($method, $path, *%args) {
+  MVC::Keayl::Request.new(:$method, :$path, |%args)
+}
+
+class InstrController is MVC::Keayl::Controller {
+  method show { self.render(:plain('ok')) }
+  method page { self.render(:inline('%p hi')) }
+}
+
+class FakeBus {
+  has @.subs;
+
+  method subscribe(Str:D $event, &callback --> Int) {
+    @!subs.push: %( :$event, :&callback );
+    @!subs.elems - 1
+  }
+
+  method emit(Str:D $event, %payload) {
+    .<callback>(%payload) for @!subs.grep(*.<event> eq $event);
+  }
+}
+
+sub dispatcher(:$view-renderer) {
+  my $router = routes {
+    get '/show', to => 'instr#show';
+    get '/page', to => 'instr#page';
+  };
+
+  my %options = $view-renderer.defined ?? (view-renderer => $view-renderer) !! ();
+  MVC::Keayl::Dispatcher.new(:$router, controllers => [InstrController], controller-options => %options)
+}
+
+# subscribe and notify
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my @seen;
+  MVC::Keayl::Notifications.subscribe('thing.happened', -> %payload { @seen.push: %payload<value> });
+  MVC::Keayl::Notifications.notify('thing.happened', %( value => 7 ));
+
+  is @seen, [7], 'a subscriber receives the payload of a notified event';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  nok MVC::Keayl::Notifications.has-subscribers('nobody'), 'an event with no subscribers reports none';
+
+  MVC::Keayl::Notifications.subscribe('somebody', -> %p { });
+  ok MVC::Keayl::Notifications.has-subscribers('somebody'), 'an event with a subscriber reports it';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my @seen;
+  my $id = MVC::Keayl::Notifications.subscribe('e', -> %p { @seen.push: 1 });
+
+  ok MVC::Keayl::Notifications.unsubscribe($id), 'unsubscribing a known id returns true';
+
+  MVC::Keayl::Notifications.notify('e', %());
+  is @seen.elems, 0, 'an unsubscribed callback no longer fires';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+  nok MVC::Keayl::Notifications.unsubscribe(999), 'unsubscribing an unknown id returns false';
+}
+
+# instrument
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my %captured;
+  MVC::Keayl::Notifications.subscribe('work', -> %payload { %captured = %payload });
+
+  my $result = MVC::Keayl::Notifications.instrument('work', %( label => 'job' ), { 99 });
+
+  is $result, 99,                'instrument returns the block result';
+  is %captured<label>, 'job',    'the subscriber receives the payload';
+  ok %captured<duration>.defined, 'instrument adds a duration to the payload';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+  my $ran = MVC::Keayl::Notifications.instrument('nobody', %(), { 5 });
+  is $ran, 5, 'instrument runs the block even with no subscribers';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my %captured;
+  MVC::Keayl::Notifications.subscribe('boom', -> %payload { %captured = %payload });
+
+  dies-ok { MVC::Keayl::Notifications.instrument('boom', %(), { die 'kaboom' }) }, 'instrument rethrows a block error';
+  ok %captured<exception>.defined, 'the subscriber sees the exception in the payload';
+}
+
+# bridge
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my $source = FakeBus.new;
+  MVC::Keayl::Notifications.bridge($source);
+
+  my @seen;
+  MVC::Keayl::Notifications.subscribe('sql.active_record', -> %payload { @seen.push: %payload<sql> });
+
+  $source.emit('sql.active_record', %( sql => 'SELECT 1' ));
+
+  is @seen, ['SELECT 1'], 'a bridged source forwards events onto the framework bus';
+}
+
+# dispatch hook
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my %captured;
+  MVC::Keayl::Notifications.subscribe('dispatch.keayl', -> %payload { %captured = %payload });
+
+  dispatcher.call(request('GET', '/show'));
+
+  is %captured<controller>, 'instr',  'the dispatch hook reports the controller';
+  is %captured<action>, 'show',       'the dispatch hook reports the action';
+  ok %captured<duration>.defined,     'the dispatch hook reports a duration';
+}
+
+# render hook
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my @kinds;
+  MVC::Keayl::Notifications.subscribe('render.keayl', -> %payload { @kinds.push: %payload<kind> });
+
+  dispatcher(view-renderer => MVC::Keayl::View.new(paths => ['specs/lib/views'])).call(request('GET', '/page'));
+
+  is @kinds, ['inline'], 'the render hook reports the kind of render';
+}
+
+# request id middleware
+
+{
+  my $stack = MVC::Keayl::Middleware::RequestId.new(app => StatusEndpoint.new, generator => sub { 'fixed-id' });
+  my $response = $stack.call(request('GET', '/'));
+
+  is $response.header('X-Request-Id'), 'fixed-id', 'a request id is generated and set on the response';
+}
+
+{
+  my $stack = MVC::Keayl::Middleware::RequestId.new(app => StatusEndpoint.new, generator => sub { 'generated' });
+  my $response = $stack.call(request('GET', '/', headers => { 'X-Request-Id' => 'incoming-123' }));
+
+  is $response.header('X-Request-Id'), 'incoming-123', 'a valid incoming request id is propagated';
+}
+
+{
+  my $stack = MVC::Keayl::Middleware::RequestId.new(app => StatusEndpoint.new, generator => sub { 'generated' });
+  my $response = $stack.call(request('GET', '/', headers => { 'X-Request-Id' => 'bad id with spaces' }));
+
+  is $response.header('X-Request-Id'), 'generated', 'an invalid incoming request id is replaced';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my %captured;
+  MVC::Keayl::Notifications.subscribe('dispatch.keayl', -> %payload { %captured = %payload });
+
+  my $stack = MVC::Keayl::Middleware::RequestId.new(app => dispatcher, generator => sub { 'trace-9' });
+  $stack.call(request('GET', '/show'));
+
+  is %captured<request-id>, 'trace-9', 'the request id is visible to downstream instrumentation';
+}
+
+# request id in the log line
+
+{
+  my $sink   = StringSink.new;
+  my $logger = MVC::Keayl::Logger.new(level => 'info', out => $sink);
+
+  my $logged = MVC::Keayl::Middleware::Logger.new(app => StatusEndpoint.new, :$logger, clock => step-clock());
+  my $stack  = MVC::Keayl::Middleware::RequestId.new(app => $logged, generator => sub { 'req-7' });
+
+  $stack.call(request('GET', '/show'));
+
+  like $sink.text, /'[req-7]'/, 'the request id prefixes the log line';
+}
+
+# application wiring
+
+{
+  my $app = MVC::Keayl::Application.new(controllers => [InstrController]);
+  $app.draw-routes({ get '/show', to => 'instr#show' });
+
+  my $response = $app.endpoint.call(request('GET', '/show'));
+
+  ok $response.header('X-Request-Id').defined, 'a booted application sets a request id on the response';
+}
+
+{
+  my $app = MVC::Keayl::Application.new;
+  $app.boot;
+
+  ok $app.middleware.contains('request-id'),     'the request-id middleware is wired by default';
+  ok $app.middleware.contains('request-logger'), 'the request logger is wired by default';
+}
+
+done-testing;

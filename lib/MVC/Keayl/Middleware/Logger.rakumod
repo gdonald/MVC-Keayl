@@ -14,9 +14,10 @@ method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
   return self.app.call($request) unless $!logger.enabled('info');
 
   my $event = MVC::Keayl::LogEvent.new(
-    method => $request.method,
-    path   => $request.path,
-    clock  => &!clock,
+    method     => $request.method,
+    path       => $request.path,
+    request-id => ($*KEAYL-REQUEST-ID // Str),
+    clock      => &!clock,
   );
 
   my $start = &!clock.();
@@ -53,6 +54,7 @@ sub format-line(MVC::Keayl::LogEvent:D $event, $total --> Str) {
 
   my $line = @parts.join(' ');
   $line ~= " params={format-params($event.params)}" if $event.params;
+  $line = "[{$event.request-id}] $line" with $event.request-id;
 
   $line
 }

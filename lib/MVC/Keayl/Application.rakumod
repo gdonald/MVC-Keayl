@@ -8,6 +8,7 @@ use MVC::Keayl::View;
 use MVC::Keayl::Routing;
 use MVC::Keayl::Logger;
 use MVC::Keayl::Middleware::Logger;
+use MVC::Keayl::Middleware::RequestId;
 
 unit class MVC::Keayl::Application;
 
@@ -37,6 +38,10 @@ submethod TWEAK {
     $app.logger //= MVC::Keayl::Logger.new(level => $app.config<log-level> // 'silent');
 
     $app.middleware.prepend('request-logger', MVC::Keayl::Middleware::Logger, logger => $app.logger);
+  });
+
+  self.initializer('request-id', -> $app {
+    $app.middleware.prepend('request-id', MVC::Keayl::Middleware::RequestId);
   });
 }
 
