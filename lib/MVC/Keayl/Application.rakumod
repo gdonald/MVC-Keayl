@@ -6,12 +6,15 @@ use MVC::Keayl::Dispatcher;
 use MVC::Keayl::Endpoint;
 use MVC::Keayl::View;
 use MVC::Keayl::Routing;
+use MVC::Keayl::Logger;
+use MVC::Keayl::Middleware::Logger;
 
 unit class MVC::Keayl::Application;
 
-has $.router     = MVC::Keayl::Router.new;
-has $.middleware = MVC::Keayl::MiddlewareStack.new;
-has $.config     = MVC::Keayl::Config.new;
+has $.router      = MVC::Keayl::Router.new;
+has $.middleware  = MVC::Keayl::MiddlewareStack.new;
+has $.config      = MVC::Keayl::Config.new;
+has $.logger is rw;
 has @.controllers;
 has %.controller-options;
 has &.database-connector = -> %db { };
@@ -28,6 +31,12 @@ submethod TWEAK {
       paths  => ($app.config<view-paths> // ['app/views']).Array,
       reload => !$app.is-production,
     );
+  });
+
+  self.initializer('request-logging', -> $app {
+    $app.logger //= MVC::Keayl::Logger.new(level => $app.config<log-level> // 'silent');
+
+    $app.middleware.prepend('request-logger', MVC::Keayl::Middleware::Logger, logger => $app.logger);
   });
 }
 

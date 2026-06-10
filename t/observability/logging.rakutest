@@ -1,0 +1,159 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Logger;
+use MVC::Keayl::LogEvent;
+use MVC::Keayl::Middleware::Logger;
+use MVC::Keayl::Dispatcher;
+use MVC::Keayl::Router;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Request;
+use MVC::Keayl::Response;
+use MVC::Keayl::View;
+use MVC::Keayl::Routing;
+use CLIFixtures;
+use LoggingFixtures;
+
+sub request($method, $path, *%args) {
+  MVC::Keayl::Request.new(:$method, :$path, |%args)
+}
+
+# Logger threshold
+
+{
+  my $logger = MVC::Keayl::Logger.new(level => 'info');
+
+  ok $logger.enabled('info'),   'a level is enabled at its own threshold';
+  ok $logger.enabled('error'),  'a higher level is enabled';
+  nok $logger.enabled('debug'), 'a lower level is disabled';
+}
+
+{
+  my $logger = MVC::Keayl::Logger.new(level => 'silent');
+
+  nok $logger.enabled('error'), 'the silent level disables everything';
+}
+
+# Logger output
+
+{
+  my $sink   = StringSink.new;
+  my $logger = MVC::Keayl::Logger.new(level => 'info', out => $sink);
+
+  ok $logger.info('hello'),     'logging an enabled level returns true';
+  is $sink.text, "hello\n",     'the message is written to the output';
+}
+
+{
+  my $sink   = StringSink.new;
+  my $logger = MVC::Keayl::Logger.new(level => 'warn', out => $sink);
+
+  nok $logger.info('skipped'), 'logging a disabled level returns false';
+  is $sink.text, '',           'a disabled level writes nothing';
+}
+
+{
+  my $sink   = StringSink.new;
+  my $logger = MVC::Keayl::Logger.new(level => 'debug', out => $sink);
+
+  $logger.error('boom');
+  like $sink.text, /boom/, 'the error convenience method writes through';
+}
+
+# LogEvent timing
+
+{
+  my $event = MVC::Keayl::LogEvent.new(clock => step-clock());
+
+  $event.time('view', -> { });
+  $event.time('view', -> { });
+
+  is $event.timing('view'), 0.002, 'timing accumulates across calls for a kind';
+}
+
+{
+  my $event  = MVC::Keayl::LogEvent.new(clock => step-clock());
+  my $result = $event.time('action', { 42 });
+
+  is $result, 42, 'time returns the block result';
+}
+
+{
+  my $event = MVC::Keayl::LogEvent.new;
+  $event.set-params(%( name => 'Ada' ));
+
+  is $event.params<name>, 'Ada', 'set-params records the parameters';
+}
+
+# request logging middleware
+
+{
+  my $sink   = StringSink.new;
+  my $logger = MVC::Keayl::Logger.new(level => 'info', out => $sink);
+  my $stack  = MVC::Keayl::Middleware::Logger.new(app => StatusEndpoint.new(status => 201), :$logger, clock => step-clock());
+
+  $stack.call(request('POST', '/widgets'));
+
+  like $sink.text, /'POST /widgets 201 in 1.00ms'/, 'a per-request line records method, path, status, and duration';
+}
+
+{
+  my $sink   = StringSink.new;
+  my $logger = MVC::Keayl::Logger.new(level => 'silent', out => $sink);
+  my $stack  = MVC::Keayl::Middleware::Logger.new(app => StatusEndpoint.new, :$logger);
+
+  my $response = $stack.call(request('GET', '/widgets'));
+
+  is $response.status, 200, 'a disabled logger still serves the request';
+  is $sink.text, '',        'a disabled logger writes no request line';
+}
+
+# controller timing and parameter filtering through the middleware
+
+class LogWidgetsController is MVC::Keayl::Controller {
+  method index { self.render(:plain('ok')) }
+  method form  { self.render(:inline('%p hello')) }
+}
+
+sub logged-call($action-path, $request, :$view-renderer) {
+  my $sink   = StringSink.new;
+  my $logger = MVC::Keayl::Logger.new(level => 'info', out => $sink);
+
+  my $router = routes { match $action-path, to => 'log_widgets#' ~ $action-path.subst('/', ''), via => <get post> };
+
+  my %options = $view-renderer.defined ?? (view-renderer => $view-renderer) !! ();
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [LogWidgetsController], controller-options => %options);
+
+  my $stack = MVC::Keayl::Middleware::Logger.new(app => $dispatcher, :$logger, clock => step-clock());
+  $stack.call($request);
+
+  $sink.text
+}
+
+{
+  my $text = logged-call('/index', request('GET', '/index'));
+
+  like $text, /'log_widgets#index'/, 'the request reaches the controller action';
+  like $text, /'action='/,       'controller action timing is recorded';
+}
+
+{
+  my $renderer = MVC::Keayl::View.new(paths => ['specs/lib/views']);
+  my $text     = logged-call('/form', request('GET', '/form'), view-renderer => $renderer);
+
+  like $text, /'view='/, 'view-render timing is recorded';
+}
+
+{
+  my $text = logged-call('/index', request('POST', '/index',
+    body    => 'password=secret&name=Ada',
+    headers => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+  ));
+
+  like $text, /'name=Ada'/,    'request parameters are logged';
+  like $text, /'[FILTERED]'/,  'filtered parameters are redacted in the log';
+  unlike $text, /secret/,      'a filtered value never appears in the log';
+}
+
+done-testing;

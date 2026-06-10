@@ -20,6 +20,11 @@ method use(Str:D $name, MVC::Keayl::Endpoint:U $class, |args) {
   self
 }
 
+method prepend(Str:D $name, MVC::Keayl::Endpoint:U $class, |args) {
+  @!entries.unshift: Entry.new(:$name, :$class, :args(args));
+  self
+}
+
 method insert-before(Str:D $before, Str:D $name, MVC::Keayl::Endpoint:U $class, |args) {
   my $i = self!index-of($before);
   die "unknown middleware '$before'" without $i;

@@ -22,6 +22,7 @@ nav:
   - Caching & streaming: caching.md
   - Application & configuration: application.md
   - Command-line interface: cli.md
+  - Logging: logging.md
 theme:
   name: 'material'
 markdown_extensions:
