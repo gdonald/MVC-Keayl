@@ -38,3 +38,13 @@ sub minimal-app-file(IO() $dir --> IO::Path) is export {
     MVC::Keayl::Application.new;
     RAKU
 }
+
+sub base-routes-file(IO() $root --> IO::Path) is export {
+  write-file($root.add('config/routes.raku'), q:to/RAKU/);
+    use MVC::Keayl::Routing;
+
+    routes {
+      root to => 'home#index';
+    }
+    RAKU
+}

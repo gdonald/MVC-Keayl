@@ -154,6 +154,236 @@ sub scaffold-app(Str:D $name, IO() :$into = '.'.IO --> List) is export {
   @created.List
 }
 
+sub camelize(Str:D $name --> Str) is export {
+  $name.split(/ <[-_]>+ /).grep(*.chars).map(*.tc).join
+}
+
+sub pluralize(Str:D $word --> Str) is export {
+  return $word.subst(/ 'y' $/, 'ies') if $word ~~ / <-[aeiou]> 'y' $/;
+  return $word ~ 'es' if $word ~~ / [ 's' | 'x' | 'z' | 'ch' | 'sh' ] $/;
+  $word ~ 's'
+}
+
+sub singularize(Str:D $word --> Str) is export {
+  return $word.subst(/ 'ies' $/, 'y') if $word ~~ / 'ies' $/;
+  return $word.subst(/ 'es' $/, '') if $word ~~ / [ 's' | 'x' | 'z' | 'ch' | 'sh' ] 'es' $/;
+  return $word.subst(/ 's' $/, '') if $word ~~ / <-[s]> 's' $/;
+  $word
+}
+
+sub controller-class-name(Str:D $name --> Str) is export {
+  camelize($name) ~ 'Controller'
+}
+
+sub emit-file(IO() $file, Str:D $content, :$out = $*OUT --> Bool) {
+  if $file.e {
+    $out.say: "  exists  $file";
+    return False;
+  }
+
+  $file.parent.mkdir;
+  $file.spurt: $content;
+
+  $out.say: "  create  $file";
+  True
+}
+
+sub insert-routes(IO() $path, @stubs, :$out = $*OUT, :$err = $*ERR --> Bool) is export {
+  unless $path.e {
+    $err.note: "{NAME}: no $path to add routes to";
+    return False;
+  }
+
+  my @lines    = $path.lines;
+  my $index    = @lines.first(:k, * ~~ / 'routes' \s* '{' | 'draw' \s* '{' /);
+
+  without $index {
+    $err.note: "{NAME}: no routes block found in $path";
+    return False;
+  }
+
+  my @existing = @lines.map(*.trim);
+  my @new      = @stubs.grep(-> $stub { !@existing.first(* eq $stub.trim) });
+
+  return True unless @new;
+
+  my @updated = |@lines[0 .. $index], |@new.map('  ' ~ *), |@lines[$index ^.. *];
+  $path.spurt: @updated.join("\n") ~ "\n";
+
+  $out.say: "  route   $path";
+  True
+}
+
+sub generate-controller(Str:D $name, @actions, IO() :$root = '.'.IO, :$out = $*OUT, :$err = $*ERR --> Int) is export {
+  my $class = controller-class-name($name);
+  my $path  = $name.lc;
+
+  emit-file($root.add("app/controllers/$class.rakumod"), controller-source($class, @actions), :$out);
+
+  for @actions -> $action {
+    emit-file($root.add("app/views/$path/$action.html.haml"), controller-view($path, $action), :$out);
+  }
+
+  insert-routes(
+    $root.add('config/routes.raku'),
+    @actions.map({ "get '/$path/$_', to => '$path#$_';" }),
+    :$out, :$err,
+  );
+
+  0
+}
+
+sub generate-scaffold(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT, :$err = $*ERR --> Int) is export {
+  my $singular = singularize($name.lc);
+  my $plural   = pluralize($singular);
+  my $model    = camelize($singular);
+  my $class    = camelize($plural) ~ 'Controller';
+
+  emit-file($root.add("app/models/$model.rakumod"), model-source($model), :$out);
+  emit-file($root.add("app/controllers/$class.rakumod"), scaffold-controller-source($class, $model, $singular, $plural), :$out);
+
+  emit-file($root.add("app/views/$plural/index.html.haml"), scaffold-index-view($singular, $plural), :$out);
+  emit-file($root.add("app/views/$plural/show.html.haml"),  scaffold-show-view($singular, $plural), :$out);
+  emit-file($root.add("app/views/$plural/new.html.haml"),   scaffold-new-view($singular, $plural), :$out);
+  emit-file($root.add("app/views/$plural/edit.html.haml"),  scaffold-edit-view($singular, $plural), :$out);
+  emit-file($root.add("app/views/$plural/_form.html.haml"), scaffold-form-view($singular, $plural), :$out);
+
+  insert-routes($root.add('config/routes.raku'), [ "resources '$plural';" ], :$out, :$err);
+
+  0
+}
+
+sub controller-source(Str:D $class, @actions --> Str) {
+  my @lines =
+    'use v6.d;',
+    'use MVC::Keayl::Controller;',
+    '',
+    "unit class $class is MVC::Keayl::Controller;";
+
+  for @actions -> $action {
+    @lines.push: '';
+    @lines.push: "method $action \{ }";
+  }
+
+  @lines.join("\n") ~ "\n"
+}
+
+sub fill(Str:D $template, %subs --> Str) {
+  my $result = $template;
+  $result = $result.subst(.key, .value, :g) for %subs.pairs;
+  $result
+}
+
+sub controller-view(Str:D $path, Str:D $action --> Str) {
+  fill(q:to/HAML/, %( '__PATHTITLE__' => $path.tc, '__PATH__' => $path, '__ACTION__' => $action ));
+    %h1 __PATHTITLE__ #__ACTION__
+    %p Find me in app/views/__PATH__/__ACTION__.html.haml
+    HAML
+}
+
+sub model-source(Str:D $model --> Str) {
+  fill(q:to/RAKU/, %( '__MODEL__' => $model ));
+    use ORM::ActiveRecord::Model;
+
+    unit class __MODEL__ is Model;
+    RAKU
+}
+
+sub scaffold-controller-source(Str:D $class, Str:D $model, Str:D $singular, Str:D $plural --> Str) {
+  fill(q:to/RAKU/, %( '__CLASS__' => $class, '__MODEL__' => $model, '__SINGULAR__' => $singular, '__PLURAL__' => $plural ));
+    use v6.d;
+    use MVC::Keayl::Controller;
+    use __MODEL__;
+
+    unit class __CLASS__ is MVC::Keayl::Controller;
+
+    method index {
+      self.render('index', locals => %( __PLURAL__ => __MODEL__.all ));
+    }
+
+    method show {
+      self.render('show', locals => %( __SINGULAR__ => __MODEL__.find(self.params<id>) ));
+    }
+
+    method new {
+      self.render('new', locals => %( __SINGULAR__ => __MODEL__.new ));
+    }
+
+    method create {
+      my $record = __MODEL__.create(self.params<__SINGULAR__>);
+      self.redirect-to("/__PLURAL__/{$record.id}");
+    }
+
+    method edit {
+      self.render('edit', locals => %( __SINGULAR__ => __MODEL__.find(self.params<id>) ));
+    }
+
+    method update {
+      my $record = __MODEL__.find(self.params<id>);
+      $record.update(self.params<__SINGULAR__>);
+      self.redirect-to("/__PLURAL__/{$record.id}");
+    }
+
+    method destroy {
+      __MODEL__.find(self.params<id>).destroy;
+      self.redirect-to('/__PLURAL__');
+    }
+    RAKU
+}
+
+sub scaffold-index-view(Str:D $singular, Str:D $plural --> Str) {
+  fill(q:to/HAML/, %( '__PLURALTITLE__' => $plural.tc, '__SINGULAR__' => $singular, '__PLURAL__' => $plural ));
+    %h1 __PLURALTITLE__
+
+    %ul
+      - for $__PLURAL__ -> $__SINGULAR__
+        %li
+          %a(href="/__PLURAL__/#{$__SINGULAR__.id}")= $__SINGULAR__.id
+
+    %a(href="/__PLURAL__/new") New __SINGULAR__
+    HAML
+}
+
+sub scaffold-show-view(Str:D $singular, Str:D $plural --> Str) {
+  fill(q:to/HAML/, %( '__SINGULARTITLE__' => $singular.tc, '__SINGULAR__' => $singular, '__PLURAL__' => $plural ));
+    %h1 __SINGULARTITLE__
+
+    %p= $__SINGULAR__.id
+
+    %a(href="/__PLURAL__/#{$__SINGULAR__.id}/edit") Edit
+    %a(href="/__PLURAL__") Back
+    HAML
+}
+
+sub scaffold-new-view(Str:D $singular, Str:D $plural --> Str) {
+  fill(q:to/HAML/, %( '__SINGULARTITLE__' => $singular.tc, '__SINGULAR__' => $singular, '__PLURAL__' => $plural ));
+    %h1 New __SINGULARTITLE__
+
+    != $partial("__PLURAL__/form", %( __SINGULAR__ => $__SINGULAR__ ))
+
+    %a(href="/__PLURAL__") Back
+    HAML
+}
+
+sub scaffold-edit-view(Str:D $singular, Str:D $plural --> Str) {
+  fill(q:to/HAML/, %( '__SINGULARTITLE__' => $singular.tc, '__SINGULAR__' => $singular, '__PLURAL__' => $plural ));
+    %h1 Edit __SINGULARTITLE__
+
+    != $partial("__PLURAL__/form", %( __SINGULAR__ => $__SINGULAR__ ))
+
+    %a(href="/__PLURAL__") Back
+    HAML
+}
+
+sub scaffold-form-view(Str:D $singular, Str:D $plural --> Str) {
+  fill(q:to/HAML/, %( '__SINGULAR__' => $singular, '__PLURAL__' => $plural ));
+    %form(action="/__PLURAL__" method="post")
+      %label Name
+      %input(type="text" name="__SINGULAR__[name]")
+      %button(type="submit") Save
+    HAML
+}
+
 sub application-json(Str:D $name --> Str) {
   qq:to/JSON/;
     \{

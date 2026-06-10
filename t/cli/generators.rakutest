@@ -1,0 +1,185 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::CLI;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Routing;
+use Template::HAML;
+use CLIFixtures;
+
+class Row { has $.id }
+
+# inflection
+
+is camelize('posts'),      'Posts',     'camelize capitalizes a single word';
+is camelize('blog-posts'), 'BlogPosts', 'camelize joins hyphenated words';
+is camelize('blog_posts'), 'BlogPosts', 'camelize joins underscored words';
+
+is pluralize('post'),     'posts',      'pluralize adds s';
+is pluralize('category'), 'categories', 'pluralize turns a consonant-y into ies';
+is pluralize('box'),      'boxes',      'pluralize adds es after x';
+
+is singularize('posts'),      'post',     'singularize strips a trailing s';
+is singularize('categories'), 'category', 'singularize turns ies into y';
+is singularize('boxes'),      'box',      'singularize strips es after x';
+
+is controller-class-name('posts'), 'PostsController', 'a controller class name is the camelized name plus Controller';
+
+# controller generator
+
+{
+  my $dir = temp-dir('gen-controller');
+  base-routes-file($dir);
+
+  is generate-controller('posts', ['index', 'show'], root => $dir, out => StringSink.new, err => StringSink.new), 0,
+    'the controller generator succeeds';
+
+  ok $dir.add('app/controllers/PostsController.rakumod').e, 'the controller file is created';
+
+  my $source = $dir.add('app/controllers/PostsController.rakumod').slurp;
+  like $source, /'unit class PostsController is MVC::Keayl::Controller'/, 'the controller subclasses the framework controller';
+  like $source, /'method index'/, 'the controller has the index action';
+  like $source, /'method show'/,  'the controller has the show action';
+}
+
+{
+  my $dir = temp-dir('gen-controller-views');
+  base-routes-file($dir);
+  generate-controller('posts', ['index', 'show'], root => $dir, out => StringSink.new, err => StringSink.new);
+
+  ok $dir.add('app/views/posts/index.html.haml').e, 'a view is created for each action';
+  ok $dir.add('app/views/posts/show.html.haml').e,  'a view is created for the second action';
+}
+
+{
+  my $dir = temp-dir('gen-controller-route');
+  base-routes-file($dir);
+  generate-controller('posts', ['index'], root => $dir, out => StringSink.new, err => StringSink.new);
+
+  like $dir.add('config/routes.raku').slurp, /'get \'/posts/index\''/, 'a route stub is inserted for the action';
+}
+
+{
+  my $dir = temp-dir('gen-controller-loadable');
+  base-routes-file($dir);
+  generate-controller('posts', ['index'], root => $dir, out => StringSink.new, err => StringSink.new);
+
+  my @table = load-routes($dir.add('config/routes.raku')).route-table;
+  is @table.first(*<path> eq '/posts/index')<target>, 'posts#index', 'the inserted route is recognized by the router';
+}
+
+{
+  my $dir = temp-dir('gen-controller-compiles');
+  base-routes-file($dir);
+  generate-controller('widgets', ['index', 'edit'], root => $dir, out => StringSink.new, err => StringSink.new);
+
+  lives-ok { EVALFILE $dir.add('app/controllers/WidgetsController.rakumod') }, 'the generated controller compiles';
+}
+
+# controller generator without a routes file
+
+{
+  my $dir = temp-dir('gen-controller-noroutes');
+  my $err = StringSink.new;
+
+  is generate-controller('posts', ['index'], root => $dir, out => StringSink.new, :$err), 0,
+    'the controller generator still succeeds without a routes file';
+  ok $dir.add('app/controllers/PostsController.rakumod').e, 'the controller is created even without a routes file';
+  like $err.text, /'no '/, 'the missing routes file is reported';
+}
+
+# idempotence
+
+{
+  my $dir = temp-dir('gen-idempotent');
+  base-routes-file($dir);
+  generate-controller('posts', ['index'], root => $dir, out => StringSink.new, err => StringSink.new);
+
+  my $out = StringSink.new;
+  generate-controller('posts', ['index'], root => $dir, :$out, err => StringSink.new);
+
+  like $out.text, /exists/, 'regenerating reports an existing file rather than overwriting it';
+}
+
+# scaffold generator
+
+{
+  my $dir = temp-dir('gen-scaffold');
+  base-routes-file($dir);
+
+  is generate-scaffold('post', root => $dir, out => StringSink.new, err => StringSink.new), 0,
+    'the scaffold generator succeeds';
+
+  like $dir.add('app/models/Post.rakumod').slurp, /'unit class Post is Model'/, 'the scaffold generates an ActiveRecord model';
+
+  my $controller = $dir.add('app/controllers/PostsController.rakumod').slurp;
+  like $controller, /'method index'/,   'the scaffold controller has index';
+  like $controller, /'method destroy'/, 'the scaffold controller has destroy';
+}
+
+{
+  my $dir = temp-dir('gen-scaffold-views');
+  base-routes-file($dir);
+  generate-scaffold('post', root => $dir, out => StringSink.new, err => StringSink.new);
+
+  ok $dir.add('app/views/posts/index.html.haml').e, 'the scaffold creates an index view';
+  ok $dir.add('app/views/posts/show.html.haml').e,  'the scaffold creates a show view';
+  ok $dir.add('app/views/posts/new.html.haml').e,   'the scaffold creates a new view';
+  ok $dir.add('app/views/posts/edit.html.haml').e,  'the scaffold creates an edit view';
+  ok $dir.add('app/views/posts/_form.html.haml').e, 'the scaffold creates a form partial';
+}
+
+{
+  my $dir = temp-dir('gen-scaffold-route');
+  base-routes-file($dir);
+  generate-scaffold('post', root => $dir, out => StringSink.new, err => StringSink.new);
+
+  like $dir.add('config/routes.raku').slurp, /'resources \'posts\''/, 'the scaffold inserts a resource route';
+
+  my @table = load-routes($dir.add('config/routes.raku')).route-table;
+  ok @table.grep(*<target> eq 'posts#index'), 'the resource route expands to the index action';
+}
+
+{
+  my $dir = temp-dir('gen-scaffold-plural');
+  base-routes-file($dir);
+  generate-scaffold('category', root => $dir, out => StringSink.new, err => StringSink.new);
+
+  ok $dir.add('app/controllers/CategoriesController.rakumod').e, 'the scaffold pluralizes the controller name';
+  like $dir.add('config/routes.raku').slurp, /'resources \'categories\''/, 'the scaffold pluralizes the resource route';
+}
+
+# generated views are valid HAML
+
+{
+  my $dir = temp-dir('gen-view-render');
+  base-routes-file($dir);
+  generate-controller('posts', ['index'], root => $dir, out => StringSink.new, err => StringSink.new);
+
+  my $html = HAML.render(:src($dir.add('app/views/posts/index.html.haml').slurp));
+  like $html, /'<h1>'/, 'a generated controller view renders to HTML';
+}
+
+{
+  my $dir = temp-dir('gen-scaffold-render');
+  base-routes-file($dir);
+  generate-scaffold('post', root => $dir, out => StringSink.new, err => StringSink.new);
+
+  my $html = HAML.render(
+    :src($dir.add('app/views/posts/index.html.haml').slurp),
+    :locals(%( posts => [Row.new(id => 7)] )),
+  );
+  like $html, /7/, 'a generated scaffold index view renders its collection';
+}
+
+{
+  my $dir = temp-dir('gen-form-render');
+  base-routes-file($dir);
+  generate-scaffold('post', root => $dir, out => StringSink.new, err => StringSink.new);
+
+  my $html = HAML.render(:src($dir.add('app/views/posts/_form.html.haml').slurp));
+  like $html, /'<form'/, 'a generated scaffold form partial renders to HTML';
+}
+
+done-testing;

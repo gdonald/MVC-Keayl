@@ -73,3 +73,48 @@ printing the result. An evaluation error is reported without ending the session.
 keayl> $*KEAYL-APP.environment
 development
 ```
+
+## generate
+
+Run a generator to write controllers, views, models, and route stubs:
+
+```
+keayl generate controller posts index show
+keayl g scaffold post
+```
+
+Each generated file is reported as `create`; an existing file is reported as
+`exists` and left untouched, so a generator can be re-run safely. Names are
+inflected with a small built-in inflector (`camelize`, `pluralize`,
+`singularize`) covering the common cases; irregular words may need editing.
+
+### controller
+
+```
+keayl generate controller posts index show
+```
+
+Writes `app/controllers/PostsController.rakumod` with a method per action, a HAML
+view under `app/views/posts/` for each action, and a `get` route stub per action
+inserted into `config/routes.raku`. An action method left empty renders its view
+through the controller's implicit render.
+
+### scaffold
+
+```
+keayl generate scaffold post
+```
+
+Takes a singular resource name and writes the full CRUD set: an
+[`ORM::ActiveRecord`](application.md) model (`app/models/Post.rakumod`), a
+controller with `index`, `show`, `new`, `create`, `edit`, `update`, and `destroy`
+actions, HAML views (`index`, `show`, `new`, `edit`, and a shared `_form`
+partial), and a `resources` route inserted into `config/routes.raku`. The
+resource name is pluralized for the controller, views, and route.
+
+### Route insertion
+
+A generator inserts its route stubs just inside the `routes` (or `draw`) block of
+`config/routes.raku`, skipping any stub already present. If the file has no
+routes block, the generator still writes the other files and reports that it
+could not add the routes.

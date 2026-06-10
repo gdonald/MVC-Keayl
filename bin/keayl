@@ -7,11 +7,6 @@ my $NAME = program-name();
 
 sub app-base(--> IO::Path) { $*PROGRAM.parent.parent }
 
-sub not-yet(Str:D $command --> Int) {
-  note "$NAME: `$command` is not implemented yet.";
-  1;
-}
-
 multi sub MAIN('version') { say version(app-base()); }
 multi sub MAIN('help')    { say usage(); }
 
@@ -43,16 +38,18 @@ multi sub MAIN('routes') { exit print-routes(); }
 multi sub MAIN('console') { exit console(); }
 multi sub MAIN('c')       { exit console(); }
 
-multi sub MAIN('generate', $type, $name) { exit generate($type, $name); }
-multi sub MAIN('g',        $type, $name) { exit generate($type, $name); }
+multi sub MAIN('generate', $type, $name, *@actions) { exit generate($type, $name, @actions); }
+multi sub MAIN('g',        $type, $name, *@actions) { exit generate($type, $name, @actions); }
 
-sub generate(Str:D $type, Str:D $name --> Int) {
-  unless $type eq 'controller' || $type eq 'scaffold' {
-    note "$NAME: unknown generator '$type' (expected: controller, scaffold)";
-    return 2;
+sub generate(Str:D $type, Str:D $name, @actions --> Int) {
+  given $type {
+    when 'controller' { generate-controller($name, @actions) }
+    when 'scaffold'   { generate-scaffold($name) }
+    default {
+      note "$NAME: unknown generator '$type' (expected: controller, scaffold)";
+      2;
+    }
   }
-
-  not-yet("generate $type $name");
 }
 
 multi sub MAIN(Bool :$version) {
