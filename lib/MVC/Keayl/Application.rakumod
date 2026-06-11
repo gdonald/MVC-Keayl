@@ -9,6 +9,8 @@ use MVC::Keayl::Routing;
 use MVC::Keayl::Logger;
 use MVC::Keayl::Middleware::Logger;
 use MVC::Keayl::Middleware::RequestId;
+use MVC::Keayl::ErrorReporting;
+use MVC::Keayl::ErrorReporter;
 
 unit class MVC::Keayl::Application;
 
@@ -16,6 +18,7 @@ has $.router      = MVC::Keayl::Router.new;
 has $.middleware  = MVC::Keayl::MiddlewareStack.new;
 has $.config      = MVC::Keayl::Config.new;
 has $.logger is rw;
+has @.error-reporters;
 has @.controllers;
 has %.controller-options;
 has &.database-connector = -> %db { };
@@ -59,6 +62,11 @@ method draw-routes(&block --> ::?CLASS) {
   self
 }
 
+method report-errors-with(MVC::Keayl::ErrorReporter:D $reporter --> ::?CLASS) {
+  @!error-reporters.push: $reporter;
+  self
+}
+
 method environment(--> Str)    { $!config.environment }
 method is-development(--> Bool) { $!config.environment eq 'development' }
 method is-test(--> Bool)        { $!config.environment eq 'test' }
@@ -81,6 +89,7 @@ method dispatcher(--> MVC::Keayl::Dispatcher) {
     controllers        => @!controllers,
     controller-options => %!controller-options,
     verbose-errors     => self.is-development,
+    error-reporting    => MVC::Keayl::ErrorReporting.new(reporters => @!error-reporters),
   )
 }
 

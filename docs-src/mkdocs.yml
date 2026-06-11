@@ -24,6 +24,7 @@ nav:
   - Command-line interface: cli.md
   - Logging: logging.md
   - Instrumentation: instrumentation.md
+  - Error reporting: error-reporting.md
 theme:
   name: 'material'
 markdown_extensions:

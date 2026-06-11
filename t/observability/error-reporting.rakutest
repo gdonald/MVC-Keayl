@@ -1,0 +1,162 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::ErrorReporter;
+use MVC::Keayl::ErrorReporting;
+use MVC::Keayl::ExceptionPage;
+use MVC::Keayl::Application;
+use MVC::Keayl::Dispatcher;
+use MVC::Keayl::Router;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Request;
+use MVC::Keayl::Response;
+use MVC::Keayl::Routing;
+
+sub request($method, $path, *%args) {
+  MVC::Keayl::Request.new(:$method, :$path, |%args)
+}
+
+class FailController is MVC::Keayl::Controller {
+  method boom { die 'kaboom' }
+}
+
+class RecordingReporter does MVC::Keayl::ErrorReporter {
+  has @.errors;
+  has @.contexts;
+
+  method report(Exception:D $error, %context) {
+    @!errors.push: $error;
+    @!contexts.push: %context;
+  }
+}
+
+class FailingReporter does MVC::Keayl::ErrorReporter {
+  method report(Exception:D $error, %context) { die 'reporter exploded' }
+}
+
+sub failing-dispatcher(:$verbose-errors = False, :$error-reporting) {
+  my $router = routes { match '/boom', to => 'fail#boom', via => <get post> };
+  my %opts = $error-reporting.defined ?? (:$error-reporting) !! ();
+  MVC::Keayl::Dispatcher.new(:$router, controllers => [FailController], :$verbose-errors, |%opts)
+}
+
+sub caught-error(--> Exception:D) {
+  try { die '<script>alert(1)</script>' };
+  $!
+}
+
+# exception page
+
+{
+  my $html = developer-exception-page(caught-error(), %( method => 'GET', path => '/posts' ), []);
+
+  like $html, /'<h2>Backtrace</h2>'/, 'the page shows a backtrace section';
+  like $html, /'GET'/,                'the page shows the request method';
+  like $html, /'/posts'/,             'the page shows the request path';
+}
+
+{
+  my $html = developer-exception-page(caught-error(), %(), []);
+
+  like $html, /'&lt;script&gt;'/,           'the exception message is HTML-escaped';
+  unlike $html, /'<script>alert'/,          'the raw message is never emitted';
+}
+
+{
+  my $html = developer-exception-page(caught-error(), %( params => %( id => '7', password => '[FILTERED]' ) ), []);
+
+  like $html, /'[FILTERED]'/, 'the page renders the filtered parameters';
+  like $html, /'7'/,          'the page renders an unfiltered parameter value';
+}
+
+{
+  my @routes = [ %( name => 'posts', verbs => ['GET'], path => '/posts', target => 'posts#index' ) ];
+  my $html   = developer-exception-page(caught-error(), %(), @routes);
+
+  like $html, /'posts#index'/, 'the page renders the route table';
+}
+
+# error reporting registry
+
+{
+  my $reporter  = RecordingReporter.new;
+  my $reporting = MVC::Keayl::ErrorReporting.new;
+  $reporting.subscribe($reporter);
+
+  $reporting.report(caught-error(), %( action => 'show' ));
+
+  is $reporter.errors.elems, 1,            'a subscribed reporter receives the error';
+  is $reporter.contexts[0]<action>, 'show', 'a subscribed reporter receives the context';
+}
+
+{
+  my $reporter  = RecordingReporter.new;
+  my $reporting = MVC::Keayl::ErrorReporting.new(reporters => [FailingReporter.new, $reporter]);
+
+  lives-ok { $reporting.report(caught-error(), %()) }, 'a failing reporter does not break reporting';
+  is $reporter.errors.elems, 1, 'a later reporter still runs after one fails';
+}
+
+{
+  lives-ok { MVC::Keayl::ErrorReporting.new.report(caught-error(), %()) }, 'reporting with no reporters is a no-op';
+}
+
+# dispatcher: developer page in verbose mode
+
+{
+  my $response = failing-dispatcher(verbose-errors => True).call(request('GET', '/boom'));
+
+  is $response.status, 500, 'an unhandled error is a 500';
+  like $response.body, /'<h1>'/,                       'the verbose response is the developer page';
+  like $response.body, /kaboom/,                       'the developer page shows the error message';
+  is $response.header('content-type'), 'text/html; charset=utf-8', 'the developer page is served as HTML';
+}
+
+{
+  my $response = failing-dispatcher(verbose-errors => False).call(request('GET', '/boom'));
+
+  is $response.status, 500,                       'a terse error is still a 500';
+  is $response.body, 'Internal Server Error',     'the terse response hides the details';
+  unlike $response.body, /'<h1>'/,                'the terse response is not the developer page';
+}
+
+# dispatcher: reporters fire on a 500 with context
+
+{
+  my $reporter  = RecordingReporter.new;
+  my $reporting = MVC::Keayl::ErrorReporting.new(reporters => [$reporter]);
+
+  failing-dispatcher(error-reporting => $reporting).call(request('GET', '/boom'));
+
+  is $reporter.errors.elems, 1,             'the reporter is notified of the dispatch error';
+  is $reporter.contexts[0]<action>, 'boom', 'the reported context carries the action';
+}
+
+{
+  my $reporter  = RecordingReporter.new;
+  my $reporting = MVC::Keayl::ErrorReporting.new(reporters => [$reporter]);
+
+  failing-dispatcher(error-reporting => $reporting).call(request('POST', '/boom',
+    body    => 'password=secret',
+    headers => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+  ));
+
+  is $reporter.contexts[0]<params><password>, '[FILTERED]', 'the reported parameters are filtered';
+}
+
+# application wiring
+
+{
+  my $reporter = RecordingReporter.new;
+
+  my $app = MVC::Keayl::Application.new(controllers => [FailController]);
+  $app.draw-routes({ get '/boom', to => 'fail#boom' });
+  $app.report-errors-with($reporter);
+
+  $app.endpoint.call(request('GET', '/boom'));
+
+  is $reporter.errors.elems, 1, 'an application reports errors through registered reporters';
+}
+
+done-testing;
