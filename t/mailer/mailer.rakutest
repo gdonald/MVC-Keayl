@@ -1,0 +1,132 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Mailer;
+use MVC::Keayl::Mail;
+use MVC::Keayl::Mailer::Delivery::Test;
+use MVC::Keayl::Mailer::Delivery::File;
+use MVC::Keayl::Mailer::Delivery::SMTP;
+use MVC::Keayl::View;
+use CLIFixtures;
+
+class NoticeMailer is MVC::Keayl::Mailer {
+  method welcome($name) {
+    self.mail(to => 'user@example.com', from => 'noreply@example.com', subject => 'Welcome', locals => %( :$name ));
+  }
+
+  method alert {
+    self.mail(to => 'ops@example.com', subject => 'Alert');
+  }
+}
+
+sub renderer { MVC::Keayl::View.new(paths => ['specs/lib/views']) }
+
+sub mailer(*%args) { NoticeMailer.new(view-renderer => renderer(), |%args) }
+
+# rendering both parts
+
+{
+  my $mail = mailer.build('welcome', 'Ada');
+
+  like $mail.html-part, /'Welcome, Ada'/, 'the html part is rendered from the html template';
+  like $mail.text-part, /'Welcome, Ada'/, 'the text part is rendered from the text template';
+  ok $mail.multipart, 'a mail with both parts is multipart';
+}
+
+# headers
+
+{
+  my $mail = mailer.build('welcome', 'Ada');
+
+  is $mail.to, ['user@example.com'], 'the recipient is set';
+  is $mail.from, 'noreply@example.com', 'the sender is set';
+  is $mail.subject, 'Welcome', 'the subject is set';
+}
+
+# single part when only one template exists
+
+{
+  my $mail = mailer.build('alert');
+
+  ok $mail.has-html,  'the html part is present';
+  nok $mail.has-text, 'the text part is absent when there is no text template';
+  nok $mail.multipart, 'a mail with one part is not multipart';
+}
+
+# default-from
+
+{
+  my $mail = NoticeMailer.new(view-renderer => renderer(), default-from => 'default@example.com').build('alert');
+
+  is $mail.from, 'default@example.com', 'the default sender is used when none is given';
+}
+
+# encoded message
+
+{
+  my $mail = mailer.build('welcome', 'Ada');
+  my $text = $mail.encoded;
+
+  like $text, /'Subject: Welcome'/,          'the encoded message carries the subject header';
+  like $text, /'multipart/alternative'/,     'a multipart message declares multipart/alternative';
+  like $text, /'text/plain'/,                'the encoded message includes a text part';
+  like $text, /'text/html'/,                 'the encoded message includes an html part';
+}
+
+# test delivery
+
+{
+  MVC::Keayl::Mailer::Delivery::Test.clear;
+
+  my $delivery = MVC::Keayl::Mailer::Delivery::Test.new;
+  mailer(delivery => $delivery).deliver('welcome', 'Ada');
+
+  is MVC::Keayl::Mailer::Delivery::Test.deliveries.elems, 1, 'test delivery collects the mail';
+  is MVC::Keayl::Mailer::Delivery::Test.deliveries[0].subject, 'Welcome', 'the collected mail is the delivered one';
+}
+
+{
+  MVC::Keayl::Mailer::Delivery::Test.clear;
+  is MVC::Keayl::Mailer::Delivery::Test.deliveries.elems, 0, 'clearing empties the test mailbox';
+}
+
+# file delivery
+
+{
+  my $dir = temp-dir('mailer-file');
+  my $delivery = MVC::Keayl::Mailer::Delivery::File.new(directory => $dir);
+
+  my $mail = mailer(delivery => $delivery).deliver('welcome', 'Ada');
+  my @files = $dir.dir.grep(*.extension eq 'eml');
+
+  is @files.elems, 1, 'file delivery writes one message file';
+  like @files[0].slurp, /'Subject: Welcome'/, 'the written file contains the encoded message';
+}
+
+# smtp delivery
+
+{
+  my %captured;
+  my $delivery = MVC::Keayl::Mailer::Delivery::SMTP.new(
+    host      => 'mail.example.com',
+    port      => 587,
+    transport => -> %envelope { %captured = %envelope },
+  );
+
+  mailer(delivery => $delivery).deliver('welcome', 'Ada');
+
+  is %captured<host>, 'mail.example.com',          'smtp delivery passes the host to the transport';
+  is %captured<from>, 'noreply@example.com',       'smtp delivery passes the sender envelope';
+  is %captured<to>, ['user@example.com'],          'smtp delivery passes the recipients envelope';
+  like %captured<data>, /'Subject: Welcome'/,      'smtp delivery passes the encoded message';
+}
+
+# deliver returns the mail
+
+{
+  my $mail = mailer(delivery => MVC::Keayl::Mailer::Delivery::Test.new).deliver('alert');
+  isa-ok $mail, MVC::Keayl::Mail, 'deliver returns the mail message';
+}
+
+done-testing;
