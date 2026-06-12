@@ -1,0 +1,136 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Job;
+use MVC::Keayl::Job::QueueAdapter::Inline;
+use MVC::Keayl::Job::QueueAdapter::Test;
+use MVC::Keayl::Job::QueueAdapter::Async;
+
+class RecordJob is MVC::Keayl::Job {
+  method perform($sink, $value) { $sink.push: $value }
+}
+
+class GreetJob is MVC::Keayl::Job {
+  method perform($sink, :$name = 'world') { $sink.push: "hi $name" }
+}
+
+class BoomJob is MVC::Keayl::Job {
+  method perform { die 'job failed' }
+}
+
+# perform-now runs synchronously
+
+{
+  my @ran;
+  RecordJob.perform-now(@ran, 7);
+
+  is @ran, [7], 'perform-now runs the job immediately';
+}
+
+{
+  my @ran;
+  GreetJob.perform-now(@ran, name => 'Ada');
+
+  is @ran, ['hi Ada'], 'perform-now forwards named arguments to perform';
+}
+
+# default queue name
+
+{
+  is RecordJob.new.queue-name, 'default', 'a job is on the default queue by default';
+}
+
+# a job without an adapter runs inline on perform-later
+
+{
+  MVC::Keayl::Job.reset-queue-adapter;
+
+  my @ran;
+  RecordJob.perform-later(@ran, 3);
+
+  is @ran, [3], 'perform-later runs inline when no adapter is configured';
+}
+
+# inline adapter
+
+{
+  MVC::Keayl::Job.queue-adapter(MVC::Keayl::Job::QueueAdapter::Inline.new);
+
+  my @ran;
+  RecordJob.perform-later(@ran, 5);
+
+  is @ran, [5], 'the inline adapter runs the job on enqueue';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+}
+
+# test adapter
+
+{
+  my $adapter = MVC::Keayl::Job::QueueAdapter::Test.new;
+  MVC::Keayl::Job.queue-adapter($adapter);
+
+  my @ran;
+  RecordJob.perform-later(@ran, 1);
+  RecordJob.perform-later(@ran, 2);
+
+  is $adapter.enqueued.elems, 2, 'the test adapter collects enqueued jobs without running them';
+  is @ran, [], 'enqueued jobs do not run until performed';
+
+  $adapter.perform-all;
+
+  is @ran, [1, 2], 'perform-all runs every enqueued job';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+}
+
+{
+  my $adapter = MVC::Keayl::Job::QueueAdapter::Test.new;
+  $adapter.enqueue(RecordJob.new);
+  $adapter.clear;
+
+  is $adapter.enqueued.elems, 0, 'clearing empties the test queue';
+}
+
+# async adapter
+
+{
+  my $adapter = MVC::Keayl::Job::QueueAdapter::Async.new;
+  MVC::Keayl::Job.queue-adapter($adapter);
+
+  my @ran;
+  RecordJob.perform-later(@ran, 9);
+  $adapter.wait;
+
+  is @ran, [9], 'the async adapter runs the job on a separate thread';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+}
+
+# perform-later returns the job
+
+{
+  MVC::Keayl::Job.queue-adapter(MVC::Keayl::Job::QueueAdapter::Test.new);
+
+  my @ran;
+  my $job = RecordJob.perform-later(@ran, 1);
+
+  isa-ok $job, RecordJob, 'perform-later returns the job instance';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+}
+
+# the base class requires a perform implementation
+
+{
+  dies-ok { MVC::Keayl::Job.perform-now }, 'a job without perform raises when run';
+}
+
+# a failing job propagates through perform-now
+
+{
+  dies-ok { BoomJob.perform-now }, 'an error inside perform propagates from perform-now';
+}
+
+done-testing;

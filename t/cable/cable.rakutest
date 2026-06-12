@@ -1,0 +1,144 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Cable::PubSub::InMemory;
+use MVC::Keayl::Cable::Connection;
+use MVC::Keayl::Cable::Channel;
+
+class ChatChannel is MVC::Keayl::Cable::Channel {
+  method subscribed   { self.stream-from('room:' ~ self.connection.identifiers<room>) }
+  method speak(%data) { self.broadcast-to('room:' ~ self.connection.identifiers<room>, %data<message>) }
+}
+
+sub connection(:@received!, :%identifiers, :$pubsub!) {
+  MVC::Keayl::Cable::Connection.new(
+    :$pubsub,
+    sink        => -> $message { @received.push: $message },
+    identifiers => %identifiers,
+  )
+}
+
+# pub/sub backend
+
+{
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+
+  my @got;
+  $pubsub.subscribe('room:1', -> $message { @got.push: $message });
+  $pubsub.broadcast('room:1', 'hello');
+
+  is @got, ['hello'], 'a broadcast reaches a stream subscriber';
+}
+
+{
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+
+  my @got;
+  my $id = $pubsub.subscribe('room:1', -> $message { @got.push: $message });
+  $pubsub.unsubscribe($id);
+  $pubsub.broadcast('room:1', 'hello');
+
+  is @got, [], 'an unsubscribed stream no longer receives broadcasts';
+}
+
+{
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  $pubsub.subscribe('room:1', -> $m { });
+  $pubsub.subscribe('room:1', -> $m { });
+
+  is $pubsub.subscriber-count('room:1'), 2, 'the backend tracks subscribers per stream';
+}
+
+{
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  lives-ok { $pubsub.broadcast('empty', 'x') }, 'broadcasting to a stream with no subscribers is a no-op';
+}
+
+# channel streaming
+
+{
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn   = connection(:@received, identifiers => %( room => '1' ), :$pubsub);
+
+  my $channel = ChatChannel.new(connection => $conn);
+  $conn.add-subscription($channel);
+
+  $pubsub.broadcast('room:1', 'hi');
+
+  is @received, ['hi'], 'a subscribed channel transmits stream messages to its connection';
+}
+
+# channel actions
+
+{
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn   = connection(:@received, identifiers => %( room => '1' ), :$pubsub);
+
+  my $channel = ChatChannel.new(connection => $conn);
+  $conn.add-subscription($channel);
+
+  $channel.perform('speak', %( message => 'yo' ));
+
+  is @received, ['yo'], 'a channel action broadcasts back to the stream';
+}
+
+{
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn   = connection(:@received, identifiers => %( room => '1' ), :$pubsub);
+
+  my $channel = ChatChannel.new(connection => $conn);
+  $conn.add-subscription($channel);
+
+  dies-ok { $channel.perform('stream-from', %()) }, 'a framework method is not a callable action';
+}
+
+# disconnect tears down subscriptions
+
+{
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn   = connection(:@received, identifiers => %( room => '1' ), :$pubsub);
+
+  my $channel = ChatChannel.new(connection => $conn);
+  $conn.add-subscription($channel);
+
+  $conn.disconnect;
+  $pubsub.broadcast('room:1', 'after');
+
+  is @received, [], 'disconnecting unsubscribes the channel streams';
+}
+
+{
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn   = connection(:@received, identifiers => %( room => '1' ), :$pubsub);
+
+  my $channel = ChatChannel.new(connection => $conn);
+  $conn.add-subscription($channel);
+  $conn.disconnect;
+
+  is $pubsub.subscriber-count('room:1'), 0, 'the backend has no subscribers left after disconnect';
+}
+
+# two connections on the same stream
+
+{
+  my (@a, @b);
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+
+  my $conn-a = connection(received => @a, identifiers => %( room => '1' ), :$pubsub);
+  my $conn-b = connection(received => @b, identifiers => %( room => '1' ), :$pubsub);
+
+  $conn-a.add-subscription(ChatChannel.new(connection => $conn-a));
+  $conn-b.add-subscription(ChatChannel.new(connection => $conn-b));
+
+  $pubsub.broadcast('room:1', 'broadcast');
+
+  is (@a, @b), (['broadcast'], ['broadcast']), 'a broadcast fans out to every connection on the stream';
+}
+
+done-testing;

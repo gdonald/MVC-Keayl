@@ -26,6 +26,8 @@ nav:
   - Instrumentation: instrumentation.md
   - Error reporting: error-reporting.md
   - Mailer: mailer.md
+  - Background jobs: jobs.md
+  - WebSockets: cable.md
 theme:
   name: 'material'
 markdown_extensions:
