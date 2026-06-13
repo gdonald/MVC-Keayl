@@ -1,0 +1,21 @@
+ru:
+  apples:
+    one: "%{count} яблоко"
+    few: "%{count} яблока"
+    many: "%{count} яблок"
+  date:
+    formats:
+      default: "%d.%m.%Y"
+    month_names:
+      - ~
+      - января
+      - февраля
+      - марта
+  number:
+    format:
+      delimiter: " "
+      separator: ","
+    currency:
+      format:
+        unit: "₽"
+        format: "%n %u"

@@ -1,0 +1,105 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::I18n;
+use I18nFixtures;
+
+class User { }
+
+# human-attribute-name
+
+{
+  my $backend = build-backend;
+  is $backend.human-attribute-name(User, 'email_address'), 'Email address',
+    'uses a model-specific attribute name';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.human-attribute-name(User, 'published_at'), 'Published at',
+    'falls back to a generic attribute name';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.human-attribute-name(User, 'first_name'), 'First name',
+    'humanizes an unknown attribute';
+}
+
+# human-model-name
+
+{
+  my $backend = build-backend;
+  is $backend.human-model-name(User), 'Member', 'uses a translated model name';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.human-model-name('account'), 'Account', 'humanizes an unknown model name';
+}
+
+# translate-error
+
+{
+  my $backend = build-backend;
+  is $backend.translate-error(User, 'email_address', 'blank'), 'is required',
+    'uses a model-and-attribute-specific error message';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate-error(User, 'name', 'blank'), "can't be blank",
+    'falls back to a model-level error message';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate-error(User, 'name', 'too_short', count => 8),
+    'is too short (minimum is 8 characters)',
+    'interpolates count into an error message';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate-error(User, 'name', 'taken'), 'has already been taken',
+    'falls back to a generic error message';
+}
+
+# form labels, placeholders, and submit text
+
+{
+  my $backend = build-backend;
+  is $backend.form-label(User, 'password'), 'Secret', 'uses a translated form label';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.form-label(User, 'email_address'), 'Email address',
+    'falls back to the human attribute name for a label';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.form-placeholder(User, 'email_address'), 'you@example.com',
+    'uses a translated placeholder';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.submit-default(User, 'create'), 'Create Member',
+    'interpolates the model name into the submit text';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.submit-default(User, 'update'), 'Update your account',
+    'uses a model-specific submit text';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.submit-default(User), 'Submit', 'humanizes an unknown submit action';
+}
+
+done-testing;

@@ -1,0 +1,96 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::I18n::Locale;
+use MVC::Keayl::Routing;
+use MVC::Keayl::Routing::UrlHelpers;
+
+sub request(*%options) { MVC::Keayl::Request.new(|%options) }
+
+# Accept-Language parsing
+
+{
+  is-deeply parse-accept-language('fr-CA,fr;q=0.9,en;q=0.8'), ('fr-CA', 'fr', 'en'),
+    'parses and orders Accept-Language by quality';
+}
+
+{
+  is-deeply parse-accept-language('en;q=0.5,de;q=0.9'), ('de', 'en'),
+    'sorts a lower-quality leading entry behind a higher one';
+}
+
+{
+  is-deeply parse-accept-language(Str), (), 'returns nothing for an absent header';
+}
+
+# param strategy
+
+{
+  my $req = request(query-string => 'locale=fr&page=2');
+  is resolve-locale($req, strategies => <param>, available => <en fr>), 'fr',
+    'resolves the locale from a query parameter';
+}
+
+{
+  my $req = request(query-string => 'locale=de');
+  is resolve-locale($req, strategies => <param>, available => <en fr>, default => 'en'), 'en',
+    'falls back to the default when the param locale is unavailable';
+}
+
+# header strategy
+
+{
+  my $req = request(headers => { 'Accept-Language' => 'fr-CA,fr;q=0.9,en;q=0.8' });
+  is resolve-locale($req, strategies => <header>, available => <en fr>), 'fr',
+    'matches an Accept-Language tag to its base locale';
+}
+
+{
+  my $req = request(headers => { 'Accept-Language' => 'es,en;q=0.7' });
+  is resolve-locale($req, strategies => <header>, available => <en fr>), 'en',
+    'skips an unavailable tag and matches the next';
+}
+
+# subdomain and domain strategies
+
+{
+  my $req = request(headers => { Host => 'fr.example.com' });
+  is resolve-locale($req, strategies => <subdomain>, available => <en fr>), 'fr',
+    'resolves the locale from a subdomain';
+}
+
+{
+  my $req = request(headers => { Host => 'example.fr' });
+  is resolve-locale($req, strategies => <domain>, available => <en fr>), 'fr',
+    'resolves the locale from a domain suffix';
+}
+
+# strategy ordering
+
+{
+  my $req = request(query-string => 'locale=fr', headers => { 'Accept-Language' => 'en' });
+  is resolve-locale($req, strategies => <param header>, available => <en fr>), 'fr',
+    'prefers an earlier strategy that resolves';
+}
+
+{
+  my $req = request(headers => { 'Accept-Language' => 'fr' });
+  is resolve-locale($req, strategies => <param header>, available => <en fr>), 'fr',
+    'falls through to a later strategy';
+}
+
+# default-url-options carrying the locale
+
+{
+  is-deeply locale-url-options('fr'), { locale => 'fr' }, 'builds url options carrying the locale';
+}
+
+{
+  my $router  = routes { get '/about', to => 'pages#about', as => 'about'; };
+  my $helpers = MVC::Keayl::Routing::UrlHelpers.new(:$router, default-url-options => locale-url-options('fr'));
+
+  is $helpers.path-for('about'), '/about?locale=fr', 'generated paths carry the locale from default-url-options';
+}
+
+done-testing;

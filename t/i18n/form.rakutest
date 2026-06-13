@@ -1,0 +1,61 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Helpers::Form;
+use I18nFixtures;
+
+class FakeUser {
+  has Bool $.persisted = False;
+  method is-persisted { $!persisted }
+}
+
+sub builder(*%options) {
+  FormBuilder.new(object-name => 'user', i18n => build-backend, |%options)
+}
+
+# translated labels
+
+{
+  is ~builder.label('password'), '<label for="user_password">Secret</label>',
+    'a form label uses a translated string';
+}
+
+{
+  is ~builder.label('email_address'), '<label for="user_email_address">Email address</label>',
+    'a form label falls back to the human attribute name';
+}
+
+# translated placeholders
+
+{
+  like ~builder.text-field('email_address', { placeholder => True }), /'placeholder="you@example.com"'/,
+    'a placeholder of True resolves a translated placeholder';
+}
+
+# translated submit text
+
+{
+  like ~builder(model => FakeUser.new).submit, /'value="Create Member"'/,
+    'submit text for a new record interpolates the model name';
+}
+
+{
+  like ~builder(model => FakeUser.new(persisted => True)).submit, /'value="Update your account"'/,
+    'submit text for a persisted record uses the update key';
+}
+
+# behaviour without a backend is unchanged
+
+{
+  my $plain = FormBuilder.new(object-name => 'user');
+  is ~$plain.label('email_address'), '<label for="user_email_address">Email address</label>',
+    'without a backend the label humanizes the attribute';
+}
+
+{
+  my $plain = FormBuilder.new(object-name => 'user');
+  like ~$plain.submit, /'value="Save"'/, 'without a backend submit defaults to Save';
+}
+
+done-testing;

@@ -23,6 +23,17 @@ sub checkbox-checked($current, $checked-value --> Bool) {
 class FormBuilder is export {
   has Str $.object-name;
   has     $.model;
+  has     $.i18n;
+
+  method label-text(Str:D $attribute --> Str) {
+    return humanize($attribute) without $!i18n;
+    $!i18n.form-label($!object-name // $attribute, $attribute)
+  }
+
+  method placeholder-text(Str:D $attribute --> Str) {
+    return humanize($attribute) without $!i18n;
+    $!i18n.form-placeholder($!object-name // $attribute, $attribute)
+  }
 
   method field-name(Str:D $attribute --> Str) {
     $!object-name ?? $!object-name ~ '[' ~ $attribute ~ ']' !! $attribute
@@ -50,6 +61,7 @@ class FormBuilder is export {
     %attrs<name> //= self.field-name($attribute);
     %attrs<id>   //= self.field-id($attribute);
     %attrs<class> = class-names(%attrs<class> // '', 'field-with-errors') if self.errors-on($attribute);
+    %attrs<placeholder> = self.placeholder-text($attribute) if (%attrs<placeholder> // False) === True;
 
     %attrs
   }
@@ -134,13 +146,34 @@ class FormBuilder is export {
     my %attrs = %options // {};
     %attrs<for> //= self.field-id($attribute);
 
-    content-tag('label', $text // humanize($attribute), %attrs)
+    content-tag('label', $text // self.label-text($attribute), %attrs)
   }
 
-  method submit($value = 'Save', %options? --> SafeString) {
+  method !submit-action(--> Str) {
+    return 'submit' without $!model;
+
+    my $persisted = do if $!model.^can('is-persisted') {
+      ?$!model.is-persisted
+    } elsif $!model.^can('id') {
+      $!model.id.defined
+    } else {
+      False
+    };
+
+    $persisted ?? 'update' !! 'create'
+  }
+
+  method !default-submit(--> Str) {
+    return 'Save' without $!i18n;
+    return 'Save' without $!object-name;
+
+    $!i18n.submit-default($!object-name, self!submit-action)
+  }
+
+  method submit($value?, %options? --> SafeString) {
     my %attrs = %options // {};
     %attrs<type>  //= 'submit';
-    %attrs<value> //= ~$value;
+    %attrs<value> //= ~($value // self!default-submit);
 
     tag('input', %attrs)
   }
@@ -156,6 +189,7 @@ class FormBuilder is export {
     my $nested = FormBuilder.new(
       object-name => self.field-name($attribute),
       model       => $model // self.field-value($attribute),
+      i18n        => $!i18n,
     );
 
     &block ?? block($nested) !! html-safe('')
@@ -186,10 +220,10 @@ sub wrap-form($inner, %options, :$url, :$method = 'post', :$csrf-token --> SafeS
   content-tag('form', safe-join([|@hidden, $inner]), %attrs)
 }
 
-sub form-with(:$model, :$url, :$scope, :$method = 'post', :$csrf-token, :&content, *%options --> SafeString) is export {
+sub form-with(:$model, :$url, :$scope, :$method = 'post', :$csrf-token, :$i18n, :&content, *%options --> SafeString) is export {
   my $object-name = $scope // ($model.defined ?? model-name($model) !! Str);
 
-  my $builder = FormBuilder.new(:$object-name, :$model);
+  my $builder = FormBuilder.new(:$object-name, :$model, :$i18n);
   my $inner   = &content ?? content($builder) !! html-safe('');
 
   wrap-form($inner, %options, :$url, :$method, :$csrf-token)
@@ -215,7 +249,7 @@ class SimpleFormBuilder is FormBuilder is export {
   method !input-label(Str:D $attribute, $label-option, Bool $required --> SafeString) {
     return html-safe('') if $label-option === False;
 
-    my $text  = $label-option ~~ Str ?? $label-option !! humanize($attribute);
+    my $text  = $label-option ~~ Str ?? $label-option !! self.label-text($attribute);
     my $inner = $required
       ?? safe-join([html-safe(html-escape($text)), content-tag('abbr', '*', %( title => 'required' ))], ' ')
       !! html-safe(html-escape($text));
@@ -259,10 +293,10 @@ class SimpleFormBuilder is FormBuilder is export {
   }
 }
 
-sub simple-form-for($model, :$url, :$scope, :$method = 'post', :$csrf-token, :@required, :&content, *%options --> SafeString) is export {
+sub simple-form-for($model, :$url, :$scope, :$method = 'post', :$csrf-token, :$i18n, :@required, :&content, *%options --> SafeString) is export {
   my $object-name = $scope // ($model.defined ?? model-name($model) !! Str);
 
-  my $builder = SimpleFormBuilder.new(:$object-name, :$model, :required-attributes(@required));
+  my $builder = SimpleFormBuilder.new(:$object-name, :$model, :$i18n, :required-attributes(@required));
   my $inner   = &content ?? content($builder) !! html-safe('');
 
   wrap-form($inner, %options, :$url, :$method, :$csrf-token)

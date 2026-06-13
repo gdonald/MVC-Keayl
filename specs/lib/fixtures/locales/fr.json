@@ -1,0 +1,13 @@
+{
+  "fr": {
+    "hello": "Bonjour le monde",
+    "greeting": "Bonjour %{name}",
+    "apples": {
+      "one": "%{count} pomme",
+      "other": "%{count} pommes"
+    }
+  },
+  "en-CA": {
+    "elevator": "lift"
+  }
+}

@@ -1,0 +1,80 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::I18n;
+use I18nFixtures;
+
+my $date     = Date.new(2020, 2, 5);
+my $datetime = DateTime.new(:2020year, :2month, :5day, :14hour, :30minute, :0second);
+
+# date and time localization
+
+{
+  my $backend = build-backend;
+  is $backend.localize($date), '2020-02-05', 'localizes a date with the default format';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.localize($date, format => 'long'), 'February 05, 2020', 'localizes a date with month names';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.localize($date, locale => 'ru'), '05.02.2020', 'localizes a date against another locale format';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.localize($datetime), '14:30:00', 'localizes a time with the default format';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.localize($datetime, format => 'short'), '02:30 pm', 'localizes a time with the meridian';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.l($date), '2020-02-05', 'l aliases localize';
+}
+
+# number localization driven by the store
+
+{
+  my $backend = build-backend;
+  is $backend.number-to-delimited(1234567.5), '1,234,567.5', 'delimits a number using locale defaults';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.number-to-delimited(1234567, locale => 'ru'), '1 234 567', 'uses the locale delimiter';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.number-to-currency(1234.5), '$1,234.50', 'formats currency using locale defaults';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.number-to-currency(1234.5, locale => 'ru'), '1 234,50 ₽', 'formats currency for another locale';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.number-to-percentage(66.666), '66.7%', 'formats a percentage using locale precision';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.number-to-human-size(1536), '1.5 KB', 'formats a human-readable size';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.localize(1234.5, locale => 'ru'), '1 234,5', 'localizes a bare number';
+}
+
+done-testing;

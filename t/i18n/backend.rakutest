@@ -1,0 +1,159 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::I18n;
+use I18nFixtures;
+
+# loading and lookup
+
+{
+  my $backend = build-backend;
+  is $backend.translate('hello'), 'Hello world', 'loads YAML locale files and looks up a key';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('hello', locale => 'fr'), 'Bonjour le monde', 'loads JSON locale files';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('messages.welcome', name => 'Greg'), 'Welcome, Greg', 'looks up a dotted key';
+}
+
+{
+  my $backend = build-backend(default-locale => 'fr');
+  is $backend.translate('hello'), 'Bonjour le monde', 'uses the configured default locale';
+}
+
+# interpolation
+
+{
+  my $backend = build-backend;
+  is $backend.translate('greeting', name => 'Ada'), 'Hello Ada', 'interpolates a named placeholder';
+}
+
+{
+  my $backend = build-backend(raise-on-missing => True);
+  throws-like { $backend.translate('greeting') },
+    X::MVC::Keayl::I18n::MissingInterpolation,
+    'raises when an interpolation argument is missing';
+}
+
+# pluralization
+
+{
+  my $backend = build-backend;
+  is $backend.translate('apples', count => 1), 'one apple', 'selects the one category';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('apples', count => 5), '5 apples', 'selects the other category and interpolates count';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('apples', count => 0), 'no apples', 'prefers the zero category at zero';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('apples', count => 1, locale => 'fr'), '1 pomme', 'French treats one as singular';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('apples', count => 0, locale => 'fr'), '0 pomme', 'French treats zero as singular';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('apples', count => 2, locale => 'ru'), '2 яблока', 'Russian selects the few category';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('apples', count => 5, locale => 'ru'), '5 яблок', 'Russian selects the many category';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('apples', count => 1, locale => 'ru'), '1 яблоко', 'Russian selects the one category';
+}
+
+# missing translations
+
+{
+  my $backend = build-backend;
+  is $backend.translate('does.not.exist'), 'translation missing: en.does.not.exist',
+    'returns a placeholder for a missing translation';
+}
+
+{
+  my $backend = build-backend(raise-on-missing => True);
+  throws-like { $backend.translate('does.not.exist') },
+    X::MVC::Keayl::I18n::MissingTranslation,
+    'raises for a missing translation when configured';
+}
+
+# defaults and fallback chains
+
+{
+  my $backend = build-backend;
+  is $backend.translate('absent', default => 'Fallback text'), 'Fallback text',
+    'uses a literal default when the key is missing';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('absent', default => ['also.absent', 'hello']), 'Hello world',
+    'walks a default chain to the first translation that resolves';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('absent', default => ['also.absent', 'Plain text']), 'Plain text',
+    'falls through a default chain to a literal';
+}
+
+# locale fallback
+
+{
+  my $backend = build-backend;
+  is $backend.translate('elevator', locale => 'en-CA'), 'lift', 'resolves a region locale directly';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.translate('hello', locale => 'en-CA'), 'Hello world', 'falls back from en-CA to en';
+}
+
+{
+  my $backend = build-backend(use-fallbacks => False);
+  is $backend.translate('hello', locale => 'en-CA'), 'translation missing: en-CA.hello',
+    'skips locale fallback when disabled';
+}
+
+# locale state
+
+{
+  my $backend = build-backend;
+  $backend.set-locale('fr');
+  is $backend.translate('hello'), 'Bonjour le monde', 'honours the set locale';
+}
+
+{
+  my $backend = build-backend;
+  my $during  = $backend.with-locale('fr', { $backend.translate('hello') });
+  is $during, 'Bonjour le monde', 'with-locale applies inside the block';
+  is $backend.translate('hello'), 'Hello world', 'with-locale resets after the block';
+}
+
+{
+  my $backend = build-backend;
+  is-deeply $backend.available-locales, ('en', 'en-CA', 'fr', 'ru'), 'reports the loaded locales';
+}
+
+done-testing;

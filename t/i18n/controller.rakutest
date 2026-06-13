@@ -1,0 +1,67 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use I18nFixtures;
+
+sub dispatch(Str:D $action, *%options) {
+  my $request = MVC::Keayl::Request.new(|%options);
+
+  my $controller = LocaleDemoController.new(
+    request      => $request,
+    i18n         => build-controller-backend,
+    i18n-options => { strategies => <param>, available => <en fr> },
+  );
+
+  $controller.dispatch($action);
+}
+
+# lazy lookup scoped to controller and action
+
+{
+  my $response = dispatch('greet');
+  is $response.body, 'Hello there', 'a lazy key resolves against the controller and action in the default locale';
+}
+
+{
+  my $response = dispatch('greet', query-string => 'locale=fr');
+  is $response.body, 'Bonjour', 'a lazy key resolves in the request locale';
+}
+
+# per-request locale
+
+{
+  my $response = dispatch('active-locale', query-string => 'locale=fr');
+  is $response.body, 'fr', 'the request locale is active during the action';
+}
+
+{
+  my $backend = build-controller-backend;
+
+  my $controller = LocaleDemoController.new(
+    request      => MVC::Keayl::Request.new(query-string => 'locale=fr'),
+    i18n         => $backend,
+    i18n-options => { strategies => <param>, available => <en fr> },
+  );
+
+  $controller.dispatch('active-locale');
+
+  is $backend.locale, 'en', 'the locale resets to the default after the request';
+}
+
+# default-url-options carries the locale
+
+{
+  my $response = dispatch('url-locale', query-string => 'locale=fr');
+  is $response.body, 'fr', 'default-url-options carries the request locale';
+}
+
+# a non-lazy key still resolves
+
+{
+  my $response = dispatch('farewell', query-string => 'locale=fr');
+  is $response.body, 'Au revoir', 'a plain key resolves in the request locale';
+}
+
+done-testing;

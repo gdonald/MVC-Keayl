@@ -11,6 +11,7 @@ use MVC::Keayl::Middleware::Logger;
 use MVC::Keayl::Middleware::RequestId;
 use MVC::Keayl::ErrorReporting;
 use MVC::Keayl::ErrorReporter;
+use MVC::Keayl::I18n;
 
 unit class MVC::Keayl::Application;
 
@@ -35,6 +36,25 @@ submethod TWEAK {
       paths  => ($app.config<view-paths> // ['app/views']).Array,
       reload => !$app.is-production,
     );
+  });
+
+  self.initializer('i18n', -> $app {
+    with $app.config<i18n> -> %i18n {
+      my $backend = MVC::Keayl::I18n.new(
+        default-locale    => (%i18n<default-locale> // 'en'),
+        available-locales => (%i18n<available-locales> // []).Array,
+        use-fallbacks     => (%i18n<fallbacks> // True),
+        raise-on-missing  => (%i18n<raise-on-missing> // False),
+      );
+
+      $backend.load-locales((%i18n<load-path> // 'config/locales').IO);
+
+      $app.controller-options<i18n>         //= $backend;
+      $app.controller-options<i18n-options> //= %(
+        strategies => (%i18n<strategies> // <param header>),
+        param      => (%i18n<param> // 'locale'),
+      );
+    }
   });
 
   self.initializer('request-logging', -> $app {

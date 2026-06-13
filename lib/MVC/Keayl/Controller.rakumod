@@ -12,6 +12,7 @@ use MVC::Keayl::ParameterFilter;
 use MVC::Keayl::Notifications;
 use MVC::Keayl::Mime;
 use MVC::Keayl::Caching;
+use MVC::Keayl::I18n::Locale;
 
 unit class MVC::Keayl::Controller;
 
@@ -21,6 +22,9 @@ has      $.params = MVC::Keayl::Parameters.new({});
 has      $.view-renderer;
 has Str  $.secret = '';
 has      $.session-store = MVC::Keayl::Session::CookieStore.new;
+has      $.i18n;
+has      %.i18n-options;
+has Str  $.current-action is rw;
 has      %!assigns;
 has      $!cookies;
 has      $!session;
@@ -113,6 +117,45 @@ method assign(Str:D $name, $value --> ::?CLASS) {
 
 method assigns(--> Hash) {
   %!assigns
+}
+
+method !lazy-scope(--> Str) {
+  (self.controller-path.subst('/', '.', :g) ~ '.' ~ ($!current-action // '')).chomp('.')
+}
+
+method translate($key, *%options --> Str) {
+  die 'no i18n backend configured' without $!i18n;
+
+  return $!i18n.translate($key.substr(1), scope => self!lazy-scope, |%options)
+    if $key ~~ Str && $key.starts-with('.');
+
+  $!i18n.translate($key, |%options)
+}
+
+method t($key, *%options --> Str) { self.translate($key, |%options) }
+
+method localize($object, *%options --> Str) {
+  die 'no i18n backend configured' without $!i18n;
+  $!i18n.localize($object, |%options)
+}
+
+method l($object, *%options --> Str) { self.localize($object, |%options) }
+
+method current-locale(--> Str) {
+  return 'en' without $!i18n;
+
+  resolve-locale(
+    $!request,
+    strategies => (%!i18n-options<strategies> // <param header>),
+    available  => (%!i18n-options<available>  // $!i18n.available-locales),
+    default    => (%!i18n-options<default>    // $!i18n.default-locale),
+    param      => (%!i18n-options<param>      // 'locale'),
+  )
+}
+
+method default-url-options(--> Hash) {
+  return %() without $!i18n;
+  locale-url-options($!i18n.locale, param => (%!i18n-options<param> // 'locale'))
 }
 
 method !helper-method-names(--> List) {
@@ -305,12 +348,14 @@ method !invoke-rescue($handler, $exception) {
 method dispatch(Str:D $action --> MVC::Keayl::Response) {
   die "unknown action '$action'" unless self!is-action($action);
 
+  $!current-action = $action;
+
   with $*KEAYL-LOG-EVENT -> $event {
     $event.target = self.controller-path ~ '#' ~ $action;
     $event.set-params(self.filtered-params);
   }
 
-  {
+  my &run = {
     CATCH {
       default {
         my $exception = $_;
@@ -321,6 +366,12 @@ method dispatch(Str:D $action --> MVC::Keayl::Response) {
     }
 
     self!run-with-callbacks($action);
+  }
+
+  with $!i18n {
+    $!i18n.with-locale(self.current-locale, &run);
+  } else {
+    run();
   }
 
   self!commit-flash;
