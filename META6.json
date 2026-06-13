@@ -12,6 +12,7 @@
     "Digest::HMAC",
     "Digest::SHA1::Native",
     "OpenSSL",
+    "MIME::Base64",
     "YAMLish",
     "ORM::ActiveRecord:auth<zef:gdonald>",
     "Template::HAML:auth<zef:gdonald>"
@@ -53,6 +54,7 @@
     "MVC::Keayl::I18n": "lib/MVC/Keayl/I18n.rakumod",
     "MVC::Keayl::I18n::Pluralization": "lib/MVC/Keayl/I18n/Pluralization.rakumod",
     "MVC::Keayl::I18n::Locale": "lib/MVC/Keayl/I18n/Locale.rakumod",
+    "MVC::Keayl::HttpAuthentication": "lib/MVC/Keayl/HttpAuthentication.rakumod",
     "MVC::Keayl::Helpers::Asset": "lib/MVC/Keayl/Helpers/Asset.rakumod",
     "MVC::Keayl::Helpers::DateTime": "lib/MVC/Keayl/Helpers/DateTime.rakumod",
     "MVC::Keayl::Helpers::Form": "lib/MVC/Keayl/Helpers/Form.rakumod",

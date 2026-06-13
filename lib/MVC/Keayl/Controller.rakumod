@@ -13,6 +13,7 @@ use MVC::Keayl::Notifications;
 use MVC::Keayl::Mime;
 use MVC::Keayl::Caching;
 use MVC::Keayl::I18n::Locale;
+use MVC::Keayl::HttpAuthentication;
 
 unit class MVC::Keayl::Controller;
 
@@ -473,6 +474,86 @@ method !handle-unverified-request {
     when 'null-session' | 'reset-session' { self.reset-session }
     default                               { die X::MVC::Keayl::InvalidAuthenticityToken.new }
   }
+}
+
+method !authorization-header(--> Str) {
+  $!request.defined ?? $!request.header('authorization') !! Str
+}
+
+method authenticate-with-http-basic(&block) {
+  my @credentials = decode-basic-credentials(self!authorization-header);
+  return Nil unless @credentials;
+
+  block(@credentials[0], @credentials[1])
+}
+
+method request-http-basic-authentication(Str:D $realm = 'Application' --> Bool) {
+  $!response.set-header('WWW-Authenticate', qq{Basic realm="$realm"});
+  self.head(401);
+  False
+}
+
+method authenticate-or-request-with-http-basic(Str:D $realm, &block) {
+  self.authenticate-with-http-basic(&block) || self.request-http-basic-authentication($realm)
+}
+
+method http-basic-authenticate-with(Str:D :$name!, Str:D :$password!, Str:D :$realm = 'Application', :$only, :$except --> ::?CLASS) {
+  self.before-action(-> $controller {
+    my $authenticated = $controller.authenticate-with-http-basic(-> $user, $pass {
+      secure-compare($user, $name) && secure-compare($pass, $password)
+    });
+
+    $controller.request-http-basic-authentication($realm) unless $authenticated;
+  }, :$only, :$except);
+
+  self
+}
+
+method authenticate-with-http-token(&block) {
+  my ($token, %options) = token-and-options(self!authorization-header);
+  return Nil without $token;
+
+  block($token, %options)
+}
+
+method request-http-token-authentication(Str:D $realm = 'Application' --> Bool) {
+  $!response.set-header('WWW-Authenticate', qq{Token realm="$realm"});
+  self.head(401);
+  False
+}
+
+method authenticate-or-request-with-http-token(Str:D $realm, &block) {
+  self.authenticate-with-http-token(&block) || self.request-http-token-authentication($realm)
+}
+
+method authenticate-with-http-digest(Str:D $realm, &password-block) {
+  my %params = parse-digest-header(self!authorization-header);
+  return Nil unless %params;
+
+  my $username = %params<username>;
+  return Nil without $username;
+  return Nil unless validate-digest-nonce($!secret, %params<nonce>);
+
+  my $password = password-block($username);
+  return Nil without $password;
+
+  my $method   = $!request.defined ?? $!request.method !! 'GET';
+  my $expected = expected-digest-response(%params, $method, $realm, $username, $password);
+
+  return Nil unless secure-compare($expected, %params<response> // '');
+
+  $username
+}
+
+method request-http-digest-authentication(Str:D $realm = 'Application' --> Bool) {
+  $!response.set-header('WWW-Authenticate', digest-challenge($realm, $!secret, time));
+  self.head(401);
+  False
+}
+
+method authenticate-or-request-with-http-digest(Str:D $realm, &password-block) {
+  self.authenticate-with-http-digest($realm, &password-block)
+    || self.request-http-digest-authentication($realm)
 }
 
 method filter-parameters(*@names --> ::?CLASS) {

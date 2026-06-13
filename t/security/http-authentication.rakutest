@@ -1,0 +1,103 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MIME::Base64;
+use MVC::Keayl::HttpAuthentication;
+
+# secure-compare
+
+{
+  ok secure-compare('abc123', 'abc123'), 'secure-compare is true for equal strings';
+}
+
+{
+  nok secure-compare('abc123', 'abc124'), 'secure-compare is false for different strings';
+}
+
+{
+  nok secure-compare('abc', 'abcd'), 'secure-compare is false for different lengths';
+}
+
+# basic credentials
+
+{
+  is encode-basic-credentials('aladdin', 'opensesame'), 'Basic YWxhZGRpbjpvcGVuc2VzYW1l',
+    'encodes basic credentials';
+}
+
+{
+  is-deeply decode-basic-credentials('Basic YWxhZGRpbjpvcGVuc2VzYW1l'), ('aladdin', 'opensesame'),
+    'decodes basic credentials';
+}
+
+{
+  is-deeply decode-basic-credentials('Basic ' ~ MIME::Base64.encode-str('user:pa:ss')), ('user', 'pa:ss'),
+    'keeps a colon in the password';
+}
+
+{
+  is-deeply decode-basic-credentials(Str), (), 'decodes nothing without a header';
+}
+
+{
+  is-deeply decode-basic-credentials('Bearer abc'), (), 'ignores a non-basic header';
+}
+
+# token credentials
+
+{
+  is-deeply token-and-options('Token token="abc123"'), ('abc123', {}), 'parses a quoted token';
+}
+
+{
+  is-deeply token-and-options('Token abc123'), ('abc123', {}), 'parses a bare token';
+}
+
+{
+  is-deeply token-and-options('Bearer xyz.789'), ('xyz.789', {}), 'parses a bearer token';
+}
+
+{
+  my ($token, %options) = token-and-options('Token token="abc", nonce="42"');
+  is $token, 'abc', 'extracts the token from options';
+  is %options<nonce>, '42', 'extracts the additional options';
+}
+
+{
+  is-deeply token-and-options(Str), (Str, {}), 'parses nothing without a header';
+}
+
+# digest
+
+{
+  my %params = parse-digest-header('Digest username="bob", realm="App", uri="/", response="deadbeef", qop=auth, nc=00000001');
+  is %params<username>, 'bob', 'parses a quoted digest field';
+  is %params<qop>, 'auth', 'parses an unquoted digest field';
+  is %params<nc>, '00000001', 'parses the nonce count';
+}
+
+{
+  my $nonce = digest-nonce('secret', 1_000_000);
+  ok validate-digest-nonce('secret', $nonce, 10_000_000_000), 'validates a fresh nonce';
+}
+
+{
+  my $nonce = digest-nonce('secret', 1_000_000);
+  nok validate-digest-nonce('other-secret', $nonce, 10_000_000_000), 'rejects a nonce signed with another secret';
+}
+
+{
+  my $nonce = digest-nonce('secret', 1_000_000);
+  nok validate-digest-nonce('secret', $nonce, 60), 'rejects an expired nonce';
+}
+
+{
+  my %params =
+    username => 'bob', realm => 'App', uri => '/secret',
+    nonce => 'abc', nc => '00000001', cnonce => 'xyz', qop => 'auth';
+
+  my $response = expected-digest-response(%params, 'GET', 'App', 'bob', 'secret');
+  is $response.chars, 32, 'computes a 32-character digest response';
+}
+
+done-testing;

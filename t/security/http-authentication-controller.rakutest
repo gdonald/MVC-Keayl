@@ -1,0 +1,107 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::HttpAuthentication;
+use AuthFixtures;
+
+sub dispatch($class, Str:D $action, :$authorization, :$secret = 'test-secret') {
+  my %headers = $authorization.defined ?? (Authorization => $authorization) !! ();
+  my $request = MVC::Keayl::Request.new(:%headers);
+
+  $class.new(:$request, :$secret).dispatch($action);
+}
+
+sub digest-header(%overrides, :$secret = 'test-secret', :$realm = 'Test', :$username = 'bob', :$password = 'secret') {
+  my %params =
+    username => $username, realm => $realm, uri => '/', qop => 'auth',
+    nc => '00000001', cnonce => 'clientnonce',
+    nonce => digest-nonce($secret, time),
+    |%overrides;
+
+  %params<response> //= expected-digest-response(%params, 'GET', $realm, $username, $password);
+
+  my @fields = <username realm uri qop nc cnonce nonce response>.map({ qq{$_="%params{$_}"} });
+  'Digest ' ~ @fields.join(', ')
+}
+
+# Basic authentication
+
+{
+  my $response = dispatch(BasicController, 'show', authorization => encode-basic-credentials('admin', 'secret'));
+  is $response.body, 'welcome admin', 'basic auth admits valid credentials';
+}
+
+{
+  my $response = dispatch(BasicController, 'show', authorization => encode-basic-credentials('admin', 'wrong'));
+  is $response.status, 401, 'basic auth rejects bad credentials with 401';
+}
+
+{
+  my $response = dispatch(BasicController, 'show', authorization => encode-basic-credentials('admin', 'wrong'));
+  is $response.header('WWW-Authenticate'), 'Basic realm="Test"', 'basic auth issues a challenge';
+}
+
+{
+  my $response = dispatch(BasicController, 'show');
+  is $response.status, 401, 'basic auth challenges a missing header';
+}
+
+# Basic authentication class-level shortcut
+
+{
+  my $response = dispatch(BasicShortcutController, 'index');
+  is $response.body, 'listing', 'the shortcut skips excepted actions';
+}
+
+{
+  my $response = dispatch(BasicShortcutController, 'restricted', authorization => encode-basic-credentials('admin', 'secret'));
+  is $response.body, 'classified', 'the shortcut admits valid credentials';
+}
+
+{
+  my $response = dispatch(BasicShortcutController, 'restricted', authorization => encode-basic-credentials('admin', 'nope'));
+  is $response.status, 401, 'the shortcut challenges bad credentials';
+}
+
+# Token authentication
+
+{
+  my $response = dispatch(TokenController, 'show', authorization => 'Token token="good-token"');
+  is $response.body, 'token accepted', 'token auth admits a valid token';
+}
+
+{
+  my $response = dispatch(TokenController, 'show', authorization => 'Bearer bad-token');
+  is $response.status, 401, 'token auth rejects a bad token';
+}
+
+{
+  my $response = dispatch(TokenController, 'show', authorization => 'Bearer bad-token');
+  is $response.header('WWW-Authenticate'), 'Token realm="Test"', 'token auth issues a challenge';
+}
+
+# Digest authentication
+
+{
+  my $response = dispatch(DigestController, 'show', authorization => digest-header({}));
+  is $response.body, 'hello bob', 'digest auth admits a valid response';
+}
+
+{
+  my $response = dispatch(DigestController, 'show', authorization => digest-header({ response => 'deadbeef' }));
+  is $response.status, 401, 'digest auth rejects a wrong response';
+}
+
+{
+  my $response = dispatch(DigestController, 'show', authorization => digest-header({ nonce => 'tampered' }));
+  is $response.status, 401, 'digest auth rejects an invalid nonce';
+}
+
+{
+  my $response = dispatch(DigestController, 'show');
+  like $response.header('WWW-Authenticate'), /^ 'Digest realm="Test"'/, 'digest auth issues a digest challenge';
+}
+
+done-testing;
