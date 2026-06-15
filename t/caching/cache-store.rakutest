@@ -1,0 +1,233 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Cache;
+
+my $temp-counter = 0;
+
+sub temp-root(--> IO::Path) {
+  $*TMPDIR.add('keayl-cache-' ~ $*PID ~ '-' ~ $temp-counter++)
+}
+
+# read and write
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+  $store.write('a', 'x');
+
+  is $store.read('a'), 'x', 'read returns the written value';
+  ok $store.exist('a'), 'exist reports a written key';
+  nok $store.read('missing').defined, 'read of a missing key is undefined';
+
+  $store.delete('a');
+  nok $store.exist('a'), 'delete removes the key';
+}
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new(namespace => 'app');
+  $store.write('k', 'v');
+  is $store.read('k'), 'v', 'a namespaced store reads its own keys';
+  is $store.entry-keys.head, 'app:k', 'a namespaced store prefixes stored keys';
+}
+
+# fetch
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+  my $calls = 0;
+
+  $store.fetch('k', { $calls++; 'value' });
+  my $second = $store.fetch('k', { $calls++; 'value' });
+
+  is $calls, 1, 'fetch computes the value once';
+  is $second, 'value', 'fetch returns the cached value';
+}
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+  $store.write('k', 'old');
+
+  is $store.fetch('k', { 'new' }, force => True), 'new', 'a forced fetch recomputes';
+}
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+  $store.fetch('k', { Nil }, skip-nil => True);
+  nok $store.exist('k'), 'fetch with skip-nil does not store a nil result';
+}
+
+# expiry
+
+{
+  my $t = 1000;
+  my $store = MVC::Keayl::Cache::MemoryStore.new(clock => sub { $t });
+  $store.write('k', 'v', expires-in => 10);
+
+  is $store.read('k'), 'v', 'a value reads back before expiry';
+
+  $t = 1011;
+  nok $store.read('k').defined, 'a value is gone after expiry';
+  nok $store.exist('k'), 'exist is false after expiry';
+}
+
+{
+  my $t = 2000;
+  my $store = MVC::Keayl::Cache::MemoryStore.new(clock => sub { $t }, default-expires-in => 5);
+  $store.write('k', 'v');
+
+  $t = 2006;
+  nok $store.read('k').defined, 'a default expiry applies when no per-write expiry is given';
+}
+
+# versioning
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+  $store.write('k', 'v', version => 'v1');
+
+  is $store.read('k', version => 'v1'), 'v', 'a matching version reads the value';
+  nok $store.read('k', version => 'v2').defined, 'a mismatched version misses';
+}
+
+# race condition ttl
+
+{
+  my $t = 3000;
+  my $store = MVC::Keayl::Cache::MemoryStore.new(clock => sub { $t });
+  $store.write('k', 'old', expires-in => 10);
+
+  $t = 3011;
+  my $seen;
+  my $value = $store.fetch('k', { $seen = $store.read('k'); 'new' }, race-condition-ttl => 5);
+
+  is $value, 'new', 'fetch returns the recomputed value';
+  is $seen, 'old', 'a concurrent reader sees the stale value while recomputing';
+}
+
+# increment and decrement
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+
+  is $store.increment('n'), 1, 'increment of a fresh key starts at the amount';
+  is $store.increment('n', 4), 5, 'increment adds the amount';
+  is $store.decrement('n', 2), 3, 'decrement subtracts the amount';
+}
+
+{
+  my $t = 4000;
+  my $store = MVC::Keayl::Cache::MemoryStore.new(clock => sub { $t });
+
+  $store.increment('n', 1, expires-in => 5);
+  is $store.increment('n', 1), 2, 'a later increment preserves the window';
+
+  $t = 4006;
+  is $store.increment('n', 1, expires-in => 5), 1, 'the counter resets after the window';
+}
+
+# multi
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+  $store.write-multi({ a => 1, b => 2 });
+
+  my %read = $store.read-multi('a', 'b', 'c');
+  is %read.keys.sort.join(','), 'a,b', 'read-multi returns only present keys';
+  is %read<a>, 1, 'read-multi returns the stored values';
+}
+
+# delete-matched
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+  $store.write('rate/a', 1);
+  $store.write('rate/b', 2);
+  $store.write('other', 3);
+
+  is $store.delete-matched('rate*'), 2, 'delete-matched removes the matching keys';
+  is $store.entry-keys.sort.join(','), 'other', 'delete-matched leaves the rest';
+}
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new;
+  $store.write('post/1', 'a');
+  $store.write('post/2', 'b');
+
+  $store.delete-matched(/^ 'post/'/);
+  is $store.entry-keys.elems, 0, 'delete-matched accepts a regex matcher';
+}
+
+# memory store bounds
+
+{
+  my $store = MVC::Keayl::Cache::MemoryStore.new(max-entries => 2);
+  $store.write('a', 1);
+  $store.write('b', 2);
+  $store.read('a');
+  $store.write('c', 3);
+
+  nok $store.exist('b'), 'the least recently used entry is evicted past the bound';
+  ok $store.exist('a'), 'a recently read entry survives eviction';
+  ok $store.exist('c'), 'the newest entry is kept';
+}
+
+# null store
+
+{
+  my $store = MVC::Keayl::Cache::NullStore.new;
+  my $calls = 0;
+
+  $store.fetch('k', { $calls++; 'v' });
+  $store.fetch('k', { $calls++; 'v' });
+
+  is $calls, 2, 'the null store never caches';
+  nok $store.exist('k'), 'the null store reports nothing stored';
+}
+
+# file store
+
+{
+  my $root = temp-root;
+  my $t = 5000;
+
+  my $store = MVC::Keayl::Cache::FileStore.new(:$root, clock => sub { $t });
+  $store.write('frag/home', 'HELLO', expires-in => 100);
+
+  is $store.read('frag/home'), 'HELLO', 'the file store reads a written value';
+  is MVC::Keayl::Cache::FileStore.new(:$root, clock => sub { $t }).read('frag/home'), 'HELLO',
+    'a second file-store instance reads the persisted value';
+
+  $t = 5200;
+  nok $store.read('frag/home').defined, 'the file store honours expiry';
+
+  $store.write('a/1', 'one');
+  $store.write('a/2', 'two');
+  $store.write('b/1', 'three');
+  is $store.delete-matched('a*'), 2, 'the file store deletes matching keys';
+
+  .unlink for $root.dir;
+  $root.rmdir;
+}
+
+# external store
+
+{
+  my class FakeClient {
+    has %.data;
+    method get($key)            { %!data{$key}:exists ?? %!data{$key}<value> !! Nil }
+    method set($key, $value, :$ttl) { %!data{$key} = { :$value, :$ttl } }
+    method del($key)            { %!data{$key}:delete }
+    method keys()               { %!data.keys }
+  }
+
+  my $client = FakeClient.new;
+  my $t = 6000;
+  my $store = MVC::Keayl::Cache::ExternalStore.new(:$client, clock => sub { $t });
+
+  $store.write('x', 'X', expires-in => 30);
+  is $store.read('x'), 'X', 'the external store round-trips through the client';
+  is $client.data<x><ttl>, 30, 'the external store passes a ttl to the client';
+  is $store.increment('n', 1, expires-in => 60), 1, 'the external store increments through the client';
+}
+
+done-testing;

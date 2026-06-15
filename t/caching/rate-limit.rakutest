@@ -1,0 +1,80 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Parameters;
+use MVC::Keayl::Cache;
+
+my $clock-time = 0;
+my $rate-store = MVC::Keayl::Cache::MemoryStore.new(clock => sub { $clock-time });
+
+class ThrottledController is MVC::Keayl::Controller {
+  method show { self.render(plain => 'ok') }
+}
+ThrottledController.rate-limit(to => 2, within => 60, store => $rate-store, by => -> $controller { 'fixed' });
+
+class ByUserController is MVC::Keayl::Controller {
+  method show { self.render(plain => 'ok') }
+}
+ByUserController.rate-limit(to => 1, within => 60, store => $rate-store, by => -> $controller { $controller.params<user> });
+
+class CustomHandlerController is MVC::Keayl::Controller {
+  method show       { self.render(plain => 'ok') }
+  method over-limit { self.render(plain => 'slow down', status => 503) }
+}
+CustomHandlerController.rate-limit(to => 1, within => 60, store => $rate-store, with => -> $controller { $controller.over-limit });
+
+sub throttled {
+  ThrottledController.new.dispatch('show')
+}
+
+sub by-user(Str $user) {
+  ByUserController.new(params => MVC::Keayl::Parameters.new({ user => $user })).dispatch('show')
+}
+
+# basic limiting
+
+{
+  $clock-time = 0;
+  $rate-store.clear;
+
+  is throttled.status, 200, 'the first request within the limit is allowed';
+  is throttled.status, 200, 'the second request within the limit is allowed';
+  is throttled.status, 429, 'a request past the limit is blocked with 429';
+  is throttled.header('Retry-After'), '60', 'a blocked request sets a Retry-After header';
+}
+
+{
+  $clock-time = 0;
+  $rate-store.clear;
+
+  throttled; throttled; throttled;
+  $clock-time = 61;
+  is throttled.status, 200, 'requests are allowed again after the window passes';
+}
+
+# discriminator
+
+{
+  $clock-time = 0;
+  $rate-store.clear;
+
+  by-user('alice');
+  is by-user('bob').status, 200, 'each discriminator is tracked separately';
+  is by-user('alice').status, 429, 'the same discriminator is blocked past its limit';
+}
+
+# custom handler
+
+{
+  $clock-time = 0;
+  $rate-store.clear;
+
+  CustomHandlerController.new.dispatch('show');
+  my $response = CustomHandlerController.new.dispatch('show');
+
+  is $response.status, 503, 'a custom over-limit handler controls the status';
+  is $response.body, 'slow down', 'a custom over-limit handler runs its body';
+}
+
+done-testing;

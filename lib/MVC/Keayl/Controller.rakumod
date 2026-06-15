@@ -12,6 +12,7 @@ use MVC::Keayl::ParameterFilter;
 use MVC::Keayl::Notifications;
 use MVC::Keayl::Mime;
 use MVC::Keayl::Caching;
+use MVC::Keayl::Cache;
 use MVC::Keayl::I18n::Locale;
 use MVC::Keayl::HttpAuthentication;
 use MVC::Keayl::Live;
@@ -39,7 +40,7 @@ my %STATUS-CODES =
   'not-modified' => 304, 'temporary-redirect' => 307,
   'bad-request' => 400, unauthorized => 401, forbidden => 403,
   'not-found' => 404, 'unprocessable-entity' => 422,
-  'internal-server-error' => 500;
+  'too-many-requests' => 429, 'internal-server-error' => 500;
 
 sub status-code($status --> Int) {
   return $status if $status ~~ Int;
@@ -452,6 +453,29 @@ method protect-from-forgery(:$with = 'exception' --> ::?CLASS) {
 
 method skip-forgery-protection(:$only, :$except --> ::?CLASS) {
   self.skip-before-action('verify-authenticity-token', :$only, :$except);
+  self
+}
+
+my $default-rate-store = MVC::Keayl::Cache::MemoryStore.new;
+
+method rate-limit(Int :$to!, :$within!, :$by, :$with, :$store, Str :$name = 'default', :$only, :$except --> ::?CLASS) {
+  my $cache   = $store // $default-rate-store;
+  my $seconds = $within;
+
+  self.before-action(-> $controller {
+    my $discriminator = $by.defined
+      ?? $by($controller)
+      !! ($controller.request.defined ?? $controller.request.remote-ip !! Str);
+
+    my $key = 'rate-limit/' ~ $controller.controller-path ~ '/' ~ $name ~ '/' ~ ($discriminator // '');
+
+    if $cache.increment($key, 1, expires-in => $seconds) > $to {
+      $with.defined
+        ?? $with($controller)
+        !! $controller.head(429, retry-after => $seconds.Int);
+    }
+  }, :$only, :$except);
+
   self
 }
 
