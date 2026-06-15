@@ -60,6 +60,10 @@ of chunks (strings or blobs); `stream-chunks` yields them encoded, and
 $response.stream(gather { for @rows { take row-html($_) } });
 ```
 
+This is the pull-based primitive: the whole sequence is known up front. For a
+push-based response, where an action writes chunks over time, see
+[live streaming](live-streaming.md).
+
 ## Range requests
 
 `send-file` honours a `Range` request header, responding `206 Partial Content`

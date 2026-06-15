@@ -1,6 +1,7 @@
 use v6.d;
 use MVC::Keayl::Controller;
 use MVC::Keayl::Errors;
+use MVC::Keayl::Live;
 
 unit module ControllerFixtures;
 
@@ -275,6 +276,42 @@ class VariantController is MVC::Keayl::Controller is export {
 
 class VariantTemplateController is MVC::Keayl::Controller is export {
   method show { self.render('show') }
+}
+
+class StreamController is MVC::Keayl::Controller is export {
+  has @.torn-down;
+
+  method numbers {
+    self.live(-> $controller, $stream {
+      $stream.write('one');
+      $stream.write('two');
+      $stream.write('three');
+    });
+  }
+
+  method events {
+    self.sse(-> $controller, $sse {
+      $sse.write('hello', event => 'greeting');
+      $sse.write('world');
+    });
+  }
+
+  method retrying {
+    self.sse(-> $controller, $sse {
+      $sse.comment('keep-alive');
+      $sse.write('tick');
+    }, retry => 5000);
+  }
+
+  method teardown {
+    self.live(-> $controller, $stream {
+      CATCH { when X::MVC::Keayl::Live::ClientDisconnected { $controller.torn-down.push('disconnected') } }
+
+      $stream.write('first');
+      $stream.disconnect;
+      $stream.write('second');
+    });
+  }
 }
 
 

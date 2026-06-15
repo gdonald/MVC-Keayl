@@ -14,6 +14,7 @@ use MVC::Keayl::Mime;
 use MVC::Keayl::Caching;
 use MVC::Keayl::I18n::Locale;
 use MVC::Keayl::HttpAuthentication;
+use MVC::Keayl::Live;
 
 unit class MVC::Keayl::Controller;
 
@@ -996,6 +997,32 @@ method send-file($path, :$type, :$filename, Str :$disposition = 'attachment', :$
   $!response.status = $status if $status.defined;
 
   $!response
+}
+
+method live(&block --> MVC::Keayl::Response) {
+  die 'double render: a response was already rendered or redirected' if $!performed;
+  $!performed = True;
+
+  my $stream = $!response.live-stream;
+
+  $!response.content-type('text/html; charset=utf-8') unless $!response.has-header('content-type');
+
+  $!response.live-promise = start {
+    LEAVE $stream.close;
+    CATCH { default {} }
+    block(self, $stream);
+  }
+
+  $!response
+}
+
+method sse(&block, *%defaults --> MVC::Keayl::Response) {
+  $!response.content-type('text/event-stream') unless $!response.has-header('content-type');
+  $!response.set-header('Cache-Control', 'no-cache') unless $!response.has-header('cache-control');
+
+  self.live(-> $controller, $stream {
+    block($controller, MVC::Keayl::Live::SSE.new(:$stream, :%defaults));
+  })
 }
 
 method implicit-render(Str:D $action, $result --> Nil) {

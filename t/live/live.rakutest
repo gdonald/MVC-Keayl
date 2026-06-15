@@ -1,0 +1,77 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Live;
+
+sub drain($stream, &producer) {
+  start { producer($stream) };
+  $stream.chunks.map(*.decode('utf-8')).join
+}
+
+# stream
+
+{
+  my $body = drain(MVC::Keayl::Live::Stream.new, -> $stream {
+    $stream.write('a');
+    $stream.write('b');
+    $stream.close;
+  });
+  is $body, 'ab', 'a stream collects written chunks in order';
+}
+
+{
+  my $stream = MVC::Keayl::Live::Stream.new;
+  start { $stream.write('é'); $stream.close };
+  is $stream.chunks.head.elems, 2, 'a string chunk is encoded as UTF-8';
+}
+
+{
+  my $stream = MVC::Keayl::Live::Stream.new;
+  start { $stream.write(Blob.new(1, 2, 3)); $stream.close };
+  is $stream.chunks.head.list.join(','), '1,2,3', 'a blob chunk passes through unchanged';
+}
+
+{
+  my $stream = MVC::Keayl::Live::Stream.new;
+  $stream.close;
+  ok $stream.is-closed, 'a stream reports closed after close';
+  throws-like { $stream.write('x') }, X::MVC::Keayl::Live::StreamClosed, 'writing to a closed stream raises';
+}
+
+# disconnect
+
+{
+  my $stream = MVC::Keayl::Live::Stream.new;
+  $stream.disconnect;
+  ok $stream.is-disconnected, 'disconnect marks the stream disconnected';
+  throws-like { $stream.write('x') }, X::MVC::Keayl::Live::ClientDisconnected,
+    'a write after disconnect raises a client-disconnected error';
+}
+
+# SSE framing
+
+{
+  my $sse = MVC::Keayl::Live::SSE.new(stream => MVC::Keayl::Live::Stream.new);
+
+  is $sse.frame('hi'), "data: hi\n\n", 'frames a bare data field';
+  is $sse.frame('hi', event => 'ping', id => '7', retry => 3000), "retry: 3000\nevent: ping\nid: 7\ndata: hi\n\n",
+    'frames event, id, and retry before the data';
+  is $sse.frame("one\ntwo"), "data: one\ndata: two\n\n", 'splits multiline data across data fields';
+}
+
+{
+  my $stream = MVC::Keayl::Live::Stream.new;
+  my $writer = MVC::Keayl::Live::SSE.new(:$stream);
+  start { $writer.comment('keep-alive'); $stream.close };
+  is $stream.chunks.head.decode('utf-8'), ": keep-alive\n\n", 'frames a comment line';
+}
+
+# SSE defaults
+
+{
+  my $sse = MVC::Keayl::Live::SSE.new(stream => MVC::Keayl::Live::Stream.new, defaults => { event => 'message' });
+  is $sse.frame('hi'), "event: message\ndata: hi\n\n", 'applies a default event when none is given';
+  is $sse.frame('hi', event => 'ping'), "event: ping\ndata: hi\n\n", 'a per-write option overrides the default';
+}
+
+done-testing;

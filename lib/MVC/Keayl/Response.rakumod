@@ -1,4 +1,5 @@
 use v6.d;
+use MVC::Keayl::Live;
 
 unit class MVC::Keayl::Response;
 
@@ -9,6 +10,8 @@ has     $!binary-body;
 has %!headers;
 has @!header-order;
 has $!stream-source;
+has $!live;
+has $.live-promise is rw;
 
 submethod BUILD(Int :$status = 200, :%headers, :$body) {
   $!status = $status;
@@ -111,6 +114,32 @@ method is-streaming(--> Bool) {
 method stream-chunks(--> Seq) {
   return ().Seq without $!stream-source;
   $!stream-source.map({ $_ ~~ Blob ?? $_ !! .Str.encode('utf-8') }).Seq
+}
+
+method live-stream(--> MVC::Keayl::Live::Stream) {
+  without $!live {
+    $!live = MVC::Keayl::Live::Stream.new;
+    $!stream-source = $!live.chunks;
+  }
+
+  $!live
+}
+
+method is-live(--> Bool) {
+  $!live.defined
+}
+
+method stream-supply(--> Supply) {
+  supply {
+    emit $_ for self.stream-chunks;
+  }
+}
+
+method streaming-finish(--> List) {
+  self.set-header('Content-Type', 'text/html; charset=utf-8')
+    unless self.has-header('content-type');
+
+  ($!status, $(self!header-pairs))
 }
 
 multi method body(--> Str)              { $!binary-body.defined ?? $!binary-body.decode('utf-8') !! @!body-parts.join }

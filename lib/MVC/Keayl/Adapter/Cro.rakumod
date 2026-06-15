@@ -52,24 +52,34 @@ method build-request(Cro::HTTP::Request:D $cro, Blob:D $body --> MVC::Keayl::Req
   )
 }
 
+method !apply-headers(Cro::HTTP::Response:D $cro-response, $headers --> Nil) {
+  for $headers.list -> $pair {
+    # Cro derives Content-Length from the body it serializes.
+    next if $pair.key.lc eq 'content-length';
+    $cro-response.append-header($pair.key, $pair.value);
+  }
+}
+
 method fill-response(
   Cro::HTTP::Request:D $cro-request,
   Blob:D $body,
   Cro::HTTP::Response:D $cro-response,
   --> Cro::HTTP::Response
 ) {
-  my $request = self.build-request($cro-request, $body);
-  my ($status, $headers, $blob) = self.handle($request);
+  my $request  = self.build-request($cro-request, $body);
+  my $response = self.app.call($request);
 
-  $cro-response.status = $status;
-
-  for $headers.list -> $pair {
-    # Cro derives Content-Length from the body it serializes.
-    next if $pair.key.lc eq 'content-length';
-    $cro-response.append-header($pair.key, $pair.value);
+  if $response.is-streaming {
+    my ($status, $headers) = $response.streaming-finish;
+    $cro-response.status = $status;
+    self!apply-headers($cro-response, $headers);
+    $cro-response.set-body-byte-stream($response.stream-supply);
+  } else {
+    my ($status, $headers, $blob) = $response.finish;
+    $cro-response.status = $status;
+    self!apply-headers($cro-response, $headers);
+    $cro-response.set-body($blob);
   }
-
-  $cro-response.set-body($blob);
 
   $cro-response
 }

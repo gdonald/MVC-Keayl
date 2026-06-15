@@ -1,0 +1,48 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+sub body($response) {
+  await $response.live-promise;
+  $response.stream-chunks.map(*.decode('utf-8')).join
+}
+
+# live
+
+{
+  my $response = StreamController.new.dispatch('numbers');
+  ok $response.is-live, 'live marks the response as live';
+  ok $response.is-streaming, 'a live response reports as streaming';
+  is body($response), 'onetwothree', 'live streams each written chunk';
+}
+
+# sse
+
+{
+  my $response = StreamController.new.dispatch('events');
+  is $response.content-type, 'text/event-stream', 'sse sets the event-stream content type';
+  is $response.header('Cache-Control'), 'no-cache', 'sse sets a no-cache directive';
+  is body($response), "event: greeting\ndata: hello\n\ndata: world\n\n", 'sse streams SSE frames';
+}
+
+{
+  is body(StreamController.new.dispatch('retrying')), ": keep-alive\n\nretry: 5000\ndata: tick\n\n",
+    'sse carries a default retry across frames';
+}
+
+# teardown
+
+{
+  is body(StreamController.new.dispatch('teardown')), 'first', 'a live response streams the chunks written before a disconnect';
+}
+
+{
+  my $controller = StreamController.new;
+  await $controller.dispatch('teardown').live-promise;
+  is $controller.torn-down.join, 'disconnected', 'a live action tears down on a client disconnect';
+}
+
+done-testing;
