@@ -1,0 +1,111 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Helpers::Text;
+use MVC::Keayl::Helpers::Tag;
+
+# highlight
+
+{
+  is highlight('You searched for rails', 'rails').Str, 'You searched for <mark>rails</mark>',
+    'highlight wraps a phrase in a mark element';
+}
+
+{
+  is highlight('rails RAILS', 'rails').Str, '<mark>rails</mark> <mark>RAILS</mark>',
+    'highlight matches case-insensitively and keeps the original text';
+}
+
+{
+  is highlight('use rails', 'rails', highlighter => '<em>\1</em>').Str, 'use <em>rails</em>',
+    'highlight honours a custom highlighter';
+}
+
+{
+  is highlight('a < b rails', 'rails').Str, 'a &lt; b <mark>rails</mark>', 'highlight escapes the text it wraps';
+}
+
+# excerpt
+
+{
+  is excerpt('This is a beautiful morning', 'beautiful', radius => 5), '...is a beautiful morn...',
+    'excerpt extracts text around a phrase with omission markers';
+}
+
+{
+  is excerpt('This is a beautiful morning', 'nope'), '', 'excerpt returns empty when the phrase is absent';
+}
+
+# word-wrap
+
+{
+  is word-wrap('The quick brown fox', line-width => 10), "The quick\nbrown fox", 'word-wrap breaks lines at the width';
+}
+
+{
+  is word-wrap('short line', line-width => 40), 'short line', 'word-wrap leaves a short line alone';
+}
+
+# strip-tags and strip-links
+
+{
+  is strip-tags('<p>Hello <b>world</b></p>'), 'Hello world', 'strip-tags removes all tags';
+}
+
+{
+  is strip-links('Visit <a href="/x">here</a> now'), 'Visit here now', 'strip-links keeps link text but drops the anchor';
+}
+
+# sanitize-css
+
+{
+  is sanitize-css('color: red; font-size: 10px').Str, 'color: red; font-size: 10px', 'sanitize-css keeps safe declarations';
+}
+
+{
+  is sanitize-css('color: red; background: url(javascript:alert(1))').Str, 'color: red',
+    'sanitize-css drops a declaration with an unsafe value';
+}
+
+# cycle, current-cycle, reset-cycle
+
+{
+  reset-cycle(name => 'rows');
+  my @results = (cycle('odd', 'even', name => 'rows'), cycle('odd', 'even', name => 'rows'), cycle('odd', 'even', name => 'rows'));
+  is @results, ['odd', 'even', 'odd'], 'cycle rotates through its values';
+}
+
+{
+  reset-cycle(name => 'stripe');
+  cycle('a', 'b', name => 'stripe');
+  is current-cycle(name => 'stripe'), 'a', 'current-cycle reports the last returned value';
+}
+
+{
+  reset-cycle(name => 'reset-me');
+  cycle('x', 'y', name => 'reset-me');
+  cycle('x', 'y', name => 'reset-me');
+  reset-cycle(name => 'reset-me');
+  is cycle('x', 'y', name => 'reset-me'), 'x', 'reset-cycle restarts from the first value';
+}
+
+# capture
+
+{
+  is capture(-> { content-tag('p', 'hi') }).Str, '<p>hi</p>', 'capture returns the block output as a safe string';
+}
+
+# provide
+
+{
+  my $*KEAYL-CONTENT = {};
+  provide('head', '<meta>');
+  provide('head', '<link>');
+  is $*KEAYL-CONTENT<head>, '<meta><link>', 'provide accumulates content under a name';
+}
+
+{
+  is provide('head', 'x'), '', 'provide returns an empty string outside a render';
+}
+
+done-testing;

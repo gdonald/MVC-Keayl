@@ -30,6 +30,16 @@ sub image-tag(Str:D $source, %options?, :&resolver = &default-asset-path --> Saf
   tag('img', %attributes)
 }
 
+sub image-submit-tag(Str:D $source, %options?, :&resolver = &default-asset-path --> SafeString) is export {
+  my %attributes = %options // {};
+
+  %attributes<type>  = 'image';
+  %attributes<src>   = asset-path($source, :resolver(&resolver));
+  %attributes<alt> //= default-alt($source);
+
+  tag('input', %attributes)
+}
+
 sub stylesheet-link-tag(*@sources, :&resolver = &default-asset-path, *%options --> SafeString) is export {
   safe-join(
     @sources.map(-> $source {

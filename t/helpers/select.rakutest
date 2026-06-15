@@ -1,0 +1,165 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Helpers::Options;
+use MVC::Keayl::Helpers::Form;
+
+class City {
+  has $.id;
+  has $.name;
+}
+
+class SelectPost {
+  has $.city-id;
+  has @.tag-ids;
+  has $.born;
+  method model-name { 'post' }
+}
+
+sub builder(*%args) { FormBuilder.new(|%args) }
+
+# options-for-select
+
+{
+  is options-for-select(['a', 'b'], 'b').Str, '<option value="a">a</option><option selected value="b">b</option>',
+    'options-for-select marks the selected value';
+}
+
+{
+  is options-for-select(['Active' => 'active']).Str, '<option value="active">Active</option>',
+    'options-for-select accepts label-value pairs';
+}
+
+{
+  like options-for-select([['Draft', 'draft', %( disabled => True )]]).Str, /'disabled'/,
+    'options-for-select carries per-option attributes';
+}
+
+# options-from-collection-for-select
+
+{
+  is options-from-collection-for-select([City.new(id => 1, name => 'NY'), City.new(id => 2, name => 'LA')], 'id', 'name', 2).Str,
+    '<option value="1">NY</option><option selected value="2">LA</option>', 'options-from-collection reads value and text methods';
+}
+
+# grouped-options-for-select
+
+{
+  is grouped-options-for-select(['North' => ['NY', 'NJ']]).Str,
+    '<optgroup label="North"><option value="NY">NY</option><option value="NJ">NJ</option></optgroup>',
+    'grouped-options-for-select wraps choices in an optgroup';
+}
+
+# select-tag
+
+{
+  is select-tag('city', options-for-select(['NY', 'LA'])).Str,
+    '<select id="city" name="city"><option value="NY">NY</option><option value="LA">LA</option></select>',
+    'select-tag wraps options in a select';
+}
+
+{
+  like select-tag('city', options-for-select(['NY']), %( multiple => True )).Str, /'multiple name="city[]"'/,
+    'select-tag with multiple appends [] and the multiple attribute';
+}
+
+{
+  like select-tag('city', options-for-select(['NY']), %( include-blank => True )).Str, /'<option value=""></option>'/,
+    'select-tag with include-blank prepends an empty option';
+}
+
+{
+  like select-tag('city', options-for-select(['NY']), %( prompt => 'Pick one' )).Str, /'<option value="">Pick one</option>'/,
+    'select-tag with a prompt prepends a prompt option';
+}
+
+# time-zone-select
+
+{
+  like time-zone-select('user[tz]', 'UTC').Str, /'<option selected value="UTC">UTC</option>'/,
+    'time-zone-select marks the selected zone';
+}
+
+{
+  like time-zone-select('user[tz]').Str, /'id="user_tz" name="user[tz]"'/,
+    'time-zone-select derives an id from the field name';
+}
+
+# select-year, select-month, select-day
+
+{
+  like select-year(2020, start-year => 2018, end-year => 2022).Str, /'<option selected value="2020">2020</option>'/,
+    'select-year marks the selected year within the range';
+}
+
+{
+  like select-year(2020, start-year => 2018, end-year => 2022).Str, /'id="date_year" name="date[year]"'/,
+    'select-year names the field under the date prefix';
+}
+
+{
+  like select-month(3).Str, /'<option selected value="3">March</option>'/, 'select-month uses month names and marks the selection';
+}
+
+{
+  like select-day(15).Str, /'<option selected value="15">15</option>'/, 'select-day marks the selected day';
+}
+
+# select-date combines year, month, and day
+
+{
+  my $out = select-date(Date.new(2020, 3, 15)).Str;
+  like $out, /'name="date[year]"'.*'name="date[month]"'.*'name="date[day]"'/, 'select-date emits year, month, and day selects';
+}
+
+# FormBuilder collection-select
+
+{
+  like builder(:object-name('post'), :model(SelectPost.new(city-id => 2))).collection-select('city-id', [City.new(id => 1, name => 'NY'), City.new(id => 2, name => 'LA')], 'id', 'name').Str,
+    /'<option selected value="2">LA</option>'/, 'collection-select marks the model value';
+}
+
+# FormBuilder collection-radio-buttons
+
+{
+  my $out = builder(:object-name('post'), :model(SelectPost.new(city-id => 2))).collection-radio-buttons('city-id', [City.new(id => 1, name => 'NY'), City.new(id => 2, name => 'LA')], 'id', 'name').Str;
+  like $out, /'type="radio"'/, 'collection-radio-buttons builds radio inputs';
+}
+
+{
+  my $out = builder(:object-name('post'), :model(SelectPost.new(city-id => 2))).collection-radio-buttons('city-id', [City.new(id => 1, name => 'NY'), City.new(id => 2, name => 'LA')], 'id', 'name').Str;
+  like $out, /'checked id="post_city-id_2"'/, 'collection-radio-buttons checks the matching value';
+}
+
+# FormBuilder collection-check-boxes
+
+{
+  my $out = builder(:object-name('post'), :model(SelectPost.new(tag-ids => [2]))).collection-check-boxes('tag-ids', [City.new(id => 1, name => 'NY'), City.new(id => 2, name => 'LA')], 'id', 'name').Str;
+  like $out, /'type="checkbox" value="1"'/, 'collection-check-boxes builds checkbox inputs';
+}
+
+{
+  my $out = builder(:object-name('post'), :model(SelectPost.new(tag-ids => [2]))).collection-check-boxes('tag-ids', [City.new(id => 1, name => 'NY'), City.new(id => 2, name => 'LA')], 'id', 'name').Str;
+  like $out, /'name="post[tag-ids][]"'/, 'collection-check-boxes scopes names as an array';
+}
+
+# FormBuilder date-select
+
+{
+  my $out = builder(:object-name('post'), :model(SelectPost.new(born => Date.new(2020, 3, 15)))).date-select('born').Str;
+  like $out, /'name="post[born](1i)"'/, 'date-select emits multiparameter field names';
+}
+
+{
+  my $out = builder(:object-name('post'), :model(SelectPost.new(born => Date.new(2020, 3, 15)))).date-select('born').Str;
+  like $out, /'<option selected value="2020">2020</option>'/, 'date-select marks the model year';
+}
+
+# FormBuilder time-select
+
+{
+  my $out = builder(:object-name('post')).time-select('at').Str;
+  like $out, /'name="post[at](4i)"'.*'name="post[at](5i)"'/, 'time-select emits hour and minute selects';
+}
+
+done-testing;

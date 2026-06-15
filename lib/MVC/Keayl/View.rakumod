@@ -5,6 +5,7 @@ use MVC::Keayl::Helpers::Tag;
 use MVC::Keayl::Helpers::Url;
 use MVC::Keayl::Helpers::Asset;
 use MVC::Keayl::Helpers::Form;
+use MVC::Keayl::Helpers::Options;
 use MVC::Keayl::Helpers::Text;
 use MVC::Keayl::Helpers::Number;
 use MVC::Keayl::Helpers::DateTime;
@@ -185,6 +186,36 @@ method !view-helpers(%locals, :$controller --> Hash) {
     url_for      => -> $target                 { url-for($target) },
     tag          => -> $name, %opts?           { ~tag($name, (%opts // {})) },
     content_tag  => -> $name, $inner?, %opts?  { ~content-tag($name, $inner, (%opts // {})) },
+    button_tag   => -> $content = 'Button', %opts? { ~button-tag($content, (%opts // {})) },
+    javascript_tag => -> $content, %opts?      { ~javascript-tag($content, (%opts // {})) },
+    time_tag     => -> $date, $inner?, %opts?  { ~time-tag($date, $inner, (%opts // {})) },
+    auto_discovery_link_tag => -> $type = 'rss', $url = '', %opts? { ~auto-discovery-link-tag($type, $url, (%opts // {})) },
+    atom_feed    => -> :$url, :&content        { ~atom-feed(:$url, :&content) },
+    image_submit_tag => -> $source, %opts?     { ~image-submit-tag($source, (%opts // {}), :resolver(&!asset-resolver)) },
+    options_for_select => -> @choices, $selected? { ~options-for-select(@choices, $selected) },
+    options_from_collection_for_select => -> @collection, $value-method, $text-method, $selected? { ~options-from-collection-for-select(@collection, $value-method, $text-method, $selected) },
+    grouped_options_for_select => -> @grouped, $selected? { ~grouped-options-for-select(@grouped, $selected) },
+    select_tag   => -> $name, $option-tags, %opts? { ~select-tag($name, $option-tags, (%opts // {})) },
+    time_zone_select => -> $name, $selected?, %opts? { ~time-zone-select($name, $selected, (%opts // {})) },
+    select_date  => -> $selected?, *%opts      { ~select-date($selected, |%opts) },
+    select_time  => -> $selected?, *%opts      { ~select-time($selected, |%opts) },
+    select_year  => -> $selected?, *%opts      { ~select-year($selected, |%opts) },
+    select_month => -> $selected?, *%opts      { ~select-month($selected, |%opts) },
+    select_day   => -> $selected?, *%opts      { ~select-day($selected, |%opts) },
+    select_hour  => -> $selected?, *%opts      { ~select-hour($selected, |%opts) },
+    select_minute => -> $selected?, *%opts     { ~select-minute($selected, |%opts) },
+    select_second => -> $selected?, *%opts     { ~select-second($selected, |%opts) },
+    highlight    => -> $text, $phrases, *%opts { ~highlight($text, $phrases, |%opts) },
+    excerpt      => -> $text, $phrase, *%opts  { excerpt($text, $phrase, |%opts) },
+    word_wrap    => -> $text, *%opts           { word-wrap($text, |%opts) },
+    strip_tags   => -> $html                   { strip-tags($html) },
+    strip_links  => -> $html                   { strip-links($html) },
+    sanitize_css => -> $style                  { ~sanitize-css($style) },
+    cycle        => -> *@values, *%opts        { cycle(|@values, |%opts) },
+    current_cycle => -> *%opts                 { current-cycle(|%opts) },
+    reset_cycle  => -> *%opts                  { reset-cycle(|%opts) },
+    capture      => -> &block                  { ~capture(&block) },
+    provide      => -> $name, $content         { provide($name, $content) },
     class_names  => -> *@tokens                { class-names(|@tokens) },
     data_attributes => -> %data                { data-attributes(%data) },
     form_with       => -> *%opts               { ~form-with(i18n => ($controller.defined ?? $controller.i18n !! Nil), |%opts) },
@@ -200,6 +231,8 @@ method !view-helpers(%locals, :$controller --> Hash) {
     number_to_currency    => -> $number, *%opts { number-to-currency($number, |%opts) },
     number_to_percentage  => -> $number, *%opts { number-to-percentage($number, |%opts) },
     number_to_human_size  => -> $number, *%opts { number-to-human-size($number, |%opts) },
+    number_to_phone       => -> $number, *%opts { number-to-phone($number, |%opts) },
+    number_to_human       => -> $number, *%opts { number-to-human($number, |%opts) },
     time_ago_in_words     => -> $from, *%opts   { time-ago-in-words($from, |%opts) },
     distance_of_time_in_words => -> $from, $to, *%opts { distance-of-time-in-words($from, $to, |%opts) },
   )

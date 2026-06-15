@@ -1,0 +1,117 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Helpers::Tag;
+use MVC::Keayl::Helpers::Number;
+
+# javascript-tag
+
+{
+  is javascript-tag('alert(1)').Str, '<script>alert(1)</script>', 'javascript-tag wraps script content';
+}
+
+{
+  is javascript-tag('x < y').Str, '<script>x < y</script>', 'javascript-tag emits its content unescaped';
+}
+
+{
+  is javascript-tag('go()', %( defer => True )).Str, '<script defer>go()</script>', 'javascript-tag carries attributes';
+}
+
+# time-tag
+
+{
+  is time-tag(Date.new(2020, 1, 1), 'New Year').Str, '<time datetime="2020-01-01">New Year</time>',
+    'time-tag sets a datetime attribute and content';
+}
+
+{
+  is time-tag(Date.new(2020, 1, 1)).Str, '<time datetime="2020-01-01">2020-01-01</time>',
+    'time-tag defaults its content to the formatted date';
+}
+
+# auto-discovery-link-tag
+
+{
+  is auto-discovery-link-tag('atom', '/feed.atom').Str,
+    '<link href="/feed.atom" rel="alternate" title="ATOM" type="application/atom+xml" />',
+    'auto-discovery-link-tag builds an atom feed link';
+}
+
+{
+  like auto-discovery-link-tag('rss', '/feed.rss').Str, /'type="application/rss+xml"'/,
+    'auto-discovery-link-tag selects the rss content type';
+}
+
+# atom-feed builder
+
+{
+  my $feed = atom-feed(url => 'http://example.com', content => -> $feed {
+    $feed.title('Posts');
+    $feed.entry(Nil, id => 'tag:1', block => -> $entry {
+      $entry.title('First');
+      $entry.content('Body', type => 'html');
+    });
+  }).Str;
+
+  like $feed, /'<feed xmlns="http://www.w3.org/2005/Atom">'/, 'atom-feed opens an Atom feed element';
+}
+
+{
+  my $feed = atom-feed(content => -> $feed {
+    $feed.title('Posts');
+    $feed.entry(Nil, id => 'tag:1', block => -> $entry { $entry.title('First') });
+  }).Str;
+
+  like $feed, /'<entry>'.*'<title>First</title>'.*'</entry>'/, 'atom-feed renders an entry with its content';
+}
+
+# number-to-phone
+
+{
+  is number-to-phone(1235551234), '123-555-1234', 'number-to-phone groups a ten-digit number';
+}
+
+{
+  is number-to-phone(5551234), '555-1234', 'number-to-phone groups a seven-digit number';
+}
+
+{
+  is number-to-phone(1235551234, area-code => True), '(123) 555-1234', 'number-to-phone wraps the area code';
+}
+
+{
+  is number-to-phone(1235551234, country-code => 1), '+1-123-555-1234', 'number-to-phone prefixes a country code';
+}
+
+{
+  is number-to-phone(1235551234, extension => 555), '123-555-1234 x 555', 'number-to-phone appends an extension';
+}
+
+{
+  is number-to-phone(1235551234, delimiter => '.'), '123.555.1234', 'number-to-phone honours a delimiter';
+}
+
+# number-to-human
+
+{
+  is number-to-human(123), '123', 'number-to-human leaves small numbers alone';
+}
+
+{
+  is number-to-human(1234), '1.23 Thousand', 'number-to-human scales to thousands';
+}
+
+{
+  is number-to-human(12345678), '12.3 Million', 'number-to-human scales to millions';
+}
+
+{
+  is number-to-human(1234567890123), '1.23 Trillion', 'number-to-human scales to trillions';
+}
+
+{
+  is number-to-human(489939, precision => 2), '490 Thousand', 'number-to-human rounds to the precision';
+}
+
+done-testing;
