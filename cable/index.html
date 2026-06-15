@@ -8,26 +8,26 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/">
+        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/cable/">
       
       
+        <link rel="prev" href="../jobs/">
       
-        <link rel="next" href="request/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>MVC::Keayl</title>
+        <title>WebSockets - MVC::Keayl</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -46,7 +46,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mvckeayl" class="md-skip">
+        <a href="#websockets" class="md-skip">
           Skip to content
         </a>
       
@@ -80,7 +80,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+    <a href=".." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              WebSockets
             
           </span>
         </div>
@@ -190,7 +190,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+    <a href=".." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -217,37 +217,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Home
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -263,48 +236,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Synopsis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pages
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -316,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="request/" class="md-nav__link">
+      <a href="../request/" class="md-nav__link">
         
   
   
@@ -343,7 +274,7 @@
   
   
     <li class="md-nav__item">
-      <a href="response/" class="md-nav__link">
+      <a href="../response/" class="md-nav__link">
         
   
   
@@ -370,7 +301,7 @@
   
   
     <li class="md-nav__item">
-      <a href="middleware/" class="md-nav__link">
+      <a href="../middleware/" class="md-nav__link">
         
   
   
@@ -397,7 +328,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adapters/" class="md-nav__link">
+      <a href="../adapters/" class="md-nav__link">
         
   
   
@@ -424,7 +355,7 @@
   
   
     <li class="md-nav__item">
-      <a href="routing/" class="md-nav__link">
+      <a href="../routing/" class="md-nav__link">
         
   
   
@@ -451,7 +382,7 @@
   
   
     <li class="md-nav__item">
-      <a href="controllers/" class="md-nav__link">
+      <a href="../controllers/" class="md-nav__link">
         
   
   
@@ -478,7 +409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="views/" class="md-nav__link">
+      <a href="../views/" class="md-nav__link">
         
   
   
@@ -505,7 +436,7 @@
   
   
     <li class="md-nav__item">
-      <a href="helpers/" class="md-nav__link">
+      <a href="../helpers/" class="md-nav__link">
         
   
   
@@ -532,7 +463,7 @@
   
   
     <li class="md-nav__item">
-      <a href="i18n/" class="md-nav__link">
+      <a href="../i18n/" class="md-nav__link">
         
   
   
@@ -559,7 +490,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cookies/" class="md-nav__link">
+      <a href="../cookies/" class="md-nav__link">
         
   
   
@@ -586,7 +517,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sessions/" class="md-nav__link">
+      <a href="../sessions/" class="md-nav__link">
         
   
   
@@ -613,7 +544,7 @@
   
   
     <li class="md-nav__item">
-      <a href="flash/" class="md-nav__link">
+      <a href="../flash/" class="md-nav__link">
         
   
   
@@ -640,7 +571,7 @@
   
   
     <li class="md-nav__item">
-      <a href="csrf/" class="md-nav__link">
+      <a href="../csrf/" class="md-nav__link">
         
   
   
@@ -667,7 +598,7 @@
   
   
     <li class="md-nav__item">
-      <a href="parameter-filtering/" class="md-nav__link">
+      <a href="../parameter-filtering/" class="md-nav__link">
         
   
   
@@ -694,7 +625,7 @@
   
   
     <li class="md-nav__item">
-      <a href="transport-security/" class="md-nav__link">
+      <a href="../transport-security/" class="md-nav__link">
         
   
   
@@ -721,7 +652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="http-authentication/" class="md-nav__link">
+      <a href="../http-authentication/" class="md-nav__link">
         
   
   
@@ -748,7 +679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="secrets/" class="md-nav__link">
+      <a href="../secrets/" class="md-nav__link">
         
   
   
@@ -775,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="content-negotiation/" class="md-nav__link">
+      <a href="../content-negotiation/" class="md-nav__link">
         
   
   
@@ -802,7 +733,7 @@
   
   
     <li class="md-nav__item">
-      <a href="caching/" class="md-nav__link">
+      <a href="../caching/" class="md-nav__link">
         
   
   
@@ -829,7 +760,7 @@
   
   
     <li class="md-nav__item">
-      <a href="application/" class="md-nav__link">
+      <a href="../application/" class="md-nav__link">
         
   
   
@@ -856,7 +787,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cli/" class="md-nav__link">
+      <a href="../cli/" class="md-nav__link">
         
   
   
@@ -883,7 +814,7 @@
   
   
     <li class="md-nav__item">
-      <a href="logging/" class="md-nav__link">
+      <a href="../logging/" class="md-nav__link">
         
   
   
@@ -910,7 +841,7 @@
   
   
     <li class="md-nav__item">
-      <a href="instrumentation/" class="md-nav__link">
+      <a href="../instrumentation/" class="md-nav__link">
         
   
   
@@ -937,7 +868,7 @@
   
   
     <li class="md-nav__item">
-      <a href="error-reporting/" class="md-nav__link">
+      <a href="../error-reporting/" class="md-nav__link">
         
   
   
@@ -964,7 +895,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mailer/" class="md-nav__link">
+      <a href="../mailer/" class="md-nav__link">
         
   
   
@@ -991,7 +922,7 @@
   
   
     <li class="md-nav__item">
-      <a href="jobs/" class="md-nav__link">
+      <a href="../jobs/" class="md-nav__link">
         
   
   
@@ -1015,10 +946,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="cable/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSockets
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1034,6 +992,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connections
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pubsub-backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pub/sub backends
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1065,10 +1076,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
+  <a href="#connections" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Synopsis
+        Connections
       
     </span>
   </a>
@@ -1076,10 +1087,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pages" class="md-nav__link">
+  <a href="#channels" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pages
+        Channels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pubsub-backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pub/sub backends
       
     </span>
   </a>
@@ -1106,38 +1128,67 @@
   
 
 
-<h1 id="mvckeayl">MVC::Keayl<a class="headerlink" href="#mvckeayl" title="Permanent link">&para;</a></h1>
-<p>The latest version of this documentation lives at <a href="https://gdonald.github.io/MVC-Keayl/">https://gdonald.github.io/MVC-Keayl/</a>.</p>
-<p>The homepage for MVC::Keayl is <a href="https://github.com/gdonald/MVC-Keayl">https://github.com/gdonald/MVC-Keayl</a>.</p>
-<h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<p>MVC::Keayl is a <a href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">Model-View-Controller</a>
-web framework for Raku.</p>
-<p>It is the web layer only. The model layer is delegated to
-<a href="https://github.com/gdonald/ORM-ActiveRecord">ORM::ActiveRecord</a> and default view
-rendering to <a href="https://github.com/gdonald/Template-HAML">Template::HAML</a>; both are
-pluggable. The HTTP server is reached through an abstract adapter, with the
-default adapter built on <a href="https://cro.raku.org/">Cro</a>.</p>
-<h2 id="pages">Pages<a class="headerlink" href="#pages" title="Permanent link">&para;</a></h2>
+<h1 id="websockets">WebSockets<a class="headerlink" href="#websockets" title="Permanent link">&para;</a></h1>
+<p><code>MVC::Keayl::Cable</code> is an ActionCable-style abstraction for real-time messaging: a
+connection holds a client, channels group its subscriptions, and a pub/sub
+backend fans broadcasts out to everyone on a stream.</p>
+<h2 id="connections">Connections<a class="headerlink" href="#connections" title="Permanent link">&para;</a></h2>
+<p><code>MVC::Keayl::Cable::Connection</code> represents one client. It carries the pub/sub
+backend, a <code>sink</code> (the transport's function for sending a message to that client),
+and <code>identifiers</code> (whatever you use to identify the client, such as the current
+user or room):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$conn</span> = <span class="n">MVC::Keayl::Cable::Connection</span>.<span class="nb">new</span>(
+  <span class="n">pubsub</span>      =&gt; <span class="nv">$pubsub</span>,
+  <span class="nb">sink</span>        =&gt; -&gt; <span class="nv">$message</span> { <span class="nv">$websocket</span>.<span class="nb">send</span>(<span class="nv">$message</span>) },
+  <span class="n">identifiers</span> =&gt; %( <span class="n">user-id</span> =&gt; <span class="mi">7</span> ),
+);
+</code></pre></div></td></tr></table></div>
+<p><code>add-subscription($channel)</code> registers a channel and subscribes it; <code>disconnect</code>
+tears every subscription down.</p>
+<h2 id="channels">Channels<a class="headerlink" href="#channels" title="Permanent link">&para;</a></h2>
+<p>Subclass <code>MVC::Keayl::Cable::Channel</code>. Override <code>subscribed</code> to start streaming,
+<code>unsubscribed</code> to clean up, and add a method per action a client can invoke:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">ChatChannel</span> <span class="k">is</span> <span class="n">MVC::Keayl::Cable::Channel</span> {
+  <span class="k">method</span> <span class="n">subscribed</span> {
+    <span class="nb">self</span>.<span class="n">stream-from</span>(<span class="s">&#39;room:&#39;</span> ~ <span class="nb">self</span>.<span class="n">connection</span>.<span class="n">identifiers</span><span class="s">&lt;room&gt;</span>);
+  }
+
+  <span class="k">method</span> <span class="n">speak</span>(<span class="nv">%data</span>) {
+    <span class="nb">self</span>.<span class="n">broadcast-to</span>(<span class="s">&#39;room:&#39;</span> ~ <span class="nb">self</span>.<span class="n">connection</span>.<span class="n">identifiers</span><span class="s">&lt;room&gt;</span>, <span class="nv">%data&lt;message&gt;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
 <ul>
-<li><a href="request/">Request</a>: the incoming HTTP request wrapper.</li>
-<li><a href="response/">Response</a>: the outgoing HTTP response builder.</li>
-<li><a href="middleware/">Middleware</a>: the Rack-like middleware stack and endpoint protocol.</li>
-<li><a href="adapters/">Server adapters</a>: the abstract adapter contract, plus the Cro and in-memory test adapters.</li>
-<li><a href="routing/">Routing</a>: the routes file DSL and request recognition.</li>
-<li><a href="controllers/">Controllers</a>: the base controller, per-request state, and action dispatch.</li>
-<li><a href="views/">Views</a>: template resolution, handlers, and caching.</li>
-<li><a href="helpers/">View helpers</a>: URL, asset, and tag-building helpers.</li>
-<li><a href="cookies/">Cookies</a>: the cookie jar with signed and encrypted variants.</li>
-<li><a href="sessions/">Sessions</a>: the session abstraction with cookie and server-side stores.</li>
-<li><a href="flash/">Flash</a>: short messages that survive one redirect.</li>
-<li><a href="csrf/">CSRF protection</a>: authenticity tokens and forgery protection.</li>
-<li><a href="parameter-filtering/">Parameter filtering</a>: redacting sensitive parameters for logs.</li>
-<li><a href="transport-security/">Transport &amp; host security</a>: SSL, host authorization, and secure headers.</li>
-<li><a href="secrets/">Secrets</a>: secret resolution and key derivation.</li>
-<li><a href="content-negotiation/">Content negotiation</a>: MIME types, <code>respond-to</code>, and API controllers.</li>
-<li><a href="caching/">Caching &amp; streaming</a>: conditional GET, cache headers, fragment caching, and streaming.</li>
-<li><a href="application/">Application &amp; configuration</a>: the application object, config, boot, and dispatch.</li>
+<li><code>stream-from($stream)</code> subscribes the channel to a broadcasting; messages on
+  that stream are transmitted to this connection's client.</li>
+<li><code>transmit($data)</code> sends data straight to this client.</li>
+<li><code>broadcast-to($stream, $data)</code> publishes to a stream, reaching every connection
+  subscribed to it.</li>
+<li><code>perform($action, %data)</code> dispatches a client message to an action method. Only
+  methods you define on the channel are callable, so framework methods like
+  <code>stream-from</code> cannot be invoked from the wire.</li>
 </ul>
+<p><code>unsubscribe</code> (run for you on <code>disconnect</code>) drops the channel's stream
+subscriptions and calls <code>unsubscribed</code>.</p>
+<h2 id="pubsub-backends">Pub/sub backends<a class="headerlink" href="#pubsub-backends" title="Permanent link">&para;</a></h2>
+<p>A backend is any <code>MVC::Keayl::Cable::PubSub</code>, a role with <code>subscribe($stream,
+&amp;callback)</code>, <code>unsubscribe($id)</code>, and <code>broadcast($stream, $message)</code>.
+<code>MVC::Keayl::Cable::PubSub::InMemory</code> is the built-in, single-process backend; it
+tracks subscribers per stream and fans a broadcast out to each one. Swap in a
+Redis- or message-queue-backed implementation of the same role to share
+broadcasts across processes.</p>
 
 
 
@@ -1187,10 +1238,10 @@ default adapter built on <a href="https://cro.raku.org/">Cro</a>.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": [], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

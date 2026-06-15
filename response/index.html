@@ -8,26 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/">
+        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/response/">
       
       
+        <link rel="prev" href="../request/">
       
-        <link rel="next" href="request/">
+      
+        <link rel="next" href="../middleware/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>MVC::Keayl</title>
+        <title>Response - MVC::Keayl</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -46,7 +48,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -64,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mvckeayl" class="md-skip">
+        <a href="#response" class="md-skip">
           Skip to content
         </a>
       
@@ -80,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+    <a href=".." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -100,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Response
             
           </span>
         </div>
@@ -190,7 +192,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+    <a href=".." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -217,6 +219,60 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../request/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Request
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -236,7 +292,7 @@
   <span class="md-ellipsis">
     
   
-    Home
+    Response
   
 
     
@@ -247,14 +303,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="." class="md-nav__link md-nav__link--active">
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
+    Response
   
 
     
@@ -280,10 +336,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
+  <a href="#construction" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Synopsis
+        Construction
       
     </span>
   </a>
@@ -291,10 +347,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pages" class="md-nav__link">
+  <a href="#status" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pages
+        Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Headers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Headers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#convenience-accessors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Convenience accessors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#body-buffering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Body buffering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finalization
       
     </span>
   </a>
@@ -316,61 +422,7 @@
   
   
     <li class="md-nav__item">
-      <a href="request/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Request
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="response/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Response
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="middleware/" class="md-nav__link">
+      <a href="../middleware/" class="md-nav__link">
         
   
   
@@ -397,7 +449,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adapters/" class="md-nav__link">
+      <a href="../adapters/" class="md-nav__link">
         
   
   
@@ -424,7 +476,7 @@
   
   
     <li class="md-nav__item">
-      <a href="routing/" class="md-nav__link">
+      <a href="../routing/" class="md-nav__link">
         
   
   
@@ -451,7 +503,7 @@
   
   
     <li class="md-nav__item">
-      <a href="controllers/" class="md-nav__link">
+      <a href="../controllers/" class="md-nav__link">
         
   
   
@@ -478,7 +530,7 @@
   
   
     <li class="md-nav__item">
-      <a href="views/" class="md-nav__link">
+      <a href="../views/" class="md-nav__link">
         
   
   
@@ -505,7 +557,7 @@
   
   
     <li class="md-nav__item">
-      <a href="helpers/" class="md-nav__link">
+      <a href="../helpers/" class="md-nav__link">
         
   
   
@@ -532,7 +584,7 @@
   
   
     <li class="md-nav__item">
-      <a href="i18n/" class="md-nav__link">
+      <a href="../i18n/" class="md-nav__link">
         
   
   
@@ -559,7 +611,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cookies/" class="md-nav__link">
+      <a href="../cookies/" class="md-nav__link">
         
   
   
@@ -586,7 +638,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sessions/" class="md-nav__link">
+      <a href="../sessions/" class="md-nav__link">
         
   
   
@@ -613,7 +665,7 @@
   
   
     <li class="md-nav__item">
-      <a href="flash/" class="md-nav__link">
+      <a href="../flash/" class="md-nav__link">
         
   
   
@@ -640,7 +692,7 @@
   
   
     <li class="md-nav__item">
-      <a href="csrf/" class="md-nav__link">
+      <a href="../csrf/" class="md-nav__link">
         
   
   
@@ -667,7 +719,7 @@
   
   
     <li class="md-nav__item">
-      <a href="parameter-filtering/" class="md-nav__link">
+      <a href="../parameter-filtering/" class="md-nav__link">
         
   
   
@@ -694,7 +746,7 @@
   
   
     <li class="md-nav__item">
-      <a href="transport-security/" class="md-nav__link">
+      <a href="../transport-security/" class="md-nav__link">
         
   
   
@@ -721,7 +773,7 @@
   
   
     <li class="md-nav__item">
-      <a href="http-authentication/" class="md-nav__link">
+      <a href="../http-authentication/" class="md-nav__link">
         
   
   
@@ -748,7 +800,7 @@
   
   
     <li class="md-nav__item">
-      <a href="secrets/" class="md-nav__link">
+      <a href="../secrets/" class="md-nav__link">
         
   
   
@@ -775,7 +827,7 @@
   
   
     <li class="md-nav__item">
-      <a href="content-negotiation/" class="md-nav__link">
+      <a href="../content-negotiation/" class="md-nav__link">
         
   
   
@@ -802,7 +854,7 @@
   
   
     <li class="md-nav__item">
-      <a href="caching/" class="md-nav__link">
+      <a href="../caching/" class="md-nav__link">
         
   
   
@@ -829,7 +881,7 @@
   
   
     <li class="md-nav__item">
-      <a href="application/" class="md-nav__link">
+      <a href="../application/" class="md-nav__link">
         
   
   
@@ -856,7 +908,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cli/" class="md-nav__link">
+      <a href="../cli/" class="md-nav__link">
         
   
   
@@ -883,7 +935,7 @@
   
   
     <li class="md-nav__item">
-      <a href="logging/" class="md-nav__link">
+      <a href="../logging/" class="md-nav__link">
         
   
   
@@ -910,7 +962,7 @@
   
   
     <li class="md-nav__item">
-      <a href="instrumentation/" class="md-nav__link">
+      <a href="../instrumentation/" class="md-nav__link">
         
   
   
@@ -937,7 +989,7 @@
   
   
     <li class="md-nav__item">
-      <a href="error-reporting/" class="md-nav__link">
+      <a href="../error-reporting/" class="md-nav__link">
         
   
   
@@ -964,7 +1016,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mailer/" class="md-nav__link">
+      <a href="../mailer/" class="md-nav__link">
         
   
   
@@ -991,7 +1043,7 @@
   
   
     <li class="md-nav__item">
-      <a href="jobs/" class="md-nav__link">
+      <a href="../jobs/" class="md-nav__link">
         
   
   
@@ -1018,7 +1070,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cable/" class="md-nav__link">
+      <a href="../cable/" class="md-nav__link">
         
   
   
@@ -1065,10 +1117,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
+  <a href="#construction" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Synopsis
+        Construction
       
     </span>
   </a>
@@ -1076,10 +1128,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pages" class="md-nav__link">
+  <a href="#status" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pages
+        Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Headers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Headers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#convenience-accessors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Convenience accessors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#body-buffering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Body buffering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finalization
       
     </span>
   </a>
@@ -1106,38 +1208,133 @@
   
 
 
-<h1 id="mvckeayl">MVC::Keayl<a class="headerlink" href="#mvckeayl" title="Permanent link">&para;</a></h1>
-<p>The latest version of this documentation lives at <a href="https://gdonald.github.io/MVC-Keayl/">https://gdonald.github.io/MVC-Keayl/</a>.</p>
-<p>The homepage for MVC::Keayl is <a href="https://github.com/gdonald/MVC-Keayl">https://github.com/gdonald/MVC-Keayl</a>.</p>
-<h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<p>MVC::Keayl is a <a href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">Model-View-Controller</a>
-web framework for Raku.</p>
-<p>It is the web layer only. The model layer is delegated to
-<a href="https://github.com/gdonald/ORM-ActiveRecord">ORM::ActiveRecord</a> and default view
-rendering to <a href="https://github.com/gdonald/Template-HAML">Template::HAML</a>; both are
-pluggable. The HTTP server is reached through an abstract adapter, with the
-default adapter built on <a href="https://cro.raku.org/">Cro</a>.</p>
-<h2 id="pages">Pages<a class="headerlink" href="#pages" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="request/">Request</a>: the incoming HTTP request wrapper.</li>
-<li><a href="response/">Response</a>: the outgoing HTTP response builder.</li>
-<li><a href="middleware/">Middleware</a>: the Rack-like middleware stack and endpoint protocol.</li>
-<li><a href="adapters/">Server adapters</a>: the abstract adapter contract, plus the Cro and in-memory test adapters.</li>
-<li><a href="routing/">Routing</a>: the routes file DSL and request recognition.</li>
-<li><a href="controllers/">Controllers</a>: the base controller, per-request state, and action dispatch.</li>
-<li><a href="views/">Views</a>: template resolution, handlers, and caching.</li>
-<li><a href="helpers/">View helpers</a>: URL, asset, and tag-building helpers.</li>
-<li><a href="cookies/">Cookies</a>: the cookie jar with signed and encrypted variants.</li>
-<li><a href="sessions/">Sessions</a>: the session abstraction with cookie and server-side stores.</li>
-<li><a href="flash/">Flash</a>: short messages that survive one redirect.</li>
-<li><a href="csrf/">CSRF protection</a>: authenticity tokens and forgery protection.</li>
-<li><a href="parameter-filtering/">Parameter filtering</a>: redacting sensitive parameters for logs.</li>
-<li><a href="transport-security/">Transport &amp; host security</a>: SSL, host authorization, and secure headers.</li>
-<li><a href="secrets/">Secrets</a>: secret resolution and key derivation.</li>
-<li><a href="content-negotiation/">Content negotiation</a>: MIME types, <code>respond-to</code>, and API controllers.</li>
-<li><a href="caching/">Caching &amp; streaming</a>: conditional GET, cache headers, fragment caching, and streaming.</li>
-<li><a href="application/">Application &amp; configuration</a>: the application object, config, boot, and dispatch.</li>
-</ul>
+<h1 id="response">Response<a class="headerlink" href="#response" title="Permanent link">&para;</a></h1>
+<p><code>MVC::Keayl::Response</code> is a mutable builder for a single outgoing HTTP response.
+Controllers and middleware set the status, headers, and body on it; the server
+adapter then calls <code>finish</code> to obtain the <code>(status, headers, body)</code> tuple it
+hands back to the connection.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Response</span>;
+
+<span class="k">my</span> <span class="nv">$response</span> = <span class="n">MVC::Keayl::Response</span>.<span class="nb">new</span>;
+
+<span class="nv">$response</span>.<span class="nb">status</span> = <span class="mi">201</span>;
+<span class="nv">$response</span>.<span class="n">content-type</span>(<span class="s">&#39;application/json&#39;</span>);
+<span class="nv">$response</span>.<span class="n">location</span>(<span class="s">&#39;/users/1&#39;</span>);
+<span class="nv">$response</span>.<span class="nb">write</span>(<span class="s">&#39;{&quot;id&quot;:1}&#39;</span>);
+
+<span class="k">my</span> (<span class="nv">$status</span>, <span class="nv">$headers</span>, <span class="nv">$body</span>) = <span class="nv">$response</span>.<span class="nb">finish</span>;
+</code></pre></div></td></tr></table></div>
+<h2 id="construction">Construction<a class="headerlink" href="#construction" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Named argument</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:status</code></td>
+<td>HTTP status code. Defaults to <code>200</code>.</td>
+</tr>
+<tr>
+<td><code>:headers</code></td>
+<td>A hash of header names to initial values.</td>
+</tr>
+<tr>
+<td><code>:body</code></td>
+<td>The initial body content.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="status">Status<a class="headerlink" href="#status" title="Permanent link">&para;</a></h2>
+<p><code>status</code> is a writable accessor:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$response</span>.<span class="nb">status</span>;        <span class="c1"># 200</span>
+<span class="nv">$response</span>.<span class="nb">status</span> = <span class="mi">404</span>;
+</code></pre></div></td></tr></table></div>
+<h2 id="headers">Headers<a class="headerlink" href="#headers" title="Permanent link">&para;</a></h2>
+<p>Header names are matched case-insensitively, and the display casing you set is
+preserved on output.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$response</span>.<span class="n">set-header</span>(<span class="s">&#39;Content-Type&#39;</span>, <span class="s">&#39;text/plain&#39;</span>);   <span class="c1"># set / replace</span>
+<span class="nv">$response</span>.<span class="n">add-header</span>(<span class="s">&#39;Set-Cookie&#39;</span>, <span class="s">&#39;a=1&#39;</span>);            <span class="c1"># append another value</span>
+<span class="nv">$response</span>.<span class="n">add-header</span>(<span class="s">&#39;Set-Cookie&#39;</span>, <span class="s">&#39;b=2&#39;</span>);
+
+<span class="nv">$response</span>.<span class="n">header</span>(<span class="s">&#39;content-type&#39;</span>);   <span class="c1"># &#39;text/plain&#39;</span>
+<span class="nv">$response</span>.<span class="n">header</span>(<span class="s">&#39;set-cookie&#39;</span>);     <span class="c1"># &#39;a=1, b=2&#39;  (values joined for reading)</span>
+
+<span class="nv">$response</span>.<span class="n">has-header</span>(<span class="s">&#39;Content-Type&#39;</span>);   <span class="c1"># True</span>
+<span class="nv">$response</span>.<span class="n">delete-header</span>(<span class="s">&#39;Content-Type&#39;</span>);
+
+<span class="nv">$response</span>.<span class="nb">headers</span>;   <span class="c1"># { &#39;Set-Cookie&#39; =&gt; &#39;a=1, b=2&#39; }  (display names, joined values)</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="convenience-accessors">Convenience accessors<a class="headerlink" href="#convenience-accessors" title="Permanent link">&para;</a></h3>
+<p><code>content-type</code> and <code>location</code> are getter/setter shortcuts for their headers, and
+<code>content-length</code> reports the body's UTF-8 byte count:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$response</span>.<span class="n">content-type</span>(<span class="s">&#39;application/json&#39;</span>);
+<span class="nv">$response</span>.<span class="n">content-type</span>;     <span class="c1"># &#39;application/json&#39;</span>
+
+<span class="nv">$response</span>.<span class="n">location</span>(<span class="s">&#39;/users/1&#39;</span>);
+<span class="nv">$response</span>.<span class="n">location</span>;         <span class="c1"># &#39;/users/1&#39;</span>
+
+<span class="nv">$response</span>.<span class="n">content-length</span>;   <span class="c1"># byte count of the current body</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="body-buffering">Body buffering<a class="headerlink" href="#body-buffering" title="Permanent link">&para;</a></h2>
+<p>The body accumulates across <code>write</code> calls; the <code>body</code> getter returns the joined
+buffer, and the <code>body</code> setter replaces it:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$response</span>.<span class="nb">write</span>(<span class="s">&#39;Hello, &#39;</span>);
+<span class="nv">$response</span>.<span class="nb">write</span>(<span class="s">&#39;world&#39;</span>);
+<span class="nv">$response</span>.<span class="n">body</span>;             <span class="c1"># &#39;Hello, world&#39;</span>
+
+<span class="nv">$response</span>.<span class="n">body</span>(<span class="s">&#39;replaced&#39;</span>); <span class="c1"># discards the buffer</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="finalization">Finalization<a class="headerlink" href="#finalization" title="Permanent link">&para;</a></h2>
+<p><code>finish</code> commits the response and returns the adapter tuple: a <code>(status,
+headers, body)</code> list where <code>headers</code> is an itemized list of <code>name =&gt; value</code>
+pairs (one pair per value, so multi-value headers like <code>Set-Cookie</code> stay
+separate) and <code>body</code> is a UTF-8 <code>Blob</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> (<span class="nv">$status</span>, <span class="nv">$headers</span>, <span class="nv">$body</span>) = <span class="nv">$response</span>.<span class="nb">finish</span>;
+
+<span class="nv">$status</span>;          <span class="c1"># 201</span>
+<span class="nv">$headers</span>.<span class="n">list</span>;    <span class="c1"># (Content-Type =&gt; ..., Content-Length =&gt; ..., ...)</span>
+<span class="nv">$body</span>;            <span class="c1"># Blob</span>
+</code></pre></div></td></tr></table></div>
+<p>On finalization the response supplies a default <code>Content-Type</code> of
+<code>text/html; charset=utf-8</code> when none was set, and always sets <code>Content-Length</code>
+to the body's byte count.</p>
 
 
 
@@ -1187,10 +1384,10 @@ default adapter built on <a href="https://cro.raku.org/">Cro</a>.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": [], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

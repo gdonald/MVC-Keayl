@@ -8,26 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/">
+        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/cli/">
       
       
+        <link rel="prev" href="../application/">
       
-        <link rel="next" href="request/">
+      
+        <link rel="next" href="../logging/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>MVC::Keayl</title>
+        <title>Command-line interface - MVC::Keayl</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -46,7 +48,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -64,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mvckeayl" class="md-skip">
+        <a href="#command-line-interface" class="md-skip">
           Skip to content
         </a>
       
@@ -80,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+    <a href=".." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -100,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Command-line interface
             
           </span>
         </div>
@@ -190,7 +192,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+    <a href=".." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -217,37 +219,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Home
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -263,48 +238,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Synopsis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pages
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -316,7 +249,7 @@
   
   
     <li class="md-nav__item">
-      <a href="request/" class="md-nav__link">
+      <a href="../request/" class="md-nav__link">
         
   
   
@@ -343,7 +276,7 @@
   
   
     <li class="md-nav__item">
-      <a href="response/" class="md-nav__link">
+      <a href="../response/" class="md-nav__link">
         
   
   
@@ -370,7 +303,7 @@
   
   
     <li class="md-nav__item">
-      <a href="middleware/" class="md-nav__link">
+      <a href="../middleware/" class="md-nav__link">
         
   
   
@@ -397,7 +330,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adapters/" class="md-nav__link">
+      <a href="../adapters/" class="md-nav__link">
         
   
   
@@ -424,7 +357,7 @@
   
   
     <li class="md-nav__item">
-      <a href="routing/" class="md-nav__link">
+      <a href="../routing/" class="md-nav__link">
         
   
   
@@ -451,7 +384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="controllers/" class="md-nav__link">
+      <a href="../controllers/" class="md-nav__link">
         
   
   
@@ -478,7 +411,7 @@
   
   
     <li class="md-nav__item">
-      <a href="views/" class="md-nav__link">
+      <a href="../views/" class="md-nav__link">
         
   
   
@@ -505,7 +438,7 @@
   
   
     <li class="md-nav__item">
-      <a href="helpers/" class="md-nav__link">
+      <a href="../helpers/" class="md-nav__link">
         
   
   
@@ -532,7 +465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="i18n/" class="md-nav__link">
+      <a href="../i18n/" class="md-nav__link">
         
   
   
@@ -559,7 +492,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cookies/" class="md-nav__link">
+      <a href="../cookies/" class="md-nav__link">
         
   
   
@@ -586,7 +519,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sessions/" class="md-nav__link">
+      <a href="../sessions/" class="md-nav__link">
         
   
   
@@ -613,7 +546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="flash/" class="md-nav__link">
+      <a href="../flash/" class="md-nav__link">
         
   
   
@@ -640,7 +573,7 @@
   
   
     <li class="md-nav__item">
-      <a href="csrf/" class="md-nav__link">
+      <a href="../csrf/" class="md-nav__link">
         
   
   
@@ -667,7 +600,7 @@
   
   
     <li class="md-nav__item">
-      <a href="parameter-filtering/" class="md-nav__link">
+      <a href="../parameter-filtering/" class="md-nav__link">
         
   
   
@@ -694,7 +627,7 @@
   
   
     <li class="md-nav__item">
-      <a href="transport-security/" class="md-nav__link">
+      <a href="../transport-security/" class="md-nav__link">
         
   
   
@@ -721,7 +654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="http-authentication/" class="md-nav__link">
+      <a href="../http-authentication/" class="md-nav__link">
         
   
   
@@ -748,7 +681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="secrets/" class="md-nav__link">
+      <a href="../secrets/" class="md-nav__link">
         
   
   
@@ -775,7 +708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="content-negotiation/" class="md-nav__link">
+      <a href="../content-negotiation/" class="md-nav__link">
         
   
   
@@ -802,7 +735,7 @@
   
   
     <li class="md-nav__item">
-      <a href="caching/" class="md-nav__link">
+      <a href="../caching/" class="md-nav__link">
         
   
   
@@ -829,7 +762,7 @@
   
   
     <li class="md-nav__item">
-      <a href="application/" class="md-nav__link">
+      <a href="../application/" class="md-nav__link">
         
   
   
@@ -853,10 +786,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="cli/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command-line interface
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -872,6 +832,120 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        new
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        server
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#routes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        routes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#console" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        console
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        generate
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="generate">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        controller
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scaffold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scaffold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#route-insertion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Route insertion
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -883,7 +957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="logging/" class="md-nav__link">
+      <a href="../logging/" class="md-nav__link">
         
   
   
@@ -910,7 +984,7 @@
   
   
     <li class="md-nav__item">
-      <a href="instrumentation/" class="md-nav__link">
+      <a href="../instrumentation/" class="md-nav__link">
         
   
   
@@ -937,7 +1011,7 @@
   
   
     <li class="md-nav__item">
-      <a href="error-reporting/" class="md-nav__link">
+      <a href="../error-reporting/" class="md-nav__link">
         
   
   
@@ -964,7 +1038,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mailer/" class="md-nav__link">
+      <a href="../mailer/" class="md-nav__link">
         
   
   
@@ -991,7 +1065,7 @@
   
   
     <li class="md-nav__item">
-      <a href="jobs/" class="md-nav__link">
+      <a href="../jobs/" class="md-nav__link">
         
   
   
@@ -1018,7 +1092,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cable/" class="md-nav__link">
+      <a href="../cable/" class="md-nav__link">
         
   
   
@@ -1065,10 +1139,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
+  <a href="#new" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Synopsis
+        new
       
     </span>
   </a>
@@ -1076,13 +1150,85 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pages" class="md-nav__link">
+  <a href="#server" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pages
+        server
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#routes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        routes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#console" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        console
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        generate
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="generate">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        controller
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scaffold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scaffold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#route-insertion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Route insertion
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1106,38 +1252,87 @@
   
 
 
-<h1 id="mvckeayl">MVC::Keayl<a class="headerlink" href="#mvckeayl" title="Permanent link">&para;</a></h1>
-<p>The latest version of this documentation lives at <a href="https://gdonald.github.io/MVC-Keayl/">https://gdonald.github.io/MVC-Keayl/</a>.</p>
-<p>The homepage for MVC::Keayl is <a href="https://github.com/gdonald/MVC-Keayl">https://github.com/gdonald/MVC-Keayl</a>.</p>
-<h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<p>MVC::Keayl is a <a href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">Model-View-Controller</a>
-web framework for Raku.</p>
-<p>It is the web layer only. The model layer is delegated to
-<a href="https://github.com/gdonald/ORM-ActiveRecord">ORM::ActiveRecord</a> and default view
-rendering to <a href="https://github.com/gdonald/Template-HAML">Template::HAML</a>; both are
-pluggable. The HTTP server is reached through an abstract adapter, with the
-default adapter built on <a href="https://cro.raku.org/">Cro</a>.</p>
-<h2 id="pages">Pages<a class="headerlink" href="#pages" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="request/">Request</a>: the incoming HTTP request wrapper.</li>
-<li><a href="response/">Response</a>: the outgoing HTTP response builder.</li>
-<li><a href="middleware/">Middleware</a>: the Rack-like middleware stack and endpoint protocol.</li>
-<li><a href="adapters/">Server adapters</a>: the abstract adapter contract, plus the Cro and in-memory test adapters.</li>
-<li><a href="routing/">Routing</a>: the routes file DSL and request recognition.</li>
-<li><a href="controllers/">Controllers</a>: the base controller, per-request state, and action dispatch.</li>
-<li><a href="views/">Views</a>: template resolution, handlers, and caching.</li>
-<li><a href="helpers/">View helpers</a>: URL, asset, and tag-building helpers.</li>
-<li><a href="cookies/">Cookies</a>: the cookie jar with signed and encrypted variants.</li>
-<li><a href="sessions/">Sessions</a>: the session abstraction with cookie and server-side stores.</li>
-<li><a href="flash/">Flash</a>: short messages that survive one redirect.</li>
-<li><a href="csrf/">CSRF protection</a>: authenticity tokens and forgery protection.</li>
-<li><a href="parameter-filtering/">Parameter filtering</a>: redacting sensitive parameters for logs.</li>
-<li><a href="transport-security/">Transport &amp; host security</a>: SSL, host authorization, and secure headers.</li>
-<li><a href="secrets/">Secrets</a>: secret resolution and key derivation.</li>
-<li><a href="content-negotiation/">Content negotiation</a>: MIME types, <code>respond-to</code>, and API controllers.</li>
-<li><a href="caching/">Caching &amp; streaming</a>: conditional GET, cache headers, fragment caching, and streaming.</li>
-<li><a href="application/">Application &amp; configuration</a>: the application object, config, boot, and dispatch.</li>
-</ul>
+<h1 id="command-line-interface">Command-line interface<a class="headerlink" href="#command-line-interface" title="Permanent link">&para;</a></h1>
+<p><code>bin/keayl</code> drives an application from the shell. It is a thin dispatcher over
+<code>MVC::Keayl::CLI</code>, where each command is a plain function, so the same behavior is
+available to call directly and to test.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl &lt;command&gt; [options]
+</code></pre></div></td></tr></table></div>
+<p>Run <code>keayl help</code> for the command list and <code>keayl version</code> for the installed
+version.</p>
+<h2 id="new">new<a class="headerlink" href="#new" title="Permanent link">&para;</a></h2>
+<p>Scaffold a new application skeleton in a subdirectory named after the app:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl new blog
+</code></pre></div></td></tr></table></div>
+<p>This writes a starter layout: <code>config/application.json</code>, <code>config/application.raku</code>
+(which loads the config and routes and returns an <code>MVC::Keayl::Application</code>),
+<code>config/routes.raku</code> with a <code>root</code> route, a <code>HomeController</code>, a HAML view for its
+<code>index</code> action, a <code>README.md</code>, and a <code>.gitignore</code>.</p>
+<p><code>scaffold-app($name, :$into)</code> returns the list of files it created, relative to
+the new application directory. <code>:into</code> defaults to the current directory.</p>
+<h2 id="server">server<a class="headerlink" href="#server" title="Permanent link">&para;</a></h2>
+<p>Boot the application and serve it over HTTP with the Cro adapter:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl server
+keayl s --host 0.0.0.0 --port 8080
+</code></pre></div></td></tr></table></div>
+<p><code>server</code> loads <code>config/application.raku</code>, builds the endpoint, and listens until
+interrupted. The host defaults to <code>127.0.0.1</code> and the port to <code>3000</code>.</p>
+<p><code>build-server($app, :$host, :$port, :$scheme)</code> constructs the
+<a href="../adapters/"><code>Adapter::Cro</code></a> around the application's endpoint without binding a
+socket, so the wiring can be inspected on its own.</p>
+<h2 id="routes">routes<a class="headerlink" href="#routes" title="Permanent link">&para;</a></h2>
+<p>Print the route table for <code>config/routes.raku</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl routes
+</code></pre></div></td></tr></table></div>
+<p>Each row lists the route name, its verbs (joined with a comma), the path, and the
+target. <code>routes-table(@table)</code> renders the table that
+<a href="../routing/">route introspection</a> produces; an unnamed route renders with a blank
+name column.</p>
+<h2 id="console">console<a class="headerlink" href="#console" title="Permanent link">&para;</a></h2>
+<p>Open a REPL with the application booted and available:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl console
+keayl c
+</code></pre></div></td></tr></table></div>
+<p><code>console</code> loads and boots <code>config/application.raku</code>, binds it to the
+<code>$*KEAYL-APP</code> dynamic variable, then reads lines and evaluates each in turn,
+printing the result. An evaluation error is reported without ending the session.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl&gt; $*KEAYL-APP.environment
+development
+</code></pre></div></td></tr></table></div>
+<h2 id="generate">generate<a class="headerlink" href="#generate" title="Permanent link">&para;</a></h2>
+<p>Run a generator to write controllers, views, models, and route stubs:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl generate controller posts index show
+keayl g scaffold post
+</code></pre></div></td></tr></table></div>
+<p>Each generated file is reported as <code>create</code>; an existing file is reported as
+<code>exists</code> and left untouched, so a generator can be re-run safely. Names are
+inflected with a small built-in inflector (<code>camelize</code>, <code>pluralize</code>,
+<code>singularize</code>) covering the common cases; irregular words may need editing.</p>
+<h3 id="controller">controller<a class="headerlink" href="#controller" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl generate controller posts index show
+</code></pre></div></td></tr></table></div>
+<p>Writes <code>app/controllers/PostsController.rakumod</code> with a method per action, a HAML
+view under <code>app/views/posts/</code> for each action, and a <code>get</code> route stub per action
+inserted into <code>config/routes.raku</code>. An action method left empty renders its view
+through the controller's implicit render.</p>
+<h3 id="scaffold">scaffold<a class="headerlink" href="#scaffold" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl generate scaffold post
+</code></pre></div></td></tr></table></div>
+<p>Takes a singular resource name and writes the full CRUD set: an
+<a href="../application/"><code>ORM::ActiveRecord</code></a> model (<code>app/models/Post.rakumod</code>), a
+controller with <code>index</code>, <code>show</code>, <code>new</code>, <code>create</code>, <code>edit</code>, <code>update</code>, and <code>destroy</code>
+actions, HAML views (<code>index</code>, <code>show</code>, <code>new</code>, <code>edit</code>, and a shared <code>_form</code>
+partial), and a <code>resources</code> route inserted into <code>config/routes.raku</code>. The
+resource name is pluralized for the controller, views, and route.</p>
+<h3 id="route-insertion">Route insertion<a class="headerlink" href="#route-insertion" title="Permanent link">&para;</a></h3>
+<p>A generator inserts its route stubs just inside the <code>routes</code> (or <code>draw</code>) block of
+<code>config/routes.raku</code>, skipping any stub already present. If the file has no
+routes block, the generator still writes the other files and reports that it
+could not add the routes.</p>
 
 
 
@@ -1187,10 +1382,10 @@ default adapter built on <a href="https://cro.raku.org/">Cro</a>.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": [], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

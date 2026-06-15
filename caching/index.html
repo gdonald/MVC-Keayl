@@ -8,26 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/">
+        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/caching/">
       
       
+        <link rel="prev" href="../content-negotiation/">
       
-        <link rel="next" href="request/">
+      
+        <link rel="next" href="../application/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>MVC::Keayl</title>
+        <title>Caching & streaming - MVC::Keayl</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -46,7 +48,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -64,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mvckeayl" class="md-skip">
+        <a href="#caching-and-streaming" class="md-skip">
           Skip to content
         </a>
       
@@ -80,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+    <a href=".." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -100,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Caching & streaming
             
           </span>
         </div>
@@ -190,7 +192,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+    <a href=".." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -217,37 +219,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Home
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -263,48 +238,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Synopsis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pages
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -316,7 +249,7 @@
   
   
     <li class="md-nav__item">
-      <a href="request/" class="md-nav__link">
+      <a href="../request/" class="md-nav__link">
         
   
   
@@ -343,7 +276,7 @@
   
   
     <li class="md-nav__item">
-      <a href="response/" class="md-nav__link">
+      <a href="../response/" class="md-nav__link">
         
   
   
@@ -370,7 +303,7 @@
   
   
     <li class="md-nav__item">
-      <a href="middleware/" class="md-nav__link">
+      <a href="../middleware/" class="md-nav__link">
         
   
   
@@ -397,7 +330,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adapters/" class="md-nav__link">
+      <a href="../adapters/" class="md-nav__link">
         
   
   
@@ -424,7 +357,7 @@
   
   
     <li class="md-nav__item">
-      <a href="routing/" class="md-nav__link">
+      <a href="../routing/" class="md-nav__link">
         
   
   
@@ -451,7 +384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="controllers/" class="md-nav__link">
+      <a href="../controllers/" class="md-nav__link">
         
   
   
@@ -478,7 +411,7 @@
   
   
     <li class="md-nav__item">
-      <a href="views/" class="md-nav__link">
+      <a href="../views/" class="md-nav__link">
         
   
   
@@ -505,7 +438,7 @@
   
   
     <li class="md-nav__item">
-      <a href="helpers/" class="md-nav__link">
+      <a href="../helpers/" class="md-nav__link">
         
   
   
@@ -532,7 +465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="i18n/" class="md-nav__link">
+      <a href="../i18n/" class="md-nav__link">
         
   
   
@@ -559,7 +492,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cookies/" class="md-nav__link">
+      <a href="../cookies/" class="md-nav__link">
         
   
   
@@ -586,7 +519,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sessions/" class="md-nav__link">
+      <a href="../sessions/" class="md-nav__link">
         
   
   
@@ -613,7 +546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="flash/" class="md-nav__link">
+      <a href="../flash/" class="md-nav__link">
         
   
   
@@ -640,7 +573,7 @@
   
   
     <li class="md-nav__item">
-      <a href="csrf/" class="md-nav__link">
+      <a href="../csrf/" class="md-nav__link">
         
   
   
@@ -667,7 +600,7 @@
   
   
     <li class="md-nav__item">
-      <a href="parameter-filtering/" class="md-nav__link">
+      <a href="../parameter-filtering/" class="md-nav__link">
         
   
   
@@ -694,7 +627,7 @@
   
   
     <li class="md-nav__item">
-      <a href="transport-security/" class="md-nav__link">
+      <a href="../transport-security/" class="md-nav__link">
         
   
   
@@ -721,7 +654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="http-authentication/" class="md-nav__link">
+      <a href="../http-authentication/" class="md-nav__link">
         
   
   
@@ -748,7 +681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="secrets/" class="md-nav__link">
+      <a href="../secrets/" class="md-nav__link">
         
   
   
@@ -775,7 +708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="content-negotiation/" class="md-nav__link">
+      <a href="../content-negotiation/" class="md-nav__link">
         
   
   
@@ -799,10 +732,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="caching/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caching & streaming
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -818,6 +778,81 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#conditional-get" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conditional GET
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cache-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cache headers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fragment-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fragment caching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#range-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Range requests
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -829,7 +864,7 @@
   
   
     <li class="md-nav__item">
-      <a href="application/" class="md-nav__link">
+      <a href="../application/" class="md-nav__link">
         
   
   
@@ -856,7 +891,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cli/" class="md-nav__link">
+      <a href="../cli/" class="md-nav__link">
         
   
   
@@ -883,7 +918,7 @@
   
   
     <li class="md-nav__item">
-      <a href="logging/" class="md-nav__link">
+      <a href="../logging/" class="md-nav__link">
         
   
   
@@ -910,7 +945,7 @@
   
   
     <li class="md-nav__item">
-      <a href="instrumentation/" class="md-nav__link">
+      <a href="../instrumentation/" class="md-nav__link">
         
   
   
@@ -937,7 +972,7 @@
   
   
     <li class="md-nav__item">
-      <a href="error-reporting/" class="md-nav__link">
+      <a href="../error-reporting/" class="md-nav__link">
         
   
   
@@ -964,7 +999,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mailer/" class="md-nav__link">
+      <a href="../mailer/" class="md-nav__link">
         
   
   
@@ -991,7 +1026,7 @@
   
   
     <li class="md-nav__item">
-      <a href="jobs/" class="md-nav__link">
+      <a href="../jobs/" class="md-nav__link">
         
   
   
@@ -1018,7 +1053,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cable/" class="md-nav__link">
+      <a href="../cable/" class="md-nav__link">
         
   
   
@@ -1065,10 +1100,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
+  <a href="#conditional-get" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Synopsis
+        Conditional GET
       
     </span>
   </a>
@@ -1076,10 +1111,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pages" class="md-nav__link">
+  <a href="#cache-headers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pages
+        Cache headers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fragment-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fragment caching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#range-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Range requests
       
     </span>
   </a>
@@ -1106,38 +1174,57 @@
   
 
 
-<h1 id="mvckeayl">MVC::Keayl<a class="headerlink" href="#mvckeayl" title="Permanent link">&para;</a></h1>
-<p>The latest version of this documentation lives at <a href="https://gdonald.github.io/MVC-Keayl/">https://gdonald.github.io/MVC-Keayl/</a>.</p>
-<p>The homepage for MVC::Keayl is <a href="https://github.com/gdonald/MVC-Keayl">https://github.com/gdonald/MVC-Keayl</a>.</p>
-<h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<p>MVC::Keayl is a <a href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">Model-View-Controller</a>
-web framework for Raku.</p>
-<p>It is the web layer only. The model layer is delegated to
-<a href="https://github.com/gdonald/ORM-ActiveRecord">ORM::ActiveRecord</a> and default view
-rendering to <a href="https://github.com/gdonald/Template-HAML">Template::HAML</a>; both are
-pluggable. The HTTP server is reached through an abstract adapter, with the
-default adapter built on <a href="https://cro.raku.org/">Cro</a>.</p>
-<h2 id="pages">Pages<a class="headerlink" href="#pages" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="request/">Request</a>: the incoming HTTP request wrapper.</li>
-<li><a href="response/">Response</a>: the outgoing HTTP response builder.</li>
-<li><a href="middleware/">Middleware</a>: the Rack-like middleware stack and endpoint protocol.</li>
-<li><a href="adapters/">Server adapters</a>: the abstract adapter contract, plus the Cro and in-memory test adapters.</li>
-<li><a href="routing/">Routing</a>: the routes file DSL and request recognition.</li>
-<li><a href="controllers/">Controllers</a>: the base controller, per-request state, and action dispatch.</li>
-<li><a href="views/">Views</a>: template resolution, handlers, and caching.</li>
-<li><a href="helpers/">View helpers</a>: URL, asset, and tag-building helpers.</li>
-<li><a href="cookies/">Cookies</a>: the cookie jar with signed and encrypted variants.</li>
-<li><a href="sessions/">Sessions</a>: the session abstraction with cookie and server-side stores.</li>
-<li><a href="flash/">Flash</a>: short messages that survive one redirect.</li>
-<li><a href="csrf/">CSRF protection</a>: authenticity tokens and forgery protection.</li>
-<li><a href="parameter-filtering/">Parameter filtering</a>: redacting sensitive parameters for logs.</li>
-<li><a href="transport-security/">Transport &amp; host security</a>: SSL, host authorization, and secure headers.</li>
-<li><a href="secrets/">Secrets</a>: secret resolution and key derivation.</li>
-<li><a href="content-negotiation/">Content negotiation</a>: MIME types, <code>respond-to</code>, and API controllers.</li>
-<li><a href="caching/">Caching &amp; streaming</a>: conditional GET, cache headers, fragment caching, and streaming.</li>
-<li><a href="application/">Application &amp; configuration</a>: the application object, config, boot, and dispatch.</li>
-</ul>
+<h1 id="caching-and-streaming">Caching and streaming<a class="headerlink" href="#caching-and-streaming" title="Permanent link">&para;</a></h1>
+<h2 id="conditional-get">Conditional GET<a class="headerlink" href="#conditional-get" title="Permanent link">&para;</a></h2>
+<p><code>fresh-when</code> sets validators on the response and renders a <code>304 Not Modified</code>
+when the request's <code>If-None-Match</code>/<code>If-Modified-Since</code> show the client already
+has the current version. <code>is-stale</code> is its inverse: it returns true when you
+should render.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">method</span> <span class="n">show</span> {
+  <span class="nb">self</span>.<span class="n">render</span>(<span class="s">&#39;show&#39;</span>) <span class="k">if</span> <span class="nb">self</span>.<span class="n">is-stale</span>(<span class="n">etag</span> =&gt; <span class="nv">$post</span>, <span class="n">last-modified</span> =&gt; <span class="nv">$post</span>.<span class="n">updated-at</span>);
+}
+</code></pre></div></td></tr></table></div>
+<p><code>etag-for</code> computes an ETag from a value, using its <code>cache-key</code> or <code>to-hash</code> when
+available. ETags are weak by default (<code>W/"..."</code>); pass <code>weak =&gt; False</code> for a
+strong ETag. Matching uses a weak comparison, so <code>W/</code> prefixes are ignored, and
+<code>*</code> matches anything.</p>
+<h2 id="cache-headers">Cache headers<a class="headerlink" href="#cache-headers" title="Permanent link">&para;</a></h2>
+<p><code>expires-in</code> sets <code>Cache-Control</code> with a max-age, <code>private</code> by default or
+<code>public</code>, plus any extra directives. <code>expires-now</code> marks the response
+uncacheable:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">expires-in</span>(<span class="mi">3600</span>, <span class="n">public</span> =&gt; <span class="nb">True</span>, <span class="n">must-revalidate</span> =&gt; <span class="nb">True</span>);
+<span class="c1"># Cache-Control: public, max-age=3600, must-revalidate</span>
+
+<span class="nb">self</span>.<span class="n">expires-now</span>;                  <span class="c1"># Cache-Control: no-cache</span>
+<span class="nb">self</span>.<span class="n">expires-now</span>(<span class="n">no-store</span> =&gt; <span class="nb">True</span>); <span class="c1"># Cache-Control: no-store</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="fragment-caching">Fragment caching<a class="headerlink" href="#fragment-caching" title="Permanent link">&para;</a></h2>
+<p><code>MVC::Keayl::Cache</code> provides a <code>Store</code> role and an in-process <code>MemoryStore</code>. A
+store's <code>fetch</code> returns a cached value or computes and stores it. <code>cache-key</code>
+derives a key from parts (an object contributes its own <code>cache-key</code>), under a
+<code>views/</code> namespace, with an optional template <code>digest</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">cache-key</span>(<span class="nv">$post</span>, <span class="n">digest</span> =&gt; <span class="n">template-digest</span>(<span class="nv">$source</span>));   <span class="c1"># views/posts/1-2021/&lt;digest&gt;</span>
+</code></pre></div></td></tr></table></div>
+<p>A view caches a fragment with <code>cache-fragment</code>, which computes the content once
+per key:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$view</span>.<span class="n">cache-fragment</span>([<span class="nv">$post</span>], { <span class="n">render-the-fragment</span>() });
+</code></pre></div></td></tr></table></div>
+<h2 id="streaming">Streaming<a class="headerlink" href="#streaming" title="Permanent link">&para;</a></h2>
+<p>A response body can be streamed instead of buffered. <code>stream</code> takes an iterable
+of chunks (strings or blobs); <code>stream-chunks</code> yields them encoded, and
+<code>is-streaming</code> reports whether a stream is set, for an adapter to write chunked:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$response</span>.<span class="n">stream</span>(<span class="k">gather</span> { <span class="k">for</span> <span class="nv">@rows</span> { <span class="nb">take</span> <span class="n">row-html</span>(<span class="nv">$_</span>) } });
+</code></pre></div></td></tr></table></div>
+<h2 id="range-requests">Range requests<a class="headerlink" href="#range-requests" title="Permanent link">&para;</a></h2>
+<p><code>send-file</code> honours a <code>Range</code> request header, responding <code>206 Partial Content</code>
+with a <code>Content-Range</code> header and the requested byte slice, and advertises
+<code>Accept-Ranges: bytes</code>.</p>
 
 
 
@@ -1187,10 +1274,10 @@ default adapter built on <a href="https://cro.raku.org/">Cro</a>.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": [], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

@@ -8,26 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/">
+        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/application/">
       
       
+        <link rel="prev" href="../caching/">
       
-        <link rel="next" href="request/">
+      
+        <link rel="next" href="../cli/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>MVC::Keayl</title>
+        <title>Application & configuration - MVC::Keayl</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -46,7 +48,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -64,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mvckeayl" class="md-skip">
+        <a href="#application-and-configuration" class="md-skip">
           Skip to content
         </a>
       
@@ -80,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+    <a href=".." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -100,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Application & configuration
             
           </span>
         </div>
@@ -190,7 +192,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+    <a href=".." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -217,37 +219,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Home
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -263,48 +238,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Synopsis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pages" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pages
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -316,7 +249,7 @@
   
   
     <li class="md-nav__item">
-      <a href="request/" class="md-nav__link">
+      <a href="../request/" class="md-nav__link">
         
   
   
@@ -343,7 +276,7 @@
   
   
     <li class="md-nav__item">
-      <a href="response/" class="md-nav__link">
+      <a href="../response/" class="md-nav__link">
         
   
   
@@ -370,7 +303,7 @@
   
   
     <li class="md-nav__item">
-      <a href="middleware/" class="md-nav__link">
+      <a href="../middleware/" class="md-nav__link">
         
   
   
@@ -397,7 +330,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adapters/" class="md-nav__link">
+      <a href="../adapters/" class="md-nav__link">
         
   
   
@@ -424,7 +357,7 @@
   
   
     <li class="md-nav__item">
-      <a href="routing/" class="md-nav__link">
+      <a href="../routing/" class="md-nav__link">
         
   
   
@@ -451,7 +384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="controllers/" class="md-nav__link">
+      <a href="../controllers/" class="md-nav__link">
         
   
   
@@ -478,7 +411,7 @@
   
   
     <li class="md-nav__item">
-      <a href="views/" class="md-nav__link">
+      <a href="../views/" class="md-nav__link">
         
   
   
@@ -505,7 +438,7 @@
   
   
     <li class="md-nav__item">
-      <a href="helpers/" class="md-nav__link">
+      <a href="../helpers/" class="md-nav__link">
         
   
   
@@ -532,7 +465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="i18n/" class="md-nav__link">
+      <a href="../i18n/" class="md-nav__link">
         
   
   
@@ -559,7 +492,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cookies/" class="md-nav__link">
+      <a href="../cookies/" class="md-nav__link">
         
   
   
@@ -586,7 +519,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sessions/" class="md-nav__link">
+      <a href="../sessions/" class="md-nav__link">
         
   
   
@@ -613,7 +546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="flash/" class="md-nav__link">
+      <a href="../flash/" class="md-nav__link">
         
   
   
@@ -640,7 +573,7 @@
   
   
     <li class="md-nav__item">
-      <a href="csrf/" class="md-nav__link">
+      <a href="../csrf/" class="md-nav__link">
         
   
   
@@ -667,7 +600,7 @@
   
   
     <li class="md-nav__item">
-      <a href="parameter-filtering/" class="md-nav__link">
+      <a href="../parameter-filtering/" class="md-nav__link">
         
   
   
@@ -694,7 +627,7 @@
   
   
     <li class="md-nav__item">
-      <a href="transport-security/" class="md-nav__link">
+      <a href="../transport-security/" class="md-nav__link">
         
   
   
@@ -721,7 +654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="http-authentication/" class="md-nav__link">
+      <a href="../http-authentication/" class="md-nav__link">
         
   
   
@@ -748,7 +681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="secrets/" class="md-nav__link">
+      <a href="../secrets/" class="md-nav__link">
         
   
   
@@ -775,7 +708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="content-negotiation/" class="md-nav__link">
+      <a href="../content-negotiation/" class="md-nav__link">
         
   
   
@@ -802,7 +735,7 @@
   
   
     <li class="md-nav__item">
-      <a href="caching/" class="md-nav__link">
+      <a href="../caching/" class="md-nav__link">
         
   
   
@@ -826,10 +759,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="application/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application & configuration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -845,6 +805,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boot-and-initializers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Boot and initializers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dispatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dispatch
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environments
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -856,7 +880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cli/" class="md-nav__link">
+      <a href="../cli/" class="md-nav__link">
         
   
   
@@ -883,7 +907,7 @@
   
   
     <li class="md-nav__item">
-      <a href="logging/" class="md-nav__link">
+      <a href="../logging/" class="md-nav__link">
         
   
   
@@ -910,7 +934,7 @@
   
   
     <li class="md-nav__item">
-      <a href="instrumentation/" class="md-nav__link">
+      <a href="../instrumentation/" class="md-nav__link">
         
   
   
@@ -937,7 +961,7 @@
   
   
     <li class="md-nav__item">
-      <a href="error-reporting/" class="md-nav__link">
+      <a href="../error-reporting/" class="md-nav__link">
         
   
   
@@ -964,7 +988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mailer/" class="md-nav__link">
+      <a href="../mailer/" class="md-nav__link">
         
   
   
@@ -991,7 +1015,7 @@
   
   
     <li class="md-nav__item">
-      <a href="jobs/" class="md-nav__link">
+      <a href="../jobs/" class="md-nav__link">
         
   
   
@@ -1018,7 +1042,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cable/" class="md-nav__link">
+      <a href="../cable/" class="md-nav__link">
         
   
   
@@ -1065,10 +1089,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#synopsis" class="md-nav__link">
+  <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Synopsis
+        Configuration
       
     </span>
   </a>
@@ -1076,10 +1100,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pages" class="md-nav__link">
+  <a href="#boot-and-initializers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pages
+        Boot and initializers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dispatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dispatch
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environments
       
     </span>
   </a>
@@ -1106,38 +1152,77 @@
   
 
 
-<h1 id="mvckeayl">MVC::Keayl<a class="headerlink" href="#mvckeayl" title="Permanent link">&para;</a></h1>
-<p>The latest version of this documentation lives at <a href="https://gdonald.github.io/MVC-Keayl/">https://gdonald.github.io/MVC-Keayl/</a>.</p>
-<p>The homepage for MVC::Keayl is <a href="https://github.com/gdonald/MVC-Keayl">https://github.com/gdonald/MVC-Keayl</a>.</p>
-<h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<p>MVC::Keayl is a <a href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">Model-View-Controller</a>
-web framework for Raku.</p>
-<p>It is the web layer only. The model layer is delegated to
-<a href="https://github.com/gdonald/ORM-ActiveRecord">ORM::ActiveRecord</a> and default view
-rendering to <a href="https://github.com/gdonald/Template-HAML">Template::HAML</a>; both are
-pluggable. The HTTP server is reached through an abstract adapter, with the
-default adapter built on <a href="https://cro.raku.org/">Cro</a>.</p>
-<h2 id="pages">Pages<a class="headerlink" href="#pages" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="request/">Request</a>: the incoming HTTP request wrapper.</li>
-<li><a href="response/">Response</a>: the outgoing HTTP response builder.</li>
-<li><a href="middleware/">Middleware</a>: the Rack-like middleware stack and endpoint protocol.</li>
-<li><a href="adapters/">Server adapters</a>: the abstract adapter contract, plus the Cro and in-memory test adapters.</li>
-<li><a href="routing/">Routing</a>: the routes file DSL and request recognition.</li>
-<li><a href="controllers/">Controllers</a>: the base controller, per-request state, and action dispatch.</li>
-<li><a href="views/">Views</a>: template resolution, handlers, and caching.</li>
-<li><a href="helpers/">View helpers</a>: URL, asset, and tag-building helpers.</li>
-<li><a href="cookies/">Cookies</a>: the cookie jar with signed and encrypted variants.</li>
-<li><a href="sessions/">Sessions</a>: the session abstraction with cookie and server-side stores.</li>
-<li><a href="flash/">Flash</a>: short messages that survive one redirect.</li>
-<li><a href="csrf/">CSRF protection</a>: authenticity tokens and forgery protection.</li>
-<li><a href="parameter-filtering/">Parameter filtering</a>: redacting sensitive parameters for logs.</li>
-<li><a href="transport-security/">Transport &amp; host security</a>: SSL, host authorization, and secure headers.</li>
-<li><a href="secrets/">Secrets</a>: secret resolution and key derivation.</li>
-<li><a href="content-negotiation/">Content negotiation</a>: MIME types, <code>respond-to</code>, and API controllers.</li>
-<li><a href="caching/">Caching &amp; streaming</a>: conditional GET, cache headers, fragment caching, and streaming.</li>
-<li><a href="application/">Application &amp; configuration</a>: the application object, config, boot, and dispatch.</li>
-</ul>
+<h1 id="application-and-configuration">Application and configuration<a class="headerlink" href="#application-and-configuration" title="Permanent link">&para;</a></h1>
+<p><code>MVC::Keayl::Application</code> ties together the router, middleware stack, and
+configuration, runs initializers at boot, and builds the endpoint that serves
+requests.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$app</span> = <span class="n">MVC::Keayl::Application</span>.<span class="nb">new</span>(
+  <span class="nb">config</span>      =&gt; <span class="n">MVC::Keayl::Config</span>.<span class="n">load</span>(<span class="s">&#39;config/application.json&#39;</span>),
+  <span class="n">controllers</span> =&gt; [<span class="n">PostsController</span>, <span class="n">CommentsController</span>],
+);
+
+<span class="nv">$app</span>.<span class="n">draw-routes</span>({
+  <span class="n">root</span> <span class="nb">to</span> =&gt; <span class="s">&#39;posts#index&#39;</span>;
+  <span class="n">resources</span> <span class="s">&#39;posts&#39;</span>;
+});
+
+<span class="k">my</span> <span class="nv">$endpoint</span> = <span class="nv">$app</span>.<span class="n">endpoint</span>;   <span class="c1"># boots the app, returns the wrapped endpoint</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<p><code>MVC::Keayl::Config</code> holds layered settings for an environment. <code>load</code> reads a
+JSON file (the same <code>config/application.json</code> shared with ORM::ActiveRecord),
+merging a <code>shared</code> section under the selected environment's section. The
+environment is chosen from <code>KEAYL_ENV</code>, then <code>RAKU_ENV</code>, defaulting to
+<code>development</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;shared&quot;</span><span class="p">:</span><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;app-name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Blog&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;development&quot;</span><span class="p">:</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;database&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;adapter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sqlite&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nt">&quot;log-level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;debug&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;production&quot;</span><span class="p">:</span><span class="w">   </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;log-level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;error&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<p>Read settings by key or dotted path, and layer overrides with <code>merge</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$config&lt;app-name&gt;</span>;            <span class="c1"># Blog</span>
+<span class="nv">$config</span>.<span class="nb">get</span>(<span class="s">&#39;database.adapter&#39;</span>);
+<span class="nv">$config</span>.<span class="nb">merge</span>(%( <span class="n">log-level</span> =&gt; <span class="s">&#39;warn&#39;</span> ));
+</code></pre></div></td></tr></table></div>
+<h2 id="boot-and-initializers">Boot and initializers<a class="headerlink" href="#boot-and-initializers" title="Permanent link">&para;</a></h2>
+<p><code>boot</code> runs registered initializers once, in registration order. Register your
+own with <code>initializer</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$app</span>.<span class="n">initializer</span>(<span class="s">&#39;mailer&#39;</span>, -&gt; <span class="nv">$app</span> { ... });
+</code></pre></div></td></tr></table></div>
+<p>Every application starts with two default initializers: <code>active-record</code>, which
+calls the application's <code>database-connector</code> when the config has a <code>database</code>
+section, and <code>template-haml</code>, which wires a <code>Template::HAML</code>-backed view renderer
+(reloading templates outside production).</p>
+<h2 id="dispatch">Dispatch<a class="headerlink" href="#dispatch" title="Permanent link">&para;</a></h2>
+<p>The endpoint recognizes a request against the router and invokes the matching
+controller action, with route parameters merged into the controller's params. A
+callable route is invoked directly. An unmatched path is <code>404</code>, a known path with
+the wrong verb is <code>405</code>, and an unhandled error is <code>500</code> (with the message in
+development, terse in production).</p>
+<p>Controllers are resolved from the <code>controllers</code> list by their controller path
+(<code>PostsController</code> serves <code>posts#index</code>), which is reliable across precompiled
+modules.</p>
+<h2 id="environments">Environments<a class="headerlink" href="#environments" title="Permanent link">&para;</a></h2>
+<p>The environment drives behavior: development reloads templates and shows verbose
+error pages, production caches templates and shows terse errors. Query it with
+<code>is-development</code>, <code>is-test</code>, <code>is-production</code>, and <code>environment</code>.</p>
 
 
 
@@ -1187,10 +1272,10 @@ default adapter built on <a href="https://cro.raku.org/">Cro</a>.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": [], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

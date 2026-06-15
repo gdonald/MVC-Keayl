@@ -1,0 +1,1661 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/helpers/">
+      
+      
+        <link rel="prev" href="../views/">
+      
+      
+        <link rel="next" href="../i18n/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>View helpers - MVC::Keayl</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#view-helpers" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MVC::Keayl
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              View helpers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/gdonald/MVC-Keayl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    MVC::Keayl
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/gdonald/MVC-Keayl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../request/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Request
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../response/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Response
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adapters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server adapters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../routing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Routing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../controllers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Controllers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../views/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    View helpers
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    View helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tag-building" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tag building
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tag building">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nested-data-and-aria-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested data and aria attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class helper
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#url-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        URL helpers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#asset-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Asset helpers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Asset helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pluggable-resolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pluggable resolver
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#forms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Forms
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Forms">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#field-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Field helpers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-awareness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model awareness
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simple_form-style-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simple_form-style inputs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#formatting-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Formatting helpers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Formatting helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Text
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#date-and-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Date and time
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../i18n/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Internationalization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cookies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sessions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flash/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../csrf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSRF protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parameter-filtering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameter filtering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transport-security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transport & host security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http-authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP authentication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../secrets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Secrets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../content-negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Content negotiation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caching & streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application & configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command-line interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../instrumentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instrumentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-reporting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error reporting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mailer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mailer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Background jobs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cable/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSockets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tag-building" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tag building
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tag building">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nested-data-and-aria-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested data and aria attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class helper
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#url-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        URL helpers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#asset-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Asset helpers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Asset helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pluggable-resolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pluggable resolver
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#forms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Forms
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Forms">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#field-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Field helpers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-awareness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model awareness
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simple_form-style-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        simple_form-style inputs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#formatting-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Formatting helpers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Formatting helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Text
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#date-and-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Date and time
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="view-helpers">View helpers<a class="headerlink" href="#view-helpers" title="Permanent link">&para;</a></h1>
+<p>View helpers build HTML. They return <code>SafeString</code> values, so their markup is not
+re-escaped when emitted with <code>!=</code>. In templates they are available as closure
+locals (<code>$link_to</code>, <code>$image_tag</code>, and so on).</p>
+<h2 id="tag-building">Tag building<a class="headerlink" href="#tag-building" title="Permanent link">&para;</a></h2>
+<p><code>content-tag</code> builds an element with content; <code>tag</code> builds a self-closing
+element. Attribute values are escaped, a <code>True</code> value becomes a bare boolean
+attribute, and a <code>False</code> or undefined value is omitted:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">content-tag</span>(<span class="s">&#39;p&#39;</span>, <span class="s">&#39;hi&#39;</span>, %( <span class="k">class</span> =&gt; <span class="s">&#39;lead&#39;</span> ));        <span class="c1"># &lt;p class=&quot;lead&quot;&gt;hi&lt;/p&gt;</span>
+<span class="n">tag</span>(<span class="s">&#39;input&#39;</span>, %( <span class="nb">type</span> =&gt; <span class="s">&#39;text&#39;</span>, <span class="n">disabled</span> =&gt; <span class="nb">True</span> )); <span class="c1"># &lt;input disabled type=&quot;text&quot; /&gt;</span>
+</code></pre></div></td></tr></table></div>
+<p>String content is escaped; a <code>SafeString</code> is emitted as-is.</p>
+<h3 id="nested-data-and-aria-attributes">Nested data and aria attributes<a class="headerlink" href="#nested-data-and-aria-attributes" title="Permanent link">&para;</a></h3>
+<p>A <code>data</code> or <code>aria</code> value that is a hash expands to dasherized attributes, and a
+structured value is JSON encoded:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">content-tag</span>(<span class="s">&#39;div&#39;</span>, <span class="s">&#39;x&#39;</span>, %( <span class="n">data</span> =&gt; %( <span class="n">user_id</span> =&gt; <span class="mi">5</span>, <span class="nb">toggle</span> =&gt; <span class="s">&#39;modal&#39;</span> ) ));
+<span class="c1"># &lt;div data-toggle=&quot;modal&quot; data-user-id=&quot;5&quot;&gt;x&lt;/div&gt;</span>
+
+<span class="n">content-tag</span>(<span class="s">&#39;div&#39;</span>, <span class="s">&#39;x&#39;</span>, %( <span class="n">data</span> =&gt; %( <span class="n">ids</span> =&gt; [<span class="mi">1</span>, <span class="mi">2</span>] ) ));
+<span class="c1"># &lt;div data-ids=&quot;[1,2]&quot;&gt;x&lt;/div&gt;</span>
+</code></pre></div></td></tr></table></div>
+<p><code>data-attributes</code> builds the same dasherized keys as a hash for merging into
+other attributes.</p>
+<h3 id="class-helper">Class helper<a class="headerlink" href="#class-helper" title="Permanent link">&para;</a></h3>
+<p>A <code>class</code> attribute accepts an array of tokens or a hash of conditional tokens,
+and <code>class-names</code> builds the same token list on its own:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">tag</span>(<span class="s">&#39;span&#39;</span>, %( <span class="k">class</span> =&gt; [<span class="s">&#39;a&#39;</span>, <span class="s">&#39;b&#39;</span>] ));                       <span class="c1"># class=&quot;a b&quot;</span>
+<span class="n">content-tag</span>(<span class="s">&#39;div&#39;</span>, <span class="s">&#39;x&#39;</span>, %( <span class="k">class</span> =&gt; %( <span class="n">active</span> =&gt; <span class="nv">$on</span> ) ));   <span class="c1"># class=&quot;active&quot; when $on</span>
+
+<span class="n">class-names</span>(<span class="s">&#39;btn&#39;</span>, %( <span class="n">active</span> =&gt; <span class="nb">True</span>, <span class="n">disabled</span> =&gt; <span class="nb">False</span> ));  <span class="c1"># &quot;btn active&quot;</span>
+<span class="n">class-names</span>([<span class="s">&#39;a&#39;</span>, <span class="s">&#39;b&#39;</span>], <span class="s">&#39;a&#39;</span>, <span class="s">&#39;c&#39;</span>);                           <span class="c1"># &quot;a b c&quot;</span>
+</code></pre></div></td></tr></table></div>
+<p>Falsy and duplicate tokens are dropped, and an empty class attribute is omitted.</p>
+<h2 id="url-helpers">URL helpers<a class="headerlink" href="#url-helpers" title="Permanent link">&para;</a></h2>
+<p><code>url-for</code> turns a target into a URL string. It passes a string through and reads
+<code>path</code> from a hash. <code>link-to</code> builds an anchor, and <code>button-to</code> builds a small
+form that posts to a URL, adding a <code>_method</code> override for other verbs:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">link-to</span>(<span class="s">&#39;Posts&#39;</span>, <span class="s">&#39;/posts&#39;</span>, %( <span class="k">class</span> =&gt; <span class="s">&#39;nav&#39;</span> ));   <span class="c1"># &lt;a class=&quot;nav&quot; href=&quot;/posts&quot;&gt;Posts&lt;/a&gt;</span>
+<span class="n">link-to</span>(<span class="s">&#39;/only&#39;</span>);                                   <span class="c1"># &lt;a href=&quot;/only&quot;&gt;/only&lt;/a&gt;</span>
+<span class="n">button-to</span>(<span class="s">&#39;Delete&#39;</span>, <span class="s">&#39;/posts/1&#39;</span>, %( <span class="k">method</span> =&gt; <span class="s">&#39;delete&#39;</span> ));
+</code></pre></div></td></tr></table></div>
+<h2 id="asset-helpers">Asset helpers<a class="headerlink" href="#asset-helpers" title="Permanent link">&para;</a></h2>
+<p><code>asset-path</code> resolves a source to a URL. A bare source is prefixed with
+<code>/assets/</code>; an absolute path or external URL is left alone; a <code>:type</code> adds an
+extension when the source has none:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">asset-path</span>(<span class="s">&#39;logo.png&#39;</span>);           <span class="c1"># /assets/logo.png</span>
+<span class="n">asset-path</span>(<span class="s">&#39;app&#39;</span>, :<span class="n">type</span>(<span class="s">&#39;css&#39;</span>));  <span class="c1"># /assets/app.css</span>
+</code></pre></div></td></tr></table></div>
+<p><code>image-tag</code>, <code>stylesheet-link-tag</code>, and <code>javascript-include-tag</code> build the
+matching elements, resolving their sources through <code>asset-path</code>. <code>image-tag</code>
+derives a default <code>alt</code> from the filename, and the link and script helpers accept
+multiple sources:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">image-tag</span>(<span class="s">&#39;logo.png&#39;</span>);                       <span class="c1"># &lt;img alt=&quot;Logo&quot; src=&quot;/assets/logo.png&quot; /&gt;</span>
+<span class="n">stylesheet-link-tag</span>(<span class="s">&#39;app&#39;</span>, <span class="s">&#39;admin&#39;</span>);
+<span class="n">javascript-include-tag</span>(<span class="s">&#39;app&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h3 id="pluggable-resolver">Pluggable resolver<a class="headerlink" href="#pluggable-resolver" title="Permanent link">&para;</a></h3>
+<p><code>asset-path</code> and the asset tags accept a <code>resolver</code>, a routine of
+<code>($source, $type)</code> that returns the final URL. It is the seam for fingerprinting
+or a CDN host. A <code>MVC::Keayl::View</code> carries an <code>asset-resolver</code> that its asset
+helpers use:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$view</span> = <span class="n">MVC::Keayl::View</span>.<span class="nb">new</span>(
+  :<span class="n">paths</span>([<span class="s">&#39;app/views&#39;</span>]),
+  <span class="n">asset-resolver</span> =&gt; -&gt; <span class="nv">$source</span>, <span class="nv">$type</span> { <span class="s">&#39;https://cdn.example/&#39;</span> ~ <span class="nv">$source</span> },
+);
+</code></pre></div></td></tr></table></div>
+<h2 id="forms">Forms<a class="headerlink" href="#forms" title="Permanent link">&para;</a></h2>
+<p><code>form-with</code> builds a form around a <code>FormBuilder</code>. The builder is passed to a
+<code>content</code> callback and scopes field names to the model (or an explicit <code>scope</code>),
+prefills values, and annotates errors. The form posts by default, adding a
+<code>_method</code> override for other verbs and an <code>authenticity_token</code> field when a
+<code>csrf-token</code> is given:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">form-with</span>(
+  <span class="n">model</span>      =&gt; <span class="nv">$post</span>,
+  <span class="n">url</span>        =&gt; <span class="s">&#39;/posts/1&#39;</span>,
+  <span class="k">method</span>     =&gt; <span class="s">&#39;patch&#39;</span>,
+  <span class="n">csrf-token</span> =&gt; <span class="nv">$token</span>,
+  <span class="n">content</span>    =&gt; -&gt; <span class="nv">$f</span> {
+    <span class="nv">$f</span>.<span class="n">text-field</span>(<span class="s">&#39;title&#39;</span>) ~ <span class="nv">$f</span>.<span class="n">submit</span>(<span class="s">&#39;Save&#39;</span>)
+  },
+);
+</code></pre></div></td></tr></table></div>
+<h3 id="field-helpers">Field helpers<a class="headerlink" href="#field-helpers" title="Permanent link">&para;</a></h3>
+<p>The builder provides <code>text-field</code>, <code>password-field</code>, <code>hidden-field</code>,
+<code>text-area</code>, <code>check-box</code>, <code>radio-button</code>, <code>select</code>, <code>label</code>, <code>submit</code>, and
+<code>button</code>. Field names are scoped (<code>post[title]</code>) and ids derived
+(<code>post_title</code>). A <code>check-box</code> renders a hidden companion for its unchecked
+value, a <code>select</code> marks the option matching the model value, and a
+<code>password-field</code> never emits a value. <code>fields-for</code> builds a nested builder whose
+names are scoped under the parent:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$form</span>.<span class="n">fields-for</span>(<span class="s">&#39;author&#39;</span>, <span class="nb">block</span> =&gt; -&gt; <span class="nv">$author</span> {
+  <span class="nv">$author</span>.<span class="n">text-field</span>(<span class="s">&#39;name&#39;</span>)   <span class="c1"># name=&quot;post[author][name]&quot;</span>
+});
+</code></pre></div></td></tr></table></div>
+<h3 id="model-awareness">Model awareness<a class="headerlink" href="#model-awareness" title="Permanent link">&para;</a></h3>
+<p>When the builder has a model, fields prefill from it (calling the
+attribute-named method), an explicit <code>value</code> overrides the model, and a field
+whose attribute reports errors gets a <code>field-with-errors</code> class. The builder
+reads errors through the model's <code>errors-on($attribute)</code> method, and
+<code>errors-for</code> renders the messages.</p>
+<h2 id="simple_form-style-inputs">simple_form-style inputs<a class="headerlink" href="#simple_form-style-inputs" title="Permanent link">&para;</a></h2>
+<p><code>SimpleFormBuilder</code> adds an <code>input</code> method that assembles a label, control, hint,
+and error into a wrapper, inferring the control type. <code>simple-form-for</code> wraps it
+in a form like <code>form-with</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">simple-form-for</span>(<span class="nv">$post</span>, <span class="n">url</span> =&gt; <span class="s">&#39;/posts&#39;</span>, <span class="k">required</span> =&gt; [<span class="s">&#39;title&#39;</span>], <span class="n">content</span> =&gt; -&gt; <span class="nv">$f</span> {
+  <span class="nv">$f</span>.<span class="n">input</span>(<span class="s">&#39;title&#39;</span>, <span class="n">hint</span> =&gt; <span class="s">&#39;Keep it short&#39;</span>)
+    ~ <span class="nv">$f</span>.<span class="n">input</span>(<span class="s">&#39;body&#39;</span>)          <span class="c1"># textarea, inferred</span>
+    ~ <span class="nv">$f</span>.<span class="n">input</span>(<span class="s">&#39;published&#39;</span>)     <span class="c1"># checkbox, inferred from a boolean value</span>
+    ~ <span class="nv">$f</span>.<span class="n">input</span>(<span class="s">&#39;state&#39;</span>, <span class="n">as</span> =&gt; <span class="s">&#39;select&#39;</span>, <span class="n">collection</span> =&gt; [<span class="s">&#39;draft&#39;</span>, <span class="s">&#39;live&#39;</span>])
+});
+</code></pre></div></td></tr></table></div>
+<p>The type is taken from <code>as</code>, then the attribute name (<code>password</code>, <code>email</code>, the
+long-text names <code>body</code>/<code>content</code>/<code>description</code>/<code>notes</code>), then a boolean model
+value, defaulting to a string input. A required attribute marks the wrapper and
+adds a <code>*</code> to the label, and an attribute with errors marks the wrapper and
+appends the messages.</p>
+<h2 id="formatting-helpers">Formatting helpers<a class="headerlink" href="#formatting-helpers" title="Permanent link">&para;</a></h2>
+<h3 id="text">Text<a class="headerlink" href="#text" title="Permanent link">&para;</a></h3>
+<p><code>truncate</code> cuts a string to a length (counting the omission) and can break at a
+separator. <code>pluralize</code> pairs a count with a singular or pluralized word, using a
+small inflector with irregulars and an explicit <code>plural</code> override.
+<code>simple-format</code> wraps text in paragraphs, turning blank lines into new paragraphs
+and single newlines into <code>&lt;br /&gt;</code>, escaping the content:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">truncate</span>(<span class="s">&#39;This is a long sentence&#39;</span>, <span class="n">length</span> =&gt; <span class="mi">12</span>);   <span class="c1"># This is a...</span>
+<span class="n">pluralize</span>(<span class="mi">2</span>, <span class="s">&#39;person&#39;</span>);                               <span class="c1"># 2 people</span>
+<span class="n">simple-format</span>(<span class="s">&quot;Para one\n\nPara two&quot;</span>);                <span class="c1"># &lt;p&gt;Para one&lt;/p&gt;\n&lt;p&gt;Para two&lt;/p&gt;</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="numbers">Numbers<a class="headerlink" href="#numbers" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">number-with-delimiter</span>(<span class="mi">1234567</span>);     <span class="c1"># 1,234,567</span>
+<span class="n">number-to-currency</span>(<span class="mf">1234.5</span>);         <span class="c1"># $1,234.50</span>
+<span class="n">number-to-percentage</span>(<span class="mf">66.666</span>, <span class="n">precision</span> =&gt; <span class="mi">1</span>);   <span class="c1"># 66.7%</span>
+<span class="n">number-to-human-size</span>(<span class="mi">1536</span>);         <span class="c1"># 1.5 KB</span>
+</code></pre></div></td></tr></table></div>
+<p><code>number-to-currency</code> accepts <code>unit</code>, <code>precision</code>, <code>delimiter</code>, <code>separator</code>, and a
+<code>format</code> string (<code>%u</code> for the unit, <code>%n</code> for the number).</p>
+<h3 id="date-and-time">Date and time<a class="headerlink" href="#date-and-time" title="Permanent link">&para;</a></h3>
+<p><code>distance-of-time-in-words</code> describes the gap between two times in words, with an
+optional <code>include-seconds</code> for finer detail under a minute. <code>time-ago-in-words</code>
+is the same measured against the current time (or an explicit reference):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">distance-of-time-in-words</span>(<span class="nv">$from</span>, <span class="nv">$to</span>);                 <span class="c1"># about 5 hours</span>
+<span class="n">distance-of-time-in-words</span>(<span class="nv">$from</span>, <span class="nv">$to</span>, <span class="n">include-seconds</span> =&gt; <span class="nb">True</span>);   <span class="c1"># less than 5 seconds</span>
+<span class="n">time-ago-in-words</span>(<span class="nv">$posted-at</span>);
+</code></pre></div></td></tr></table></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1778 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/controllers/">
+      
+      
+        <link rel="prev" href="../routing/">
+      
+      
+        <link rel="next" href="../views/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Controllers - MVC::Keayl</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#controllers" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="MVC::Keayl" class="md-header__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MVC::Keayl
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Controllers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/gdonald/MVC-Keayl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="MVC::Keayl" class="md-nav__button md-logo" aria-label="MVC::Keayl" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    MVC::Keayl
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/gdonald/MVC-Keayl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../request/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Request
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../response/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Response
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../middleware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Middleware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adapters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server adapters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../routing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Routing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Controllers
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Controllers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#per-request-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-request state
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Params
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dispatch-and-implicit-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dispatch and implicit render
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Render
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redirects-and-head" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redirects and head
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sending-files-and-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sending files and data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Callbacks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strong-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strong parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strong parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#expecting-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expecting parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrapping-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wrapping parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-renderers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom renderers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rescuing-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rescuing exceptions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helpers-and-shared-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers and shared state
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-applicationcontroller-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The ApplicationController pattern
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../views/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    View helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../i18n/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Internationalization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cookies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sessions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flash/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Flash
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../csrf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSRF protection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parameter-filtering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameter filtering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transport-security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transport & host security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http-authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP authentication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../secrets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Secrets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../content-negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Content negotiation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caching & streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application & configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command-line interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../instrumentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instrumentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-reporting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error reporting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mailer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mailer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Background jobs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cable/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebSockets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#per-request-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-request state
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Params
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dispatch-and-implicit-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dispatch and implicit render
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Render
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redirects-and-head" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redirects and head
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sending-files-and-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sending files and data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Callbacks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strong-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strong parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strong parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#expecting-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expecting parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrapping-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wrapping parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-renderers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom renderers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rescuing-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rescuing exceptions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helpers-and-shared-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers and shared state
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-applicationcontroller-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The ApplicationController pattern
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="controllers">Controllers<a class="headerlink" href="#controllers" title="Permanent link">&para;</a></h1>
+<p>A controller is a subclass of <code>MVC::Keayl::Controller</code>. Each public method is an
+action. The framework builds one controller instance per request, dispatches the
+named action on it, and returns the <a href="../response/">response</a>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Controller</span>;
+
+<span class="k">class</span> <span class="n">UsersController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> {
+  <span class="k">method</span> <span class="nb">index</span> {
+    <span class="s">&#39;all users&#39;</span>;
+  }
+
+  <span class="k">method</span> <span class="n">show</span> {
+    <span class="s">&#39;user &#39;</span> ~ <span class="nb">self</span>.<span class="nb">params</span><span class="s">&lt;id&gt;</span>;
+  }
+}
+</code></pre></div></td></tr></table></div>
+<h2 id="per-request-state">Per-request state<a class="headerlink" href="#per-request-state" title="Permanent link">&para;</a></h2>
+<p>A controller instance carries the request, a fresh response, and the merged
+params for that request:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">request</span>;    <span class="c1"># the incoming Request</span>
+<span class="nb">self</span>.<span class="n">response</span>;   <span class="c1"># the outgoing Response</span>
+<span class="nb">self</span>.<span class="nb">params</span>;     <span class="c1"># path, query, and body params</span>
+</code></pre></div></td></tr></table></div>
+<p>Each instance gets its own response, so actions never share state across
+requests.</p>
+<h2 id="params">Params<a class="headerlink" href="#params" title="Permanent link">&para;</a></h2>
+<p><code>self.params</code> merges the path params (from routing), the query string, and the
+request body into one <code>MVC::Keayl::Parameters</code> collection. Path params win over
+the body, which wins over the query. Access is indifferent: a key is coerced to a
+string, so <code>params&lt;id&gt;</code> and <code>params{5}</code> reach the same value.</p>
+<p>Bracketed names build nested structures, the same way Rack does:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>user[name]=Ada&amp;user[email]=a@b.com   # params&lt;user&gt;&lt;name&gt;, params&lt;user&gt;&lt;email&gt;
+ids[]=1&amp;ids[]=2                      # params&lt;ids&gt; is [&#39;1&#39;, &#39;2&#39;]
+user[roles][]=admin                  # params&lt;user&gt;&lt;roles&gt; is [&#39;admin&#39;]
+users[][name]=A&amp;users[][age]=1       # params&lt;users&gt;[0] is { name =&gt; &#39;A&#39;, age =&gt; &#39;1&#39; }
+</code></pre></div></td></tr></table></div>
+<p>The body is parsed by its <code>Content-Type</code>:</p>
+<ul>
+<li><code>application/x-www-form-urlencoded</code> parses like a query string.</li>
+<li><code>application/json</code> parses the JSON object into params.</li>
+<li><code>multipart/form-data</code> parses text fields, and file fields into a
+  <code>{ filename, content, type }</code> hash.</li>
+</ul>
+<p><code>build-params(%path-params, $request)</code> produces the merged <code>Parameters</code> for a
+request, which the dispatcher passes to the controller.</p>
+<h2 id="dispatch-and-implicit-render">Dispatch and implicit render<a class="headerlink" href="#dispatch-and-implicit-render" title="Permanent link">&para;</a></h2>
+<p><code>dispatch($action)</code> runs the named action and returns the response. An action
+interacts with the response directly:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">method</span> <span class="n">create</span> {
+  <span class="nb">self</span>.<span class="n">response</span>.<span class="nb">status</span> = <span class="mi">201</span>;
+  <span class="nb">self</span>.<span class="n">response</span>.<span class="n">body</span>(<span class="s">&#39;created&#39;</span>);
+}
+</code></pre></div></td></tr></table></div>
+<p>When an action does not write to the response, its return value is rendered
+implicitly. An action whose body is still empty has its string return value
+written to the response:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">method</span> <span class="n">show</span> {
+  <span class="s">&#39;user &#39;</span> ~ <span class="nb">self</span>.<span class="nb">params</span><span class="s">&lt;id&gt;</span>;   <span class="c1"># becomes the response body</span>
+}
+</code></pre></div></td></tr></table></div>
+<p>Only actions defined on the controller are dispatchable. Dispatching an unknown
+action, or one of the base controller's own methods, raises.</p>
+<h2 id="render">Render<a class="headerlink" href="#render" title="Permanent link">&para;</a></h2>
+<p><code>render</code> writes the response explicitly. The content modes set a default content
+type and the body:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">render</span>(<span class="n">json</span> =&gt; { <span class="nb">ok</span> =&gt; <span class="nb">True</span> });   <span class="c1"># application/json</span>
+<span class="nb">self</span>.<span class="n">render</span>(<span class="n">plain</span> =&gt; <span class="s">&#39;hello&#39;</span>);         <span class="c1"># text/plain</span>
+<span class="nb">self</span>.<span class="n">render</span>(<span class="n">html</span>  =&gt; <span class="s">&#39;&lt;b&gt;hi&lt;/b&gt;&#39;</span>);     <span class="c1"># text/html</span>
+<span class="nb">self</span>.<span class="n">render</span>(<span class="n">body</span>  =&gt; <span class="s">&#39;id,name&#39;</span>, <span class="n">content-type</span> =&gt; <span class="s">&#39;text/csv&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p><code>status</code> sets the status, on its own or alongside content, and <code>content-type</code>
+overrides the default:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">render</span>(<span class="n">plain</span> =&gt; <span class="s">&#39;created&#39;</span>, <span class="nb">status</span> =&gt; <span class="mi">201</span>);
+<span class="nb">self</span>.<span class="n">render</span>(<span class="nb">status</span> =&gt; <span class="mi">204</span>);            <span class="c1"># no body</span>
+</code></pre></div></td></tr></table></div>
+<p>A template is rendered by name, by another action, or inline. Locals and a layout
+are passed as options:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">render</span>(<span class="s">&#39;show&#39;</span>);                   <span class="c1"># the show template</span>
+<span class="nb">self</span>.<span class="n">render</span>(<span class="nb">action</span> =&gt; <span class="s">&#39;edit&#39;</span>);         <span class="c1"># another action&#39;s template</span>
+<span class="nb">self</span>.<span class="n">render</span>(<span class="s">&#39;show&#39;</span>, <span class="n">locals</span> =&gt; { <span class="n">user</span> =&gt; <span class="nv">$user</span> });
+<span class="nb">self</span>.<span class="n">render</span>(<span class="n">inline</span> =&gt; <span class="s">&#39;&lt;p&gt;= name&lt;/p&gt;&#39;</span>);
+<span class="nb">self</span>.<span class="n">render</span>(<span class="s">&#39;show&#39;</span>, <span class="n">layout</span> =&gt; <span class="s">&#39;admin&#39;</span>);
+<span class="nb">self</span>.<span class="n">render</span>(<span class="s">&#39;show&#39;</span>, <span class="n">layout</span> =&gt; <span class="nb">False</span>);  <span class="c1"># no layout</span>
+</code></pre></div></td></tr></table></div>
+<p>Template, inline, and layout rendering go through the controller's view renderer.
+When a renderer is configured, an action that does not render explicitly
+implicitly renders the template named after the action.</p>
+<p>Rendering twice raises a double-render error.</p>
+<h2 id="redirects-and-head">Redirects and head<a class="headerlink" href="#redirects-and-head" title="Permanent link">&para;</a></h2>
+<p><code>redirect-to</code> sends a redirect with an empty body. It takes a path or URL, and an
+optional status (numeric or named, defaulting to 302). <code>:back</code> redirects to the
+<code>Referer</code>, with a fallback when there is none:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">redirect-to</span>(<span class="s">&#39;/dashboard&#39;</span>);
+<span class="nb">self</span>.<span class="n">redirect-to</span>(<span class="s">&#39;https://example.com&#39;</span>);
+<span class="nb">self</span>.<span class="n">redirect-to</span>(<span class="s">&#39;/new&#39;</span>, <span class="nb">status</span> =&gt; <span class="mi">301</span>);
+<span class="nb">self</span>.<span class="n">redirect-to</span>(<span class="s">&#39;/x&#39;</span>, <span class="nb">status</span> =&gt; <span class="s">&#39;see-other&#39;</span>);   <span class="c1"># 303</span>
+<span class="nb">self</span>.<span class="n">redirect-to</span>(:<span class="n">back</span>, <span class="n">fallback</span> =&gt; <span class="s">&#39;/home&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>A named-route redirect is the path a URL helper produces, passed as the target.</p>
+<p><code>head</code> sends a status and headers with no body. The status is numeric or named,
+and named arguments become headers (<code>location</code> becomes the <code>Location</code> header):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="nb">head</span>(<span class="mi">204</span>);
+<span class="nb">self</span>.<span class="nb">head</span>(<span class="s">&#39;not-found&#39;</span>);
+<span class="nb">self</span>.<span class="nb">head</span>(<span class="s">&#39;created&#39;</span>, <span class="n">location</span> =&gt; <span class="s">&#39;/users/5&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>A redirect, like a render, marks the response performed, so a render or redirect
+after one raises a double-render error.</p>
+<h2 id="sending-files-and-data">Sending files and data<a class="headerlink" href="#sending-files-and-data" title="Permanent link">&para;</a></h2>
+<p><code>send-data</code> sends an in-memory payload, a string or a <code>Blob</code>, with a content type
+and disposition. The default disposition is <code>attachment</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">send-data</span>(<span class="nv">$csv</span>, <span class="nb">type</span> =&gt; <span class="s">&#39;text/csv&#39;</span>, <span class="nb">filename</span> =&gt; <span class="s">&#39;report.csv&#39;</span>);
+<span class="nb">self</span>.<span class="n">send-data</span>(<span class="nv">$bytes</span>, <span class="nb">filename</span> =&gt; <span class="s">&#39;image.png&#39;</span>);
+<span class="nb">self</span>.<span class="n">send-data</span>(<span class="nv">$html</span>, <span class="n">disposition</span> =&gt; <span class="s">&#39;inline&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p><code>send-file</code> sends a file from disk. The content type is guessed from the
+extension unless given, and the filename defaults to the basename:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">send-file</span>(<span class="s">&#39;tmp/report.csv&#39;</span>);
+<span class="nb">self</span>.<span class="n">send-file</span>(<span class="s">&#39;public/logo.png&#39;</span>, <span class="n">disposition</span> =&gt; <span class="s">&#39;inline&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p><code>send-file</code> advertises <code>Accept-Ranges: bytes</code> and honours a <code>Range</code> request
+header, replying with <code>206 Partial Content</code>, a <code>Content-Range</code> header, and the
+requested slice. Open-ended (<code>bytes=100-</code>) and suffix (<code>bytes=-100</code>) ranges both
+work.</p>
+<h2 id="callbacks">Callbacks<a class="headerlink" href="#callbacks" title="Permanent link">&para;</a></h2>
+<p><code>before-action</code>, <code>after-action</code>, and <code>around-action</code> register callbacks on the
+controller class. A callback is a method name or a block. Around callbacks
+receive a continuation they invoke to run the rest of the chain:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">UsersController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> {
+  <span class="k">method</span> <span class="n">authenticate</span> { ... }
+  <span class="k">method</span> <span class="n">timer</span>(<span class="nv">$next</span>) { ...; <span class="nv">$next</span>(); ... }
+  <span class="k">method</span> <span class="n">show</span> { ... }
+}
+
+<span class="n">UsersController</span>.<span class="o">before-</span><span class="n">action</span>(<span class="s">&#39;authenticate&#39;</span>);
+<span class="n">UsersController</span>.<span class="n">around-action</span>(<span class="s">&#39;timer&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>A request runs the before callbacks in order, then the around callbacks wrapping
+the action, then the after callbacks in reverse order.</p>
+<p><code>only</code> and <code>except</code> scope a callback to specific actions, and <code>if</code> / <code>unless</code>
+gate it on a method or block:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">UsersController</span>.<span class="o">before-</span><span class="n">action</span>(<span class="s">&#39;authenticate&#39;</span>, <span class="n">except</span> =&gt; <span class="s">&lt;index show&gt;</span>);
+<span class="n">UsersController</span>.<span class="o">before-</span><span class="n">action</span>(<span class="s">&#39;require-admin&#39;</span>, <span class="k">if</span> =&gt; <span class="s">&#39;is-admin&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>A subclass inherits its parents' callbacks and can drop one with
+<code>skip-before-action</code> (and <code>skip-after-action</code> / <code>skip-around-action</code>), with the
+same <code>only</code> / <code>except</code> scoping:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">PublicController</span>.<span class="n">skip-before-action</span>(<span class="s">&#39;authenticate&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>A before or around callback that renders or redirects halts the chain: the action
+and the remaining callbacks do not run.</p>
+<h2 id="strong-parameters">Strong parameters<a class="headerlink" href="#strong-parameters" title="Permanent link">&para;</a></h2>
+<p><code>require</code> and <code>permit</code> whitelist params before they reach the model. <code>require</code>
+returns the value at a key, raising when it is missing or empty. <code>permit</code> returns
+a new <code>Parameters</code> containing only the listed keys:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$attrs</span> = <span class="nb">self</span>.<span class="nb">params</span>.<span class="k">require</span>(<span class="s">&#39;user&#39;</span>).<span class="n">permit</span>(<span class="s">&#39;name&#39;</span>, <span class="s">&#39;email&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p><code>permit</code> accepts scalar keys, arrays (an empty-array spec), nested hashes, and
+arrays of hashes:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="nb">params</span>.<span class="k">require</span>(<span class="s">&#39;user&#39;</span>).<span class="n">permit</span>(
+  <span class="s">&#39;name&#39;</span>, <span class="s">&#39;email&#39;</span>,
+  <span class="n">roles</span>   =&gt; [],              <span class="c1"># an array of scalars</span>
+  <span class="n">address</span> =&gt; <span class="s">&lt;street city&gt;</span>,   <span class="c1"># a nested hash with these keys</span>
+  <span class="n">tags</span>    =&gt; <span class="s">&lt;id name&gt;</span>,       <span class="c1"># an array of hashes with these keys</span>
+);
+</code></pre></div></td></tr></table></div>
+<p>A value that is not a permitted scalar (a nested hash or array) is dropped unless
+it is permitted explicitly. <code>permit-all</code> is the escape hatch that marks the
+parameters permitted and keeps every key.</p>
+<p>Unpermitted keys are dropped. The action taken is configurable, globally with
+<code>MVC::Keayl::Parameters.unpermitted-action('raise')</code> or per call with
+<code>permit(..., :on-unpermitted&lt;raise&gt;)</code>, which raises instead of dropping.</p>
+<h3 id="expecting-parameters">Expecting parameters<a class="headerlink" href="#expecting-parameters" title="Permanent link">&para;</a></h3>
+<p><code>expect</code> combines <code>require</code> and <code>permit</code> into one strict call. It returns the
+permitted value at a key, raising <code>X::MVC::Keayl::ParameterMissing</code> when the key
+is missing or when the value is the wrong shape:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$user</span> = <span class="nb">self</span>.<span class="nb">params</span>.<span class="n">expect</span>(<span class="n">user</span> =&gt; <span class="s">&lt;name email&gt;</span>);
+</code></pre></div></td></tr></table></div>
+<p>The default rescue turns that exception into a <code>400</code>, so a malformed payload (a
+scalar where a hash is expected, or a missing key) is rejected without reaching
+the model. <code>expect</code> follows the value's shape: a hash value permits the listed
+keys, an array value permits each element as a hash, and an empty-array spec
+returns an array of scalars:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="nb">params</span>.<span class="n">expect</span>(<span class="n">ids</span> =&gt; []);          <span class="c1"># an array of scalars</span>
+<span class="nb">self</span>.<span class="nb">params</span>.<span class="n">expect</span>(<span class="n">rows</span> =&gt; <span class="s">&lt;id name&gt;</span>);  <span class="c1"># an array of hashes, when rows is a list</span>
+<span class="nb">self</span>.<span class="nb">params</span>.<span class="n">expect</span>(<span class="s">&#39;id&#39;</span>);               <span class="c1"># a required scalar</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="wrapping-parameters">Wrapping parameters<a class="headerlink" href="#wrapping-parameters" title="Permanent link">&para;</a></h3>
+<p><code>wrap-parameters</code> nests a JSON request body under a root key, so a client that
+posts <code>{"name": "Ada"}</code> to <code>UsersController</code> reads it back as <code>params&lt;user&gt;</code>. The
+key defaults to the controller name singularized, and only JSON requests are
+wrapped:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">UsersController</span>.<span class="n">wrap-parameters</span>;
+</code></pre></div></td></tr></table></div>
+<p>Pass an explicit key as the first argument, restrict the formats with <code>:format</code>,
+and choose attributes with <code>:include</code> or <code>:exclude</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">UsersController</span>.<span class="n">wrap-parameters</span>(<span class="s">&#39;person&#39;</span>, <span class="n">include</span> =&gt; <span class="s">&lt;name email&gt;</span>);
+</code></pre></div></td></tr></table></div>
+<p>Wrapping is skipped when the root key is already present in the params, so an
+explicitly nested body is left untouched.</p>
+<h2 id="custom-renderers">Custom renderers<a class="headerlink" href="#custom-renderers" title="Permanent link">&para;</a></h2>
+<p><code>add-renderer</code> registers a render option backed by a block, so <code>render csv: $rows</code>
+dispatches to it. The block receives the controller, the rendered value, and the
+remaining render options, sets its own content type, and returns the body:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">MVC::Keayl::Controller</span>.<span class="n">add-renderer</span>(<span class="s">&#39;csv&#39;</span>, -&gt; <span class="nv">$controller</span>, <span class="nv">$rows</span>, <span class="nv">%options</span> {
+  <span class="nv">$controller</span>.<span class="n">response</span>.<span class="n">content-type</span>(<span class="s">&#39;text/csv&#39;</span>);
+  <span class="nv">$rows</span>.<span class="n">map</span>(*.<span class="nb">join</span>(<span class="s">&#39;,&#39;</span>)).<span class="nb">join</span>(<span class="s">&quot;\n&quot;</span>)
+});
+
+<span class="k">method</span> <span class="k">export</span> { <span class="nb">self</span>.<span class="n">render</span>(<span class="n">csv</span> =&gt; <span class="nv">@rows</span>) }
+</code></pre></div></td></tr></table></div>
+<p>Renderers are registered globally and are available to every controller.</p>
+<h2 id="rescuing-exceptions">Rescuing exceptions<a class="headerlink" href="#rescuing-exceptions" title="Permanent link">&para;</a></h2>
+<p><code>rescue-from</code> maps an exception type to a handler, a method name or a block, that
+turns the exception into a response:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">ArticlesController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> {
+  <span class="k">method</span> <span class="o">not-</span><span class="n">found</span>(<span class="nv">$error</span>) { <span class="nb">self</span>.<span class="nb">head</span>(<span class="mi">404</span>) }
+}
+
+<span class="n">ArticlesController</span>.<span class="n">rescue-from</span>(<span class="o">X</span>::<span class="n">MVC::Keayl::NotFound</span>, <span class="s">&#39;not-found&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>Lookup is inheritance-aware: when more than one registered type matches a raised
+exception, the most specific handler wins. A subclass inherits its parents'
+mappings and can override them.</p>
+<p>The base controller ships default mappings: <code>X::MVC::Keayl::NotFound</code> becomes a
+404, and <code>X::MVC::Keayl::ParameterMissing</code> and
+<code>X::MVC::Keayl::UnpermittedParameters</code> become a 400. An exception with no matching
+handler propagates.</p>
+<h2 id="helpers-and-shared-state">Helpers and shared state<a class="headerlink" href="#helpers-and-shared-state" title="Permanent link">&para;</a></h2>
+<p><code>helper-method</code> exposes a controller method to the template under its own name:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">UsersController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> {
+  <span class="k">method</span> <span class="n">current-user</span> { ... }
+}
+
+<span class="n">UsersController</span>.<span class="n">helper-method</span>(<span class="s">&#39;current-user&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p><code>assign</code> records a value for the template:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">method</span> <span class="n">show</span> {
+  <span class="nb">self</span>.<span class="n">assign</span>(<span class="s">&#39;title&#39;</span>, <span class="s">&#39;Profile&#39;</span>);
+  <span class="nb">self</span>.<span class="n">render</span>(<span class="s">&#39;show&#39;</span>);
+}
+</code></pre></div></td></tr></table></div>
+<p>When an action renders, the template locals are built from the helper-method
+values, then the assigned values, then any explicit <code>locals</code> (which win). The
+recorded assigns are also readable through <code>self.assigns</code>.</p>
+<h2 id="the-applicationcontroller-pattern">The ApplicationController pattern<a class="headerlink" href="#the-applicationcontroller-pattern" title="Permanent link">&para;</a></h2>
+<p>Put shared callbacks, rescue handlers, and helpers on a base controller, and
+subclasses inherit them:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">ApplicationController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> {
+  <span class="k">method</span> <span class="n">authenticate</span> { ... }
+  <span class="k">method</span> <span class="n">site-name</span> { ... }
+}
+<span class="n">ApplicationController</span>.<span class="o">before-</span><span class="n">action</span>(<span class="s">&#39;authenticate&#39;</span>);
+<span class="n">ApplicationController</span>.<span class="n">helper-method</span>(<span class="s">&#39;site-name&#39;</span>);
+
+<span class="k">class</span> <span class="n">UsersController</span> <span class="k">is</span> <span class="n">ApplicationController</span> { ... }
+</code></pre></div></td></tr></table></div>
+<p>Callbacks, <code>rescue-from</code> mappings, and <code>helper-method</code> declarations all collect
+across the inheritance chain, and a subclass can add to or override what it
+inherits.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
