@@ -1,0 +1,81 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Parameters;
+use MVC::Keayl::Params;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+sub params(%store) {
+  MVC::Keayl::Parameters.new(%store)
+}
+
+# expect of a hash
+
+{
+  my $user = params({ user => { name => 'Ada', email => 'a@b', admin => True } }).expect(user => <name email>);
+  is $user.Hash.keys.sort.join(','), 'email,name', 'expect returns the permitted nested keys';
+}
+
+{
+  throws-like { params({}).expect(user => <name email>) }, X::MVC::Keayl::ParameterMissing,
+    'expect raises when the key is missing';
+}
+
+{
+  throws-like { params({ user => 'scalar' }).expect(user => <name email>) }, X::MVC::Keayl::ParameterMissing,
+    'expect raises when the value is the wrong shape';
+}
+
+# expect of an array
+
+{
+  is params({ ids => ['1', '2'] }).expect(ids => []).join(','), '1,2', 'expect returns an array of scalars';
+}
+
+{
+  throws-like { params({ ids => 'one' }).expect(ids => []) }, X::MVC::Keayl::ParameterMissing,
+    'expect raises when an array is expected but a scalar is given';
+}
+
+{
+  my $permitted = MVC::Keayl::Parameters.new(parse-urlencoded('rows[][id]=1&rows[][secret]=x')).expect(rows => <id>);
+  is $permitted[0].keys.join(','), 'id', 'expect returns an array of permitted hashes';
+}
+
+# expect of a scalar
+
+{
+  is params({ id => '7' }).expect('id'), '7', 'expect returns the scalar value';
+}
+
+{
+  throws-like { params({}).expect('id') }, X::MVC::Keayl::ParameterMissing,
+    'expect raises when the scalar is missing';
+}
+
+# controller integration
+
+{
+  my $request = MVC::Keayl::Request.new(
+    :method<POST>,
+    :headers({ 'Content-Type' => 'application/x-www-form-urlencoded' }),
+    :body('user=scalar'),
+  );
+  my $controller = ExpectController.new(:params(build-params({}, $request)));
+  is $controller.dispatch('create').status, 400, 'a malformed payload returns 400';
+}
+
+{
+  my $request = MVC::Keayl::Request.new(
+    :method<POST>,
+    :headers({ 'Content-Type' => 'application/x-www-form-urlencoded' }),
+    :body('user[name]=Ada&user[admin]=1'),
+  );
+  my $controller = ExpectController.new(:params(build-params({}, $request)));
+  is $controller.dispatch('create').body, 'Ada:no-admin', 'a valid payload permits the expected keys';
+}
+
+done-testing;

@@ -79,3 +79,27 @@ describe 'MVC::Keayl::Controller flash cycle', {
     expect($second.body).to.be('Created');
   }
 }
+
+describe 'MVC::Keayl::Flash registered types', {
+  before-each({ register-flash-type('success') });
+
+  it 'reads a registered type through a method', {
+    my $flash = MVC::Keayl::Flash.new;
+    $flash<success> = 'Saved';
+    expect($flash.success).to.be('Saved');
+  }
+
+  it 'writes a registered type through a method', {
+    my $flash = MVC::Keayl::Flash.new;
+    $flash.success('Updated');
+    expect($flash<success>).to.be('Updated');
+  }
+
+  it 'lists the registered types', {
+    expect(flash-types.first(* eq 'success').defined).to.be-truthy;
+  }
+
+  it 'raises for an unregistered type', {
+    expect({ MVC::Keayl::Flash.new.bogus }).to.throw;
+  }
+}

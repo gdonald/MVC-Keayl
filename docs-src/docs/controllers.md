@@ -242,6 +242,66 @@ Unpermitted keys are dropped. The action taken is configurable, globally with
 `MVC::Keayl::Parameters.unpermitted-action('raise')` or per call with
 `permit(..., :on-unpermitted<raise>)`, which raises instead of dropping.
 
+### Expecting parameters
+
+`expect` combines `require` and `permit` into one strict call. It returns the
+permitted value at a key, raising `X::MVC::Keayl::ParameterMissing` when the key
+is missing or when the value is the wrong shape:
+
+```perl6
+my $user = self.params.expect(user => <name email>);
+```
+
+The default rescue turns that exception into a `400`, so a malformed payload (a
+scalar where a hash is expected, or a missing key) is rejected without reaching
+the model. `expect` follows the value's shape: a hash value permits the listed
+keys, an array value permits each element as a hash, and an empty-array spec
+returns an array of scalars:
+
+```perl6
+self.params.expect(ids => []);          # an array of scalars
+self.params.expect(rows => <id name>);  # an array of hashes, when rows is a list
+self.params.expect('id');               # a required scalar
+```
+
+### Wrapping parameters
+
+`wrap-parameters` nests a JSON request body under a root key, so a client that
+posts `{"name": "Ada"}` to `UsersController` reads it back as `params<user>`. The
+key defaults to the controller name singularized, and only JSON requests are
+wrapped:
+
+```perl6
+UsersController.wrap-parameters;
+```
+
+Pass an explicit key as the first argument, restrict the formats with `:format`,
+and choose attributes with `:include` or `:exclude`:
+
+```perl6
+UsersController.wrap-parameters('person', include => <name email>);
+```
+
+Wrapping is skipped when the root key is already present in the params, so an
+explicitly nested body is left untouched.
+
+## Custom renderers
+
+`add-renderer` registers a render option backed by a block, so `render csv: $rows`
+dispatches to it. The block receives the controller, the rendered value, and the
+remaining render options, sets its own content type, and returns the body:
+
+```perl6
+MVC::Keayl::Controller.add-renderer('csv', -> $controller, $rows, %options {
+  $controller.response.content-type('text/csv');
+  $rows.map(*.join(',')).join("\n")
+});
+
+method export { self.render(csv => @rows) }
+```
+
+Renderers are registered globally and are available to every controller.
+
 ## Rescuing exceptions
 
 `rescue-from` maps an exception type to a handler, a method name or a block, that

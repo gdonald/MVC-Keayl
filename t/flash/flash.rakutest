@@ -105,4 +105,21 @@ use MVC::Keayl::Request;
   ok $controller.flash.keys.so, 'a controller exposes a flash with content';
 }
 
+# registered flash types
+
+{
+  register-flash-type('success');
+
+  my $flash = MVC::Keayl::Flash.new;
+  $flash<success> = 'Saved';
+  is $flash.success, 'Saved', 'a registered type reads through a method';
+
+  $flash.success('Updated');
+  is $flash<success>, 'Updated', 'a registered type writes through a method';
+
+  ok flash-types.first(* eq 'success').defined, 'the registered types are listed';
+
+  dies-ok { MVC::Keayl::Flash.new.bogus }, 'an unregistered type raises';
+}
+
 done-testing;

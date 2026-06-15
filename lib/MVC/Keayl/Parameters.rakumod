@@ -98,4 +98,44 @@ class MVC::Keayl::Parameters does Associative {
     $!permitted = True;
     self
   }
+
+  method expect(*@scalars, *%nested) {
+    my @results;
+
+    for @scalars -> $key {
+      my $name  = $key.Str;
+      my $value = %!store{$name};
+
+      X::MVC::Keayl::ParameterMissing.new(:key($name)).throw
+        unless present($value) && permitted-scalar($value);
+
+      @results.push($value);
+    }
+
+    for %nested.kv -> $key, $spec {
+      @results.push(self!expect-nested($key, $spec));
+    }
+
+    @results.elems == 1 ?? @results[0] !! |@results
+  }
+
+  method !expect-nested(Str:D $key, $spec) {
+    my $value = %!store{$key};
+    X::MVC::Keayl::ParameterMissing.new(:$key).throw unless present($value);
+
+    if $spec ~~ Positional && $spec.elems == 0 {
+      X::MVC::Keayl::ParameterMissing.new(:$key).throw unless $value ~~ Positional;
+      return $value.grep(&permitted-scalar).Array;
+    }
+
+    if $value ~~ Positional {
+      return $value.map(-> $item {
+        X::MVC::Keayl::ParameterMissing.new(:$key).throw unless $item ~~ Associative;
+        ::?CLASS.new($item.hash).permit(|$spec.list).Hash
+      }).Array;
+    }
+
+    X::MVC::Keayl::ParameterMissing.new(:$key).throw unless $value ~~ Associative;
+    ::?CLASS.new($value.hash).permit(|$spec.list)
+  }
 }

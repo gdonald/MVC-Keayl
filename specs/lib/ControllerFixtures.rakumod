@@ -51,9 +51,9 @@ class GreetController is MVC::Keayl::Controller is export {
 }
 
 class StubRenderer is export {
-  method render-template(Str $name, %locals, :$controller) {
+  method render-template(Str $name, %locals, :$controller, :$variant) {
     my $locals = %locals ?? ' ' ~ %locals.sort(*.key).map({ .key ~ '=' ~ .value }).join(',') !! '';
-    'template:' ~ $name ~ $locals
+    'template:' ~ $name ~ $locals ~ ($variant.defined ?? '+' ~ $variant !! '')
   }
 
   method render-inline(Str $template, %locals, :$controller) {
@@ -216,6 +216,65 @@ class DownloadController is MVC::Keayl::Controller is export {
 
   method file        { self.send-file('specs/lib/fixtures/sample.txt') }
   method file-typed  { self.send-file('specs/lib/fixtures/sample.txt', type => 'text/plain', filename => 'down.txt', disposition => 'inline') }
+}
+
+class WidgetsController is MVC::Keayl::Controller is export {
+  method create { self.render(plain => (self.params<widget><name> // 'none') ~ ':' ~ (self.params<widget><color> // 'none')) }
+}
+WidgetsController.wrap-parameters;
+
+class GadgetsController is MVC::Keayl::Controller is export {
+  method create { self.render(plain => (self.params<gadget><name> // 'none') ~ ':' ~ (self.params<gadget><secret> // 'none')) }
+}
+GadgetsController.wrap-parameters(include => <name>);
+
+class TrinketsController is MVC::Keayl::Controller is export {
+  method create { self.render(plain => (self.params<trinket><name> // 'none') ~ ':' ~ (self.params<trinket><secret> // 'none')) }
+}
+TrinketsController.wrap-parameters(exclude => <secret>);
+
+class ParcelsController is MVC::Keayl::Controller is export {
+  method create { self.render(plain => (self.params<box><name> // 'none')) }
+}
+ParcelsController.wrap-parameters('box');
+
+class ExpectController is MVC::Keayl::Controller is export {
+  method create {
+    my $user = self.params.expect(user => <name email>);
+    self.render(plain => $user<name> ~ ':' ~ ($user<admin> // 'no-admin'));
+  }
+}
+
+class ReportsController is MVC::Keayl::Controller is export {
+  method export { self.render(csv => [[1, 2], [3, 4]]) }
+}
+
+MVC::Keayl::Controller.add-renderer('csv', -> $controller, $value, %options {
+  $controller.response.content-type('text/csv');
+  $value.map(*.join(',')).join("\n")
+});
+
+class NoticeController is MVC::Keayl::Controller is export {
+  method create {
+    self.flash<success> = 'saved';
+    self.render(plain => self.flash.success);
+  }
+}
+MVC::Keayl::Controller.add-flash-types('success', 'alert');
+
+class VariantController is MVC::Keayl::Controller is export {
+  method show {
+    self.respond-to([
+      html => {
+        phone => { self.render(plain => 'phone view') },
+        any   => { self.render(plain => 'default view') },
+      },
+    ])
+  }
+}
+
+class VariantTemplateController is MVC::Keayl::Controller is export {
+  method show { self.render('show') }
 }
 
 

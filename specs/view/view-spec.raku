@@ -32,6 +32,14 @@ describe 'MVC::Keayl::View resolution', {
   it 'returns an undefined path when nothing matches', {
     expect(view.resolve('greetings/missing', 'html').defined).to.be-falsy;
   }
+
+  it 'prefers a variant template when the variant is set', {
+    expect(view.resolve('greetings/show', 'html', variant => 'phone').basename).to.be('show.html+phone.haml');
+  }
+
+  it 'falls back to the plain template when no variant template exists', {
+    expect(view.resolve('greetings/show', 'html', variant => 'tablet').basename).to.be('show.html.haml');
+  }
 }
 
 describe 'MVC::Keayl::View rendering', {
@@ -41,6 +49,10 @@ describe 'MVC::Keayl::View rendering', {
 
   it 'resolves a different template for a different format', {
     expect(view.render-template('greetings/show', { name => 'Ada' }, :format('txt')).contains('Plain greeting')).to.be-truthy;
+  }
+
+  it 'renders a variant template when the variant is set', {
+    expect(view.render-template('greetings/show', { name => 'Ada' }, :variant('phone')).contains('Hi Ada (phone)')).to.be-truthy;
   }
 
   it 'renders an inline template', {

@@ -41,3 +41,18 @@ self.flash.keep;            # carry everything one more request
 self.flash.keep('notice');  # carry just this entry
 self.flash.discard('alert');
 ```
+
+## Flash types
+
+`add-flash-types` registers named flash types that read and write through a
+method on the flash, alongside the usual `flash<key>` access:
+
+```perl6
+ApplicationController.add-flash-types('success', 'error');
+
+self.flash.success('Saved');   # writes flash<success>
+self.flash.success;            # reads flash<success>
+```
+
+A method call for a type that was never registered raises. Registration is
+global, so a type added on the base controller is available everywhere.

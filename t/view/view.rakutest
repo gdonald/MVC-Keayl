@@ -37,6 +37,13 @@ sub view(*%opts) {
   nok view.resolve('greetings/missing', 'html').defined, 'resolve returns an undefined path when nothing matches';
 }
 
+{
+  is view.resolve('greetings/show', 'html', variant => 'phone').basename, 'show.html+phone.haml',
+    'resolve prefers a variant template when the variant is set';
+  is view.resolve('greetings/show', 'html', variant => 'tablet').basename, 'show.html.haml',
+    'resolve falls back to the plain template when no variant template exists';
+}
+
 # rendering through the HAML handler
 
 {
@@ -49,6 +56,11 @@ sub view(*%opts) {
 {
   like view.render-template('greetings/show', { name => 'Ada' }, :format('txt')), /'Plain greeting'/,
     'a different format resolves a different template';
+}
+
+{
+  like view.render-template('greetings/show', { name => 'Ada' }, :variant('phone')), /'Hi Ada (phone)'/,
+    'a variant template renders when the variant is set';
 }
 
 # inline and layout

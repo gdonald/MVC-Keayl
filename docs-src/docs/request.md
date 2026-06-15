@@ -117,5 +117,26 @@ missing body reads as the empty string:
 $request.body;   # '{"name":"Ada"}'
 ```
 
-Reading the raw body never consumes or parses it; structured parameter parsing
+Reading the raw body never consumes or parses it. Structured parameter parsing
 (form bodies, JSON, multipart) is layered on top by the controller.
+
+## Variant
+
+A variant marks a device-specific view selection. It is undefined until set, and
+`set-variant` assigns it:
+
+```perl6
+$request.set-variant('phone');
+$request.variant;   # 'phone'
+```
+
+`detect-variant` reads the `User-Agent` header and returns `phone` for a mobile
+agent, `tablet` for an iPad-style agent, or an undefined value otherwise. Wire it
+in by hand when a variant should follow the device:
+
+```perl6
+$request.set-variant($request.detect-variant);
+```
+
+The controller uses the variant to branch `respond-to` blocks and to prefer a
+variant template such as `show.html+phone.haml`.

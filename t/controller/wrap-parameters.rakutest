@@ -1,0 +1,40 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Params;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+sub json-request($body, :$content-type = 'application/json') {
+  MVC::Keayl::Request.new(
+    :method<POST>,
+    :headers({ 'Content-Type' => $content-type }),
+    :body($body),
+  )
+}
+
+sub dispatch($controller-class, $request) {
+  $controller-class.new(:request($request), :params(build-params({}, $request))).dispatch('create')
+}
+
+is dispatch(WidgetsController, json-request('{"name":"Gear","color":"red"}')).body, 'Gear:red',
+  'wraps a top-level JSON body under the controller key';
+
+is dispatch(WidgetsController, json-request('{"widget":{"name":"Set"},"name":"Loose"}')).body, 'Set:none',
+  'leaves an existing root key untouched';
+
+is dispatch(WidgetsController, json-request('name=Gear', content-type => 'application/x-www-form-urlencoded')).body, 'none:none',
+  'does not wrap a non-JSON request';
+
+is dispatch(ParcelsController, json-request('{"name":"Crate"}')).body, 'Crate',
+  'wraps under an explicit key';
+
+is dispatch(GadgetsController, json-request('{"name":"Phone","secret":"hush"}')).body, 'Phone:none',
+  'keeps only the included attributes';
+
+is dispatch(TrinketsController, json-request('{"name":"Bead","secret":"hush"}')).body, 'Bead:none',
+  'drops the excluded attributes';
+
+done-testing;

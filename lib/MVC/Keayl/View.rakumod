@@ -42,9 +42,16 @@ method register-handler(Str:D $extension, $handler --> ::?CLASS) {
 }
 
 # Resolve a template name and format to a file by search-path then handler
-# precedence: {path}/{name}.{format}.{ext}, falling back to {path}/{name}.{ext}.
-method resolve(Str:D $name, Str:D $format --> IO::Path) {
+# precedence: {path}/{name}.{format}+{variant}.{ext}, {path}/{name}.{format}.{ext},
+# falling back to {path}/{name}.{ext}.
+method resolve(Str:D $name, Str:D $format, :$variant --> IO::Path) {
   for @!paths -> $path {
+    if $variant.defined {
+      for %!handlers.keys.sort -> $ext {
+        my $with-variant = $path.IO.add($name ~ '.' ~ $format ~ '+' ~ $variant ~ '.' ~ $ext);
+        return $with-variant if $with-variant.e;
+      }
+    }
     for %!handlers.keys.sort -> $ext {
       my $with-format = $path.IO.add($name ~ '.' ~ $format ~ '.' ~ $ext);
       return $with-format if $with-format.e;
@@ -78,10 +85,10 @@ method !compiled-for(IO::Path:D $file --> List) {
   ($compiled, $handler)
 }
 
-method render-template(Str:D $name, %locals, Str :$format, :$controller --> Str) {
+method render-template(Str:D $name, %locals, Str :$format, :$variant, :$controller --> Str) {
   my $lookup = self!lookup-name($name, $controller);
   my $fmt    = $format // $!default-format;
-  my $file   = self.resolve($lookup, $fmt);
+  my $file   = self.resolve($lookup, $fmt, :$variant);
 
   die 'template not found: ' ~ $lookup ~ '.' ~ $fmt unless $file.defined && $file.e;
 

@@ -1,0 +1,34 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+sub html-request(:$variant) {
+  my $request = MVC::Keayl::Request.new(:method<GET>, :path('/show'), :headers({ accept => 'text/html' }));
+  $request.set-variant($variant) if $variant.defined;
+  $request
+}
+
+# respond-to variant branching
+
+is VariantController.new(request => html-request(variant => 'phone')).dispatch('show').body, 'phone view',
+  'respond-to dispatches to the matching variant block';
+
+is VariantController.new(request => html-request(variant => 'tablet')).dispatch('show').body, 'default view',
+  'respond-to falls back to the any block for an unmatched variant';
+
+is VariantController.new(request => html-request).dispatch('show').body, 'default view',
+  'respond-to falls back to the any block when no variant is set';
+
+# variant-aware template lookup
+
+is VariantTemplateController.new(request => html-request(variant => 'phone'), view-renderer => StubRenderer.new).dispatch('show').body,
+  'template:show+phone', 'the request variant passes through to the renderer';
+
+is VariantTemplateController.new(request => html-request, view-renderer => StubRenderer.new).dispatch('show').body,
+  'template:show', 'a template renders without a variant suffix when none is set';
+
+done-testing;

@@ -39,6 +39,32 @@ method show {
 
 `/posts.json` forces JSON; `/posts` with `Accept: text/html` serves HTML.
 
+## Variants
+
+A variant selects a device-specific view of the same format. `request.variant`
+holds the variant, set explicitly or from a user-agent heuristic:
+
+```perl6
+self.request.set-variant('phone');
+self.request.set-variant(self.request.detect-variant);  # phone, tablet, or none
+```
+
+A format block in `respond-to` may be a map of variant names to blocks instead of
+a single block. The block for the current variant runs, falling back to `any`:
+
+```perl6
+self.respond-to([
+  html => {
+    phone => { self.render('show_phone') },
+    any   => { self.render('show') },
+  },
+]);
+```
+
+Variants also steer template lookup. When the variant is set, the renderer
+prefers a variant template before the plain one, so `phone` resolves
+`show.html+phone.haml` and falls back to `show.html.haml`.
+
 ## API controllers
 
 `MVC::Keayl::APIController` is a JSON-first controller. It needs no view renderer:

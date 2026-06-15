@@ -10,6 +10,7 @@ has     %.headers;
 has Str $!conn-scheme;
 has Str $!remote-address;
 has     $!body-source;
+has Str $!variant;
 
 has Bool $!body-read = False;
 has Str  $!body-cache;
@@ -116,6 +117,25 @@ method is-head(--> Bool)   { $!method eq 'HEAD' }
 
 method is-xhr(--> Bool) {
   (self.header('x-requested-with') // '').lc eq 'xmlhttprequest'
+}
+
+method variant(--> Str) {
+  $!variant
+}
+
+method set-variant($value --> ::?CLASS) {
+  $!variant = $value.defined ?? $value.Str !! Str;
+  self
+}
+
+method detect-variant(--> Str) {
+  my $agent = (self.header('user-agent') // '').lc;
+  return Str if $agent eq '';
+
+  return 'tablet' if $agent.contains('ipad') || ($agent.contains('android') && !$agent.contains('mobile'));
+  return 'phone'  if $agent.contains('iphone') || $agent.contains('mobile');
+
+  Str
 }
 
 method scheme(--> Str) {

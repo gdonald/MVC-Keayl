@@ -49,6 +49,13 @@ sub header-name(Str:D $key --> Str) {
   $key.split(/<[-_]>/).map(*.tc).join('-')
 }
 
+sub singularize(Str:D $word --> Str) {
+  return $word.subst(/ 'ies' $/, 'y') if $word.ends-with('ies');
+  return $word.subst(/ 'ses' $/, 's') if $word.ends-with('ses');
+  return $word.substr(0, *- 1)         if $word.ends-with('s');
+  $word
+}
+
 my %MIME-TYPES =
   html => 'text/html', htm => 'text/html', txt => 'text/plain',
   css => 'text/css', js => 'application/javascript', json => 'application/json',
@@ -105,10 +112,26 @@ my %helper-methods{Mu};
 my %controller-layouts{Mu};
 my %forgery-strategy{Mu};
 my %param-filters{Mu};
+my %wrap-config{Mu};
+my %renderers;
 
 method helper-method(*@names --> ::?CLASS) {
   (%helper-methods{self} //= []).append(@names.map(*.Str));
   self
+}
+
+method add-renderer(Str:D $name, &block --> ::?CLASS) {
+  %renderers{$name} = &block;
+  self
+}
+
+method add-flash-types(*@types --> ::?CLASS) {
+  register-flash-type($_.Str) for @types;
+  self
+}
+
+method variant(--> Str) {
+  $!request.defined ?? $!request.variant !! Str
 }
 
 method assign(Str:D $name, $value --> ::?CLASS) {
@@ -351,6 +374,8 @@ method dispatch(Str:D $action --> MVC::Keayl::Response) {
 
   $!current-action = $action;
 
+  self!apply-parameter-wrapping;
+
   with $*KEAYL-LOG-EVENT -> $event {
     $event.target = self.controller-path ~ '#' ~ $action;
     $event.set-params(self.filtered-params);
@@ -556,6 +581,73 @@ method authenticate-or-request-with-http-digest(Str:D $realm, &password-block) {
     || self.request-http-digest-authentication($realm)
 }
 
+method wrap-parameters($key?, :$format, :$include, :$exclude --> ::?CLASS) {
+  %wrap-config{self} = {
+    key     => ($key.defined ?? $key.Str !! Str),
+    formats => action-set($format // <json>),
+    include => ($include.defined ?? $include.list.map(*.Str).List !! Nil),
+    exclude => ($exclude.defined ?? $exclude.list.map(*.Str).List !! Nil),
+  };
+  self
+}
+
+method !wrap-config {
+  for self.^mro -> $class {
+    return %wrap-config{$class} if %wrap-config{$class}:exists;
+  }
+
+  Nil
+}
+
+method !default-wrap-key(--> Str) {
+  singularize(self.controller-path.split('/')[*-1])
+}
+
+method !request-content-format(--> Str) {
+  return Str without $!request;
+
+  my $content-type = ($!request.header('content-type') // '').split(';')[0].trim;
+  return Str if $content-type eq '';
+
+  mime-format($content-type)
+}
+
+method !wrap-attributes($config --> Hash) {
+  my %source = self.params.Hash;
+  my %result;
+
+  with $config<include> {
+    %result{$_} = %source{$_} for $_.list.grep({ %source{$_}:exists });
+  } orwith $config<exclude> {
+    my %excluded = $_.list.map(* => True);
+    %result{.key} = .value for %source.grep({ !%excluded{.key} });
+  } else {
+    %result = %source;
+  }
+
+  %result
+}
+
+method !apply-parameter-wrapping {
+  my $config = self!wrap-config;
+  return without $config;
+
+  my $format = self!request-content-format;
+  return without $format;
+  return unless $config<formats>{$format};
+
+  my $key = $config<key> // self!default-wrap-key;
+  return if self.params{$key}:exists;
+
+  my %wrapped = self!wrap-attributes($config);
+  return unless %wrapped;
+
+  my %merged = self.params.Hash;
+  %merged{$key} = %wrapped;
+
+  $!params = MVC::Keayl::Parameters.new(%merged);
+}
+
 method filter-parameters(*@names --> ::?CLASS) {
   (%param-filters{self} //= []).append(@names);
   self
@@ -577,9 +669,21 @@ method respond-to(@formats --> MVC::Keayl::Response) {
 
   return self.head(406) without $format;
 
-  @formats.first(*.key.Str eq $format).value.();
+  self!invoke-format-handler(@formats.first(*.key.Str eq $format).value);
 
   $!response
+}
+
+method !invoke-format-handler($handler) {
+  unless $handler ~~ Associative {
+    $handler();
+    return;
+  }
+
+  my $variant = self.variant;
+  my $block   = ($variant.defined ?? $handler{$variant} !! Nil) // $handler<any> // $handler{''};
+
+  $block() if $block.defined;
 }
 
 method request-format(--> Str) {
@@ -701,7 +805,7 @@ method !render-traced(Str:D $kind, Str:D $name, &block) {
 
 method render-template(Str:D $name, %locals --> Str) {
   die 'no view renderer configured' without $!view-renderer;
-  self!render-traced('template', $name, { $!view-renderer.render-template($name, %locals, controller => self) })
+  self!render-traced('template', $name, { $!view-renderer.render-template($name, %locals, controller => self, variant => self.variant) })
 }
 
 method render-inline(Str:D $template, %locals --> Str) {
@@ -776,10 +880,15 @@ method render(*@positional, *%options --> MVC::Keayl::Response) {
 
   my $*KEAYL-CONTENT = {};
 
+  my $renderer-key = %renderers.keys.sort.first({ %options{$_}:exists });
+
   my $default-ct;
   my $body;
 
-  if %options<json>:exists {
+  if $renderer-key.defined {
+    my $value = %options{$renderer-key}:delete;
+    $body = %renderers{$renderer-key}(self, $value, %options);
+  } elsif %options<json>:exists {
     $default-ct = 'application/json';
     $body = to-json(%options<json>, :!pretty);
   } elsif %options<plain>:exists {

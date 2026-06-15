@@ -241,3 +241,25 @@ describe 'MVC::Keayl::Request lazy body', {
     expect($calls).to.be(1);
   }
 }
+
+describe 'MVC::Keayl::Request variant', {
+  it 'is undefined by default', {
+    expect(MVC::Keayl::Request.new.variant.defined).to.be-falsy;
+  }
+
+  it 'returns a variant set explicitly', {
+    expect(MVC::Keayl::Request.new.set-variant('phone').variant).to.be('phone');
+  }
+
+  it 'detects a phone from a mobile user agent', {
+    expect(MVC::Keayl::Request.new(:headers({ 'User-Agent' => 'iPhone Mobile Safari' })).detect-variant).to.be('phone');
+  }
+
+  it 'detects a tablet from an iPad user agent', {
+    expect(MVC::Keayl::Request.new(:headers({ 'User-Agent' => 'iPad Safari' })).detect-variant).to.be('tablet');
+  }
+
+  it 'detects no variant for a desktop user agent', {
+    expect(MVC::Keayl::Request.new(:headers({ 'User-Agent' => 'Mozilla Macintosh' })).detect-variant.defined).to.be-falsy;
+  }
+}

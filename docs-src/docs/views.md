@@ -18,13 +18,16 @@ $view.render-template('users/show', { user => $user });
 handler extension, preferring a format-qualified file:
 
 ```
-app/views/users/show.html.haml      # users/show, format html
-app/views/users/show.haml           # format-less fallback
+app/views/users/show.html+phone.haml  # users/show, format html, variant phone
+app/views/users/show.html.haml        # users/show, format html
+app/views/users/show.haml             # format-less fallback
 ```
 
-The default format is `html`, overridable per call with `:format`. When the View
-is given a controller, a name with no `/` is resolved relative to the
-controller's path (`UsersController` resolves under `users/`).
+The default format is `html`, overridable per call with `:format`. A `:variant`
+prefers a variant-qualified file before the plain one, so `phone` resolves
+`show.html+phone.haml` and falls back to `show.html.haml`. When the View is given
+a controller, a name with no `/` is resolved relative to the controller's path
+(`UsersController` resolves under `users/`).
 
 ## Handlers
 

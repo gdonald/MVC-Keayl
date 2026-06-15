@@ -201,4 +201,20 @@ use MVC::Keayl::Request;
   is $calls, 1, 'subsequent body access is memoized';
 }
 
+# variant
+
+{
+  nok MVC::Keayl::Request.new.variant.defined, 'the variant is undefined by default';
+  is MVC::Keayl::Request.new.set-variant('phone').variant, 'phone', 'an explicitly set variant is returned';
+}
+
+{
+  is MVC::Keayl::Request.new(:headers({ 'User-Agent' => 'iPhone Mobile Safari' })).detect-variant, 'phone',
+    'a mobile user agent detects a phone variant';
+  is MVC::Keayl::Request.new(:headers({ 'User-Agent' => 'iPad Safari' })).detect-variant, 'tablet',
+    'an iPad user agent detects a tablet variant';
+  nok MVC::Keayl::Request.new(:headers({ 'User-Agent' => 'Mozilla Macintosh' })).detect-variant.defined,
+    'a desktop user agent detects no variant';
+}
+
 done-testing;

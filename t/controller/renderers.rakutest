@@ -1,0 +1,22 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Controller;
+use ControllerFixtures;
+
+# add-renderer
+
+{
+  my $response = ReportsController.new.dispatch('export');
+  is $response.body, "1,2\n3,4", 'add-renderer dispatches a registered render option to its handler';
+  is $response.content-type, 'text/csv', 'the renderer handler sets the content type';
+}
+
+# add-flash-types
+
+{
+  is NoticeController.new.dispatch('create').body, 'saved', 'add-flash-types exposes a registered flash type as a reader helper';
+}
+
+done-testing;
