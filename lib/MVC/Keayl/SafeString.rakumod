@@ -58,7 +58,7 @@ sub sanitize(Str() $html, :@tags = @default-tags, :@attributes = @default-attrib
 
   $clean ~~ s:g:i[ '<' (script | style) <-[>]>* '>' .*? '</' \s* $0 \s* '>' ] = '';
 
-  $clean ~~ s:g[ '<' ('/'?) (<[A..Za..z]> \w*) (<-[>]>*) '>' ] = sanitize-element(~$0, ~$1, ~$2, @tags, @attributes);
+  $clean ~~ s:g[ '<' ('/'?) (<[A..Za..z]> <[\w-]>*) (<-[>]>*) '>' ] = sanitize-element(~$0, ~$1, ~$2, @tags, @attributes);
 
   SafeString.new(string => $clean)
 }
@@ -69,7 +69,7 @@ sub sanitize-element(Str $slash, Str $name, Str $attrs, @tags, @attributes --> S
 
   my @kept;
 
-  for $attrs.match(/ (\w+) \s* '=' \s* (<['"]>) (.*?) $1 /, :g) -> $match {
+  for $attrs.match(/ (<[\w-]>+) \s* '=' \s* (<['"]>) (.*?) $1 /, :g) -> $match {
     my $attribute = $match[0].Str.lc;
     my $value     = $match[2].Str;
 

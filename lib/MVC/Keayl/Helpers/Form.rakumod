@@ -47,6 +47,29 @@ sub checkbox-checked($current, $checked-value --> Bool) {
   ~$current eq ~$checked-value
 }
 
+sub trix-value($value --> Str) {
+  return '' without $value;
+  return $value.to-trix-html.Str if $value.^can('to-trix-html');
+  ~$value
+}
+
+sub rich-text-area-markup(Str:D $name, Str:D $id, Str:D $value, %options --> SafeString) is export {
+  my %editor = %options;
+  my $input-id = $id ~ '_trix_input';
+
+  %editor<input> = $input-id;
+  %editor<class> = class-names(%editor<class> // '', 'trix-content');
+
+  my $hidden = tag('input', %( type => 'hidden', :$name, id => $input-id, value => $value ));
+  my $editor = content-tag('trix-editor', '', %editor);
+
+  safe-join([$hidden, $editor], "\n")
+}
+
+sub rich-text-area-tag(Str:D $name, $value?, %options? --> SafeString) is export {
+  rich-text-area-markup($name, $name, trix-value($value), %options // {})
+}
+
 class FormBuilder is export {
   has Str $.object-name;
   has     $.model;
@@ -174,6 +197,18 @@ class FormBuilder is export {
     my $value = %attrs<value>:exists ?? (%attrs<value>:delete) !! self.field-value($attribute);
 
     content-tag('textarea', ~($value // ''), %attrs)
+  }
+
+  method rich-text-area(Str:D $attribute, %options? --> SafeString) {
+    my %opts  = %options // {};
+    my $value = %opts<value>:exists ?? (%opts<value>:delete) !! self.field-value($attribute);
+
+    rich-text-area-markup(
+      self.field-name($attribute),
+      self.field-id($attribute),
+      trix-value($value),
+      %opts,
+    )
   }
 
   method check-box(Str:D $attribute, %options?, $checked-value = '1', $unchecked-value = '0' --> SafeString) {

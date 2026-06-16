@@ -1,0 +1,156 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::ActionText;
+use MVC::Keayl::ActionText::Repository;
+use MVC::Keayl::ActionText::RichTextable;
+use MVC::Keayl::Storage;
+use MVC::Keayl::Storage::Service;
+use MVC::Keayl::Storage::Attached;
+use MVC::Keayl::Helpers::Form;
+
+my $temp-counter = 0;
+
+sub temp-root(--> IO::Path) {
+  $*TMPDIR.add('keayl-action-text-' ~ $*PID ~ '-' ~ $temp-counter++)
+}
+
+sub cleanup(IO::Path $root) {
+  return unless $root.e;
+  for $root.dir -> $entry {
+    $entry.f ?? $entry.unlink !! cleanup($entry);
+  }
+  $root.rmdir;
+}
+
+class ActionTextArticle does RichTextable {
+  has $.id;
+}
+ActionTextArticle.has-rich-text('content');
+
+# sanitized content
+
+{
+  my $content = MVC::Keayl::ActionText::Content.from-html('<h1>Title</h1><script>evil()</script><b onclick="x()">bold</b>');
+
+  is $content.to-trix-html.Str, '<h1>Title</h1><b>bold</b>', 'from-html strips disallowed tags, scripts, and event attributes';
+  is $content.to-plain-text, 'Title bold', 'to-plain-text drops the markup';
+}
+
+{
+  my $content = MVC::Keayl::ActionText::Content.new(html => '');
+  ok $content.is-empty, 'blank content is empty';
+}
+
+# has-rich-text
+
+{
+  reset-rich-text;
+  my $article = ActionTextArticle.new(id => 1);
+
+  nok $article.content.is-present, 'a record with no rich text is not present';
+
+  $article.content.assign('<h1>Hello</h1><script>bad()</script>');
+
+  ok $article.content.is-present, 'assigning rich text makes it present';
+  is $article.content.to-html.Str, '<h1>Hello</h1>', 'the stored rich text renders its sanitized html';
+  is $article.content.to-plain-text, 'Hello', 'the stored rich text exposes plain text';
+
+  reset-rich-text;
+}
+
+{
+  reset-rich-text;
+  my $article = ActionTextArticle.new(id => 2);
+
+  $article.content.assign('<p>first</p>');
+  $article.content.assign('<p>second</p>');
+
+  is $article.content.to-html.Str, '<p>second</p>', 'reassigning replaces the rich text body';
+
+  reset-rich-text;
+}
+
+# undeclared rich text name
+
+{
+  my $article = ActionTextArticle.new(id => 3);
+  dies-ok { $article.headline }, 'an undeclared rich text name is a method-not-found error';
+}
+
+# embedded attachments
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $blob = MVC::Keayl::Storage::Blob.build('image-bytes', filename => 'photo.png', content-type => 'image/png');
+  storage-repository.create-blob($blob);
+
+  my $tag     = embed-tag($blob);
+  my $content = MVC::Keayl::ActionText::Content.from-html('<div>look</div>' ~ $tag);
+
+  is $content.attachment-sgids.elems, 1, 'the content tracks its embedded attachment';
+
+  my $rendered = $content.to-html.Str;
+  ok $rendered.contains('<figure class="attachment attachment--preview attachment--png">'), 'an image attachment renders a preview figure';
+  ok $rendered.contains('/keayl/blobs/proxy/'), 'an embedded attachment links to the proxy serving path';
+
+  reset-storage;
+  cleanup($root);
+}
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $blob = MVC::Keayl::Storage::Blob.build('pdf-bytes', filename => 'report.pdf', content-type => 'application/pdf');
+  storage-repository.create-blob($blob);
+
+  my $content = MVC::Keayl::ActionText::Content.from-html(embed-tag($blob));
+  my $rendered = $content.to-html.Str;
+
+  ok $rendered.contains('<figure class="attachment attachment--file">'), 'a non-image attachment renders a file figure';
+  ok $rendered.contains('report.pdf'), 'a file attachment shows its filename';
+
+  reset-storage;
+  cleanup($root);
+}
+
+{
+  reset-storage;
+  set-storage-service(DiskService.new(root => temp-root));
+
+  my $content = MVC::Keayl::ActionText::Content.from-html('<action-text-attachment sgid="bogus--00"></action-text-attachment>');
+  is $content.to-html.Str, '', 'an unresolvable attachment is dropped on render';
+
+  reset-storage;
+}
+
+# rich-text view helper
+
+{
+  my $out = rich-text('<p>hi</p><script>x()</script>').Str;
+  is $out, '<p>hi</p>', 'the rich-text helper sanitizes and renders a string';
+}
+
+# rich-text-area form helper
+
+{
+  my $out = FormBuilder.new(object-name => 'post').rich-text-area('body').Str;
+
+  ok $out.contains('<trix-editor'), 'rich-text-area emits a trix editor';
+  ok $out.contains('input="post_body_trix_input"'), 'the trix editor references the hidden input';
+  ok $out.contains('class="trix-content"'), 'the trix editor carries the trix-content class';
+  ok $out.contains('type="hidden"'), 'rich-text-area emits a hidden input for the value';
+  ok $out.contains('name="post[body]"'), 'the hidden input submits under the attribute name';
+}
+
+{
+  my $out = rich-text-area-tag('comment', '<p>existing</p>').Str;
+  ok $out.contains('value="&lt;p&gt;existing&lt;/p&gt;"'), 'the standalone tag escapes the current value into the hidden input';
+}
+
+done-testing;

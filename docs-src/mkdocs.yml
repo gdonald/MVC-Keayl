@@ -32,6 +32,7 @@ nav:
   - Background jobs: jobs.md
   - WebSockets: cable.md
   - Active Storage: active-storage.md
+  - Action Text: action-text.md
 theme:
   name: 'material'
 markdown_extensions:
