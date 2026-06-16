@@ -14,7 +14,7 @@
         <link rel="prev" href="../content-negotiation/">
       
       
-        <link rel="next" href="../application/">
+        <link rel="next" href="../live-streaming/">
       
       
         
@@ -817,10 +817,49 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cache-store" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cache store
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cache store">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backends
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fragment-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fragment caching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rate-limiting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate limiting
       
     </span>
   </a>
@@ -853,6 +892,33 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../live-streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live streaming & SSE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1073,6 +1139,60 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../active-storage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Active Storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../action-text/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Action Text
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1122,10 +1242,49 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cache-store" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cache store
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cache store">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backends
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fragment-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fragment caching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rate-limiting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate limiting
       
     </span>
   </a>
@@ -1204,16 +1363,83 @@ uncacheable:</p>
 <span class="nb">self</span>.<span class="n">expires-now</span>;                  <span class="c1"># Cache-Control: no-cache</span>
 <span class="nb">self</span>.<span class="n">expires-now</span>(<span class="n">no-store</span> =&gt; <span class="nb">True</span>); <span class="c1"># Cache-Control: no-store</span>
 </code></pre></div></td></tr></table></div>
+<h2 id="cache-store">Cache store<a class="headerlink" href="#cache-store" title="Permanent link">&para;</a></h2>
+<p><code>MVC::Keayl::Cache</code> provides a <code>Store</code> role with a low-level key-value API shared
+by every backend:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$store</span>.<span class="nb">write</span>(<span class="s">&#39;user/1&#39;</span>, <span class="nv">$user</span>, <span class="n">expires-in</span> =&gt; <span class="mi">300</span>);
+<span class="nv">$store</span>.<span class="nb">read</span>(<span class="s">&#39;user/1&#39;</span>);
+<span class="nv">$store</span>.<span class="n">exist</span>(<span class="s">&#39;user/1&#39;</span>);
+<span class="nv">$store</span>.<span class="n">delete</span>(<span class="s">&#39;user/1&#39;</span>);
+
+<span class="nv">$store</span>.<span class="n">fetch</span>(<span class="s">&#39;user/1&#39;</span>, { <span class="n">load-user</span>(<span class="mi">1</span>) }, <span class="n">expires-in</span> =&gt; <span class="mi">300</span>);
+</code></pre></div></td></tr></table></div>
+<p><code>fetch</code> returns a cached value or computes, stores, and returns it. <code>force</code>
+recomputes, <code>skip-nil</code> declines to store an undefined result, and
+<code>race-condition-ttl</code> serves the stale value to other readers while one recomputes
+an expired entry.</p>
+<p><code>increment</code> and <code>decrement</code> maintain counters, preserving an entry's expiry
+window across updates. <code>read-multi</code> and <code>write-multi</code> work on several keys at
+once, and <code>delete-matched</code> removes every key matching a string glob or a regex:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$store</span>.<span class="n">increment</span>(<span class="s">&#39;visits&#39;</span>, <span class="mi">1</span>, <span class="n">expires-in</span> =&gt; <span class="mi">3600</span>);
+<span class="nv">$store</span>.<span class="n">write-multi</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> });
+<span class="nv">$store</span>.<span class="n">read-multi</span>(<span class="s">&#39;a&#39;</span>, <span class="s">&#39;b&#39;</span>);
+<span class="nv">$store</span>.<span class="n">delete-matched</span>(<span class="s">&#39;user/*&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>Entries carry an optional <code>version</code>; a read with a mismatched <code>version</code> misses.
+A store can take a <code>namespace</code> that prefixes its keys and a <code>default-expires-in</code>
+applied when a write gives no expiry.</p>
+<h3 id="backends">Backends<a class="headerlink" href="#backends" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>MemoryStore</code> keeps entries in process, with an optional <code>max-entries</code> bound
+  that evicts the least recently used entry.</li>
+<li><code>FileStore</code> persists each entry under a <code>root</code> directory, surviving across
+  instances.</li>
+<li><code>NullStore</code> stores nothing, so <code>fetch</code> always recomputes. It is the no-op
+  backend for test and development.</li>
+<li><code>ExternalStore</code> delegates to an injected <code>client</code> shaped like a Redis or
+  Memcache driver (<code>get</code>, <code>set</code> with a <code>ttl</code>, <code>del</code>, <code>keys</code>), serializing each
+  entry through it.</li>
+</ul>
 <h2 id="fragment-caching">Fragment caching<a class="headerlink" href="#fragment-caching" title="Permanent link">&para;</a></h2>
-<p><code>MVC::Keayl::Cache</code> provides a <code>Store</code> role and an in-process <code>MemoryStore</code>. A
-store's <code>fetch</code> returns a cached value or computes and stores it. <code>cache-key</code>
-derives a key from parts (an object contributes its own <code>cache-key</code>), under a
-<code>views/</code> namespace, with an optional template <code>digest</code>:</p>
+<p>A store's <code>fetch</code> backs view fragment caching. <code>cache-key</code> derives a key from
+parts (an object contributes its own <code>cache-key</code>), under a <code>views/</code> namespace,
+with an optional template <code>digest</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">cache-key</span>(<span class="nv">$post</span>, <span class="n">digest</span> =&gt; <span class="n">template-digest</span>(<span class="nv">$source</span>));   <span class="c1"># views/posts/1-2021/&lt;digest&gt;</span>
 </code></pre></div></td></tr></table></div>
 <p>A view caches a fragment with <code>cache-fragment</code>, which computes the content once
-per key:</p>
+per key through its configured store:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$view</span>.<span class="n">cache-fragment</span>([<span class="nv">$post</span>], { <span class="n">render-the-fragment</span>() });
+</code></pre></div></td></tr></table></div>
+<h2 id="rate-limiting">Rate limiting<a class="headerlink" href="#rate-limiting" title="Permanent link">&para;</a></h2>
+<p><code>rate-limit</code> is a controller class method that caps how often a client may reach
+an action, backed by a cache store. It registers a before-action that counts
+requests per discriminator within a window and blocks once the count passes the
+limit:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">PostsController</span>.<span class="n">rate-limit</span>(<span class="nb">to</span> =&gt; <span class="mi">100</span>, <span class="n">within</span> =&gt; <span class="mi">60</span>);
+</code></pre></div></td></tr></table></div>
+<p>By default the discriminator is the request's remote IP and an over-limit request
+gets <code>429 Too Many Requests</code> with a <code>Retry-After</code> header set to the window. <code>by</code>
+supplies a custom discriminator and <code>with</code> a custom over-limit handler; <code>store</code>
+and <code>name</code> choose the backing store and the counter name:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">ApiController</span>.<span class="n">rate-limit</span>(
+  <span class="nb">to</span> =&gt; <span class="mi">1000</span>, <span class="n">within</span> =&gt; <span class="mi">3600</span>,
+  <span class="n">by</span>    =&gt; -&gt; <span class="nv">$controller</span> { <span class="nv">$controller</span>.<span class="n">api-key</span> },
+  <span class="k">with</span>  =&gt; -&gt; <span class="nv">$controller</span> { <span class="nv">$controller</span>.<span class="nb">head</span>(<span class="mi">503</span>) },
+  <span class="n">store</span> =&gt; <span class="nv">$cache</span>,
+);
 </code></pre></div></td></tr></table></div>
 <h2 id="streaming">Streaming<a class="headerlink" href="#streaming" title="Permanent link">&para;</a></h2>
 <p>A response body can be streamed instead of buffered. <code>stream</code> takes an iterable
@@ -1221,6 +1447,9 @@ of chunks (strings or blobs); <code>stream-chunks</code> yields them encoded, an
 <code>is-streaming</code> reports whether a stream is set, for an adapter to write chunked:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$response</span>.<span class="n">stream</span>(<span class="k">gather</span> { <span class="k">for</span> <span class="nv">@rows</span> { <span class="nb">take</span> <span class="n">row-html</span>(<span class="nv">$_</span>) } });
 </code></pre></div></td></tr></table></div>
+<p>This is the pull-based primitive: the whole sequence is known up front. For a
+push-based response, where an action writes chunks over time, see
+<a href="../live-streaming/">live streaming</a>.</p>
 <h2 id="range-requests">Range requests<a class="headerlink" href="#range-requests" title="Permanent link">&para;</a></h2>
 <p><code>send-file</code> honours a <code>Range</code> request header, responding <code>206 Partial Content</code>
 with a <code>Content-Range</code> header and the requested byte slice, and advertises

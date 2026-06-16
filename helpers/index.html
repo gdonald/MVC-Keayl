@@ -531,6 +531,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#script-time-and-feed-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Script, time, and feed tags
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -592,6 +603,34 @@
     <span class="md-ellipsis">
       
         Field helpers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Field helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#html5-typed-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTML5 typed inputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#select-and-option-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Select and option helpers
       
     </span>
   </a>
@@ -987,6 +1026,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../live-streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live streaming & SSE
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../application/" class="md-nav__link">
         
   
@@ -1196,6 +1262,60 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../active-storage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Active Storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../action-text/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Action Text
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1250,6 +1370,17 @@
     <span class="md-ellipsis">
       
         Class helper
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#script-time-and-feed-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Script, time, and feed tags
       
     </span>
   </a>
@@ -1317,6 +1448,34 @@
     <span class="md-ellipsis">
       
         Field helpers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Field helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#html5-typed-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTML5 typed inputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#select-and-option-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Select and option helpers
       
     </span>
   </a>
@@ -1462,6 +1621,34 @@ and <code>class-names</code> builds the same token list on its own:</p>
 <span class="n">class-names</span>([<span class="s">&#39;a&#39;</span>, <span class="s">&#39;b&#39;</span>], <span class="s">&#39;a&#39;</span>, <span class="s">&#39;c&#39;</span>);                           <span class="c1"># &quot;a b c&quot;</span>
 </code></pre></div></td></tr></table></div>
 <p>Falsy and duplicate tokens are dropped, and an empty class attribute is omitted.</p>
+<h3 id="script-time-and-feed-tags">Script, time, and feed tags<a class="headerlink" href="#script-time-and-feed-tags" title="Permanent link">&para;</a></h3>
+<p><code>javascript-tag</code> wraps script content (emitted unescaped) in a <code>&lt;script&gt;</code>
+element, <code>time-tag</code> builds a <code>&lt;time&gt;</code> element with a <code>datetime</code> attribute from a
+date, and <code>auto-discovery-link-tag</code> builds a feed <code>&lt;link&gt;</code> for <code>atom</code>, <code>rss</code>, or
+<code>json</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">javascript-tag</span>(<span class="s">&#39;alert(1)&#39;</span>);                  <span class="c1"># &lt;script&gt;alert(1)&lt;/script&gt;</span>
+<span class="n">time-tag</span>(<span class="nb">Date</span>.<span class="nb">new</span>(<span class="mi">2020</span>, <span class="mi">1</span>, <span class="mi">1</span>), <span class="s">&#39;New Year&#39;</span>);  <span class="c1"># &lt;time datetime=&quot;2020-01-01&quot;&gt;New Year&lt;/time&gt;</span>
+<span class="n">auto-discovery-link-tag</span>(<span class="s">&#39;atom&#39;</span>, <span class="s">&#39;/feed.atom&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p><code>atom-feed</code> builds an Atom feed document. The feed builder takes <code>title</code>,
+<code>updated</code>, and <code>id</code>, and <code>entry</code> yields an entry builder with <code>title</code>,
+<code>content</code>, <code>updated</code>, <code>author</code>, and <code>link</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">atom-feed</span>(<span class="n">url</span> =&gt; <span class="s">&#39;http://example.com&#39;</span>, <span class="n">content</span> =&gt; -&gt; <span class="nv">$feed</span> {
+  <span class="nv">$feed</span>.<span class="n">title</span>(<span class="s">&#39;Posts&#39;</span>);
+  <span class="nv">$feed</span>.<span class="n">entry</span>(<span class="nv">$post</span>, <span class="n">url</span> =&gt; <span class="s">&#39;/posts/1&#39;</span>, <span class="nb">block</span> =&gt; -&gt; <span class="nv">$entry</span> {
+    <span class="nv">$entry</span>.<span class="n">title</span>(<span class="nv">$post</span>.<span class="n">title</span>);
+    <span class="nv">$entry</span>.<span class="n">content</span>(<span class="nv">$post</span>.<span class="n">body</span>, <span class="nb">type</span> =&gt; <span class="s">&#39;html&#39;</span>);
+  });
+});
+</code></pre></div></td></tr></table></div>
 <h2 id="url-helpers">URL helpers<a class="headerlink" href="#url-helpers" title="Permanent link">&para;</a></h2>
 <p><code>url-for</code> turns a target into a URL string. It passes a string through and reads
 <code>path</code> from a hash. <code>link-to</code> builds an anchor, and <code>button-to</code> builds a small
@@ -1541,6 +1728,71 @@ names are scoped under the parent:</p>
   <span class="nv">$author</span>.<span class="n">text-field</span>(<span class="s">&#39;name&#39;</span>)   <span class="c1"># name=&quot;post[author][name]&quot;</span>
 });
 </code></pre></div></td></tr></table></div>
+<h4 id="html5-typed-inputs">HTML5 typed inputs<a class="headerlink" href="#html5-typed-inputs" title="Permanent link">&para;</a></h4>
+<p>The builder also has the HTML5 typed inputs, each setting its <code>type</code> and
+prefilling from the model like <code>text-field</code>: <code>email-field</code>, <code>url-field</code>,
+<code>telephone-field</code> (<code>type="tel"</code>), <code>number-field</code>, <code>range-field</code>, <code>search-field</code>,
+<code>color-field</code>, <code>date-field</code>, <code>time-field</code>, <code>datetime-field</code>
+(<code>type="datetime-local"</code>), <code>month-field</code>, and <code>week-field</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$form</span>.<span class="n">email-field</span>(<span class="s">&#39;email&#39;</span>);          <span class="c1"># type=&quot;email&quot;</span>
+<span class="nv">$form</span>.<span class="n">number-field</span>(<span class="s">&#39;rank&#39;</span>);          <span class="c1"># type=&quot;number&quot;</span>
+<span class="nv">$form</span>.<span class="n">date-field</span>(<span class="s">&#39;born&#39;</span>);            <span class="c1"># type=&quot;date&quot;</span>
+</code></pre></div></td></tr></table></div>
+<p><code>file-field</code> builds a file input. A <code>multiple</code> option appends <code>[]</code> to the name
+and adds the <code>multiple</code> attribute, and a <code>direct-upload</code> option sets a
+<code>data-direct-upload-url</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$form</span>.<span class="n">file-field</span>(<span class="s">&#39;avatar&#39;</span>);
+<span class="nv">$form</span>.<span class="n">file-field</span>(<span class="s">&#39;photos&#39;</span>, %( <span class="n">multiple</span> =&gt; <span class="nb">True</span> ));        <span class="c1"># name=&quot;post[photos][]&quot;</span>
+<span class="nv">$form</span>.<span class="n">file-field</span>(<span class="s">&#39;photo&#39;</span>, %( <span class="n">direct-upload</span> =&gt; <span class="s">&#39;/uploads&#39;</span> ));
+</code></pre></div></td></tr></table></div>
+<p>Outside a builder, <code>button-tag</code> builds a <code>&lt;button type="submit"&gt;</code>, and
+<code>image-submit-tag</code> builds an image submit input that resolves its source through
+<code>asset-path</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">button-tag</span>(<span class="s">&#39;Save&#39;</span>);                  <span class="c1"># &lt;button type=&quot;submit&quot;&gt;Save&lt;/button&gt;</span>
+<span class="n">image-submit-tag</span>(<span class="s">&#39;search.png&#39;</span>);      <span class="c1"># &lt;input alt=&quot;Search&quot; src=&quot;/assets/search.png&quot; type=&quot;image&quot; /&gt;</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="select-and-option-helpers">Select and option helpers<a class="headerlink" href="#select-and-option-helpers" title="Permanent link">&para;</a></h3>
+<p><code>options-for-select</code> builds <code>&lt;option&gt;</code> tags from a list of strings, label-value
+pairs, or <code>[label, value, attrs]</code> triples, marking the selected value.
+<code>options-from-collection-for-select</code> reads value and text methods off each
+member of a collection, and <code>grouped-options-for-select</code> wraps choices in
+<code>&lt;optgroup&gt;</code> elements. <code>select-tag</code> wraps option markup in a <code>&lt;select&gt;</code>, with
+<code>multiple</code>, <code>include-blank</code>, and <code>prompt</code> options:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">options-for-select</span>([<span class="s">&#39;a&#39;</span>, <span class="s">&#39;b&#39;</span>], <span class="s">&#39;b&#39;</span>);           <span class="c1"># &lt;option value=&quot;a&quot;&gt;a&lt;/option&gt;&lt;option selected value=&quot;b&quot;&gt;b&lt;/option&gt;</span>
+<span class="n">options-from-collection-for-select</span>(<span class="nv">@cities</span>, <span class="s">&#39;id&#39;</span>, <span class="s">&#39;name&#39;</span>, <span class="nv">$selected</span>);
+<span class="n">grouped-options-for-select</span>([<span class="s">&#39;North&#39;</span> =&gt; [<span class="s">&#39;NY&#39;</span>, <span class="s">&#39;NJ&#39;</span>]]);
+<span class="n">select-tag</span>(<span class="s">&#39;city&#39;</span>, <span class="n">options-for-select</span>([<span class="s">&#39;NY&#39;</span>, <span class="s">&#39;LA&#39;</span>]), %( <span class="n">include-blank</span> =&gt; <span class="nb">True</span> ));
+</code></pre></div></td></tr></table></div>
+<p><code>time-zone-select</code> builds a select from a built-in zone list. The date-part
+helpers <code>select-year</code>, <code>select-month</code> (with month names), <code>select-day</code>,
+<code>select-hour</code>, <code>select-minute</code>, and <code>select-second</code> build a single select each,
+and <code>select-date</code> and <code>select-time</code> combine them. They name their fields under a
+<code>date</code> prefix by default:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">select-year</span>(<span class="mi">2020</span>, <span class="n">start-year</span> =&gt; <span class="mi">2018</span>, <span class="n">end-year</span> =&gt; <span class="mi">2022</span>);
+<span class="n">select-month</span>(<span class="mi">3</span>);                     <span class="c1"># marks March</span>
+<span class="n">select-date</span>(<span class="nb">Date</span>.<span class="nb">new</span>(<span class="mi">2020</span>, <span class="mi">3</span>, <span class="mi">15</span>));  <span class="c1"># year, month, and day selects</span>
+</code></pre></div></td></tr></table></div>
+<p>On the builder, <code>collection-select</code>, <code>collection-radio-buttons</code>, and
+<code>collection-check-boxes</code> build a select, a radio set, or a checkbox set from a
+collection, reading value and text methods and marking the model value.
+<code>date-select</code>, <code>time-select</code>, and <code>datetime-select</code> build multiparameter selects
+(<code>post[born](1i)</code>, <code>(2i)</code>, <code>(3i)</code>) prefilled from a model date or time:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$form</span>.<span class="n">collection-select</span>(<span class="s">&#39;city-id&#39;</span>, <span class="nv">@cities</span>, <span class="s">&#39;id&#39;</span>, <span class="s">&#39;name&#39;</span>);
+<span class="nv">$form</span>.<span class="n">collection-check-boxes</span>(<span class="s">&#39;tag-ids&#39;</span>, <span class="nv">@tags</span>, <span class="s">&#39;id&#39;</span>, <span class="s">&#39;name&#39;</span>);
+<span class="nv">$form</span>.<span class="n">date-select</span>(<span class="s">&#39;born&#39;</span>);
+</code></pre></div></td></tr></table></div>
 <h3 id="model-awareness">Model awareness<a class="headerlink" href="#model-awareness" title="Permanent link">&para;</a></h3>
 <p>When the builder has a model, fields prefill from it (calling the
 attribute-named method), an explicit <code>value</code> overrides the model, and a field
@@ -1581,6 +1833,39 @@ and single newlines into <code>&lt;br /&gt;</code>, escaping the content:</p>
 <span class="n">pluralize</span>(<span class="mi">2</span>, <span class="s">&#39;person&#39;</span>);                               <span class="c1"># 2 people</span>
 <span class="n">simple-format</span>(<span class="s">&quot;Para one\n\nPara two&quot;</span>);                <span class="c1"># &lt;p&gt;Para one&lt;/p&gt;\n&lt;p&gt;Para two&lt;/p&gt;</span>
 </code></pre></div></td></tr></table></div>
+<p><code>highlight</code> wraps matches of one or more phrases (case-insensitively, keeping the
+original text) using a <code>highlighter</code> template where <code>\1</code> is the match, escaping
+the surrounding text. <code>excerpt</code> extracts a window of text around a phrase with
+omission markers, and <code>word-wrap</code> breaks lines at a width:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">highlight</span>(<span class="s">&#39;You searched for rails&#39;</span>, <span class="s">&#39;rails&#39;</span>);         <span class="c1"># You searched for &lt;mark&gt;rails&lt;/mark&gt;</span>
+<span class="n">excerpt</span>(<span class="s">&#39;This is a beautiful morning&#39;</span>, <span class="s">&#39;beautiful&#39;</span>, <span class="n">radius</span> =&gt; <span class="mi">5</span>);   <span class="c1"># ...is a beautiful morn...</span>
+<span class="n">word-wrap</span>(<span class="s">&#39;The quick brown fox&#39;</span>, <span class="n">line-width</span> =&gt; <span class="mi">10</span>);   <span class="c1"># &quot;The quick\nbrown fox&quot;</span>
+</code></pre></div></td></tr></table></div>
+<p><code>strip-tags</code> removes every tag, <code>strip-links</code> removes anchors but keeps their
+text, and <code>sanitize-css</code> drops style declarations whose values contain unsafe
+tokens (<code>javascript:</code>, <code>expression</code>, <code>@import</code>, <code>behavior</code>, <code>-moz-binding</code>):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">strip-tags</span>(<span class="s">&#39;&lt;p&gt;Hello &lt;b&gt;world&lt;/b&gt;&lt;/p&gt;&#39;</span>);              <span class="c1"># Hello world</span>
+<span class="n">strip-links</span>(<span class="s">&#39;Visit &lt;a href=&quot;/x&quot;&gt;here&lt;/a&gt; now&#39;</span>);       <span class="c1"># Visit here now</span>
+<span class="n">sanitize-css</span>(<span class="s">&#39;color: red; background: url(javascript:alert(1))&#39;</span>);   <span class="c1"># color: red</span>
+</code></pre></div></td></tr></table></div>
+<p><code>cycle</code> rotates through a set of values across calls (keyed by an optional
+<code>name</code>), <code>current-cycle</code> reports the last value, and <code>reset-cycle</code> restarts it.
+<code>capture</code> returns a block's output as a safe string, and <code>provide</code> accumulates
+content under a name for a layout <code>yield</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">cycle</span>(<span class="s">&#39;odd&#39;</span>, <span class="s">&#39;even&#39;</span>);     <span class="c1"># &quot;odd&quot;, then &quot;even&quot;, then &quot;odd&quot; on the next calls</span>
+<span class="n">current-cycle</span>;            <span class="c1"># the last value cycle returned</span>
+<span class="n">reset-cycle</span>;              <span class="c1"># the next cycle starts over</span>
+<span class="n">capture</span>(-&gt; { <span class="n">content-tag</span>(<span class="s">&#39;p&#39;</span>, <span class="s">&#39;hi&#39;</span>) });   <span class="c1"># &lt;p&gt;hi&lt;/p&gt;</span>
+<span class="n">provide</span>(<span class="s">&#39;head&#39;</span>, <span class="n">stylesheet-link-tag</span>(<span class="s">&#39;app&#39;</span>));
+</code></pre></div></td></tr></table></div>
 <h3 id="numbers">Numbers<a class="headerlink" href="#numbers" title="Permanent link">&para;</a></h3>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -1592,6 +1877,18 @@ and single newlines into <code>&lt;br /&gt;</code>, escaping the content:</p>
 </code></pre></div></td></tr></table></div>
 <p><code>number-to-currency</code> accepts <code>unit</code>, <code>precision</code>, <code>delimiter</code>, <code>separator</code>, and a
 <code>format</code> string (<code>%u</code> for the unit, <code>%n</code> for the number).</p>
+<p><code>number-to-phone</code> groups a phone number, with <code>area-code</code>, <code>delimiter</code>,
+<code>country-code</code>, and <code>extension</code> options. <code>number-to-human</code> scales a number to a
+word (Thousand, Million, Billion, Trillion, Quadrillion) at a significant-digit
+<code>precision</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">number-to-phone</span>(<span class="mi">1235551234</span>);                     <span class="c1"># 123-555-1234</span>
+<span class="n">number-to-phone</span>(<span class="mi">1235551234</span>, <span class="n">area-code</span> =&gt; <span class="nb">True</span>);  <span class="c1"># (123) 555-1234</span>
+<span class="n">number-to-human</span>(<span class="mi">1234</span>);                            <span class="c1"># 1.23 Thousand</span>
+<span class="n">number-to-human</span>(<span class="mi">12345678</span>);                        <span class="c1"># 12.3 Million</span>
+</code></pre></div></td></tr></table></div>
 <h3 id="date-and-time">Date and time<a class="headerlink" href="#date-and-time" title="Permanent link">&para;</a></h3>
 <p><code>distance-of-time-in-words</code> describes the gap between two times in words, with an
 optional <code>include-seconds</code> for finer detail under a minute. <code>time-ago-in-words</code>

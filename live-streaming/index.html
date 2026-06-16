@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/request/">
+        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/live-streaming/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../caching/">
       
       
-        <link rel="next" href="../response/">
+        <link rel="next" href="../application/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Request - MVC::Keayl</title>
+        <title>Live streaming & SSE - MVC::Keayl</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#request" class="md-skip">
+        <a href="#live-streaming-and-server-sent-events" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Request
+              Live streaming & SSE
             
           </span>
         </div>
@@ -246,37 +246,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Request
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../request/" class="md-nav__link">
         
   
   
@@ -292,114 +265,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#construction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Construction
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#method-and-verb-predicates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Method and verb predicates
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#path-and-query-string" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Path and query string
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#headers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Headers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#scheme-host-port-and-ssl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scheme, host, port, and SSL
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#remote-ip" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Remote IP
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#body" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Body
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#variant" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Variant
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -894,10 +759,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../live-streaming/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live streaming & SSE
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -913,6 +805,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#live-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live responses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-disconnects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client disconnects
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-sent-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server-Sent Events
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1214,10 +1159,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#construction" class="md-nav__link">
+  <a href="#live-responses" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Construction
+        Live responses
       
     </span>
   </a>
@@ -1225,10 +1170,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#method-and-verb-predicates" class="md-nav__link">
+  <a href="#client-disconnects" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Method and verb predicates
+        Client disconnects
       
     </span>
   </a>
@@ -1236,65 +1181,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#path-and-query-string" class="md-nav__link">
+  <a href="#server-sent-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Path and query string
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#headers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Headers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#scheme-host-port-and-ssl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scheme, host, port, and SSL
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#remote-ip" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Remote IP
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#body" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Body
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#variant" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Variant
+        Server-Sent Events
       
     </span>
   </a>
@@ -1321,11 +1211,40 @@
   
 
 
-<h1 id="request">Request<a class="headerlink" href="#request" title="Permanent link">&para;</a></h1>
-<p><code>MVC::Keayl::Request</code> is a read-only wrapper around a single incoming HTTP
-request. The server adapter builds one per request from the raw method, target,
-headers, body, connection scheme, and peer address; controllers and middleware
-then read from it through a small, stable accessor surface.</p>
+<h1 id="live-streaming-and-server-sent-events">Live streaming and Server-Sent Events<a class="headerlink" href="#live-streaming-and-server-sent-events" title="Permanent link">&para;</a></h1>
+<p>A live action writes a response body incrementally instead of returning it all at
+once. It is the push counterpart of the pull-based
+<a href="../caching/#streaming"><code>stream</code></a> primitive: the action runs on its own thread and
+writes chunks as they become available, while the adapter pulls them through and
+sends them to the client.</p>
+<h2 id="live-responses">Live responses<a class="headerlink" href="#live-responses" title="Permanent link">&para;</a></h2>
+<p><code>live</code> runs a block on a separate thread, passing the controller and a stream.
+The block writes chunks with <code>write</code> and the framework closes the stream when the
+block returns:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">method</span> <span class="n">numbers</span> {
+  <span class="nb">self</span>.<span class="nb">live</span>(-&gt; <span class="nv">$controller</span>, <span class="nv">$stream</span> {
+    <span class="k">for</span> <span class="mi">1</span><span class="o">..</span><span class="mi">10</span> -&gt; <span class="nv">$n</span> {
+      <span class="nv">$stream</span>.<span class="nb">write</span>(<span class="s">&quot;$n\n&quot;</span>);
+    }
+  });
+}
+</code></pre></div></td></tr></table></div>
+<p>The action returns as soon as the block is spawned, so the dispatch loop is not
+blocked while the body streams. The response reports <code>is-live</code> and <code>is-streaming</code>,
+and <code>live-promise</code> is the <code>Promise</code> that completes when the writer thread
+finishes.</p>
+<p>A string chunk is encoded as UTF-8; a <code>Blob</code> chunk is written through unchanged.
+Writing to a closed stream raises <code>X::MVC::Keayl::Live::StreamClosed</code>.</p>
+<h2 id="client-disconnects">Client disconnects<a class="headerlink" href="#client-disconnects" title="Permanent link">&para;</a></h2>
+<p>When the client goes away, the adapter calls <code>disconnect</code> on the stream. The next
+<code>write</code> then raises <code>X::MVC::Keayl::Live::ClientDisconnected</code>, which the action
+catches to release resources and stop producing:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1335,147 +1254,61 @@ then read from it through a small, stable accessor surface.</p>
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Request</span>;
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">method</span> <span class="n">feed</span> {
+  <span class="nb">self</span>.<span class="nb">live</span>(-&gt; <span class="nv">$controller</span>, <span class="nv">$stream</span> {
+    <span class="k">CATCH</span> {
+      <span class="k">when</span> <span class="o">X</span>::<span class="n">MVC::Keayl::Live::ClientDisconnected</span> { <span class="nb">cleanup</span>() }
+    }
 
-<span class="k">my</span> <span class="nv">$request</span> = <span class="n">MVC::Keayl::Request</span>.<span class="nb">new</span>(
-  :<span class="n">method</span><span class="s">&lt;POST&gt;</span>,
-  :<span class="n">target</span>(<span class="s">&#39;/users?role=admin&#39;</span>),
-  :<span class="n">headers</span>({ <span class="n">Host</span> =&gt; <span class="s">&#39;example.com:3000&#39;</span>, <span class="s">&#39;Content-Type&#39;</span> =&gt; <span class="s">&#39;application/json&#39;</span> }),
-  :<span class="n">scheme</span><span class="s">&lt;https&gt;</span>,
-  :<span class="n">remote-address</span>(<span class="s">&#39;203.0.113.5&#39;</span>),
-  :<span class="n">body</span>(<span class="s">&#39;{&quot;name&quot;:&quot;Ada&quot;}&#39;</span>),
-);
+    <span class="k">loop</span> {
+      <span class="nv">$stream</span>.<span class="nb">write</span>(<span class="n">next-chunk</span>());
+    }
+  });
+}
 </code></pre></div></td></tr></table></div>
-<h2 id="construction">Construction<a class="headerlink" href="#construction" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Named argument</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>:method</code></td>
-<td>HTTP verb; normalized to uppercase. Defaults to <code>GET</code>.</td>
-</tr>
-<tr>
-<td><code>:target</code></td>
-<td>Raw request target (<code>path?query</code>); split into <code>path</code> and <code>query-string</code>.</td>
-</tr>
-<tr>
-<td><code>:path</code></td>
-<td>Path, when not supplying <code>:target</code>. Defaults to <code>/</code>.</td>
-</tr>
-<tr>
-<td><code>:query-string</code></td>
-<td>Query string, when not supplying <code>:target</code>. Defaults to empty.</td>
-</tr>
-<tr>
-<td><code>:headers</code></td>
-<td>A hash of header names to values; names are matched case-insensitively.</td>
-</tr>
-<tr>
-<td><code>:scheme</code></td>
-<td>Connection scheme (<code>http</code> / <code>https</code>); normalized to lowercase.</td>
-</tr>
-<tr>
-<td><code>:remote-address</code></td>
-<td>The peer address reported by the connection.</td>
-</tr>
-<tr>
-<td><code>:body</code></td>
-<td>The request body: a <code>Str</code>, a <code>Blob</code>, or a <code>Callable</code> read lazily.</td>
-</tr>
-</tbody>
-</table>
-<p>Supplying <code>:target</code> takes precedence over <code>:path</code> / <code>:query-string</code>.</p>
-<h2 id="method-and-verb-predicates">Method and verb predicates<a class="headerlink" href="#method-and-verb-predicates" title="Permanent link">&para;</a></h2>
-<p><code>method</code> returns the normalized verb. Each predicate is an exact match:</p>
+<p><code>is-disconnected</code> reports whether the client has gone, and <code>disconnect</code> both marks
+the stream and closes it.</p>
+<h2 id="server-sent-events">Server-Sent Events<a class="headerlink" href="#server-sent-events" title="Permanent link">&para;</a></h2>
+<p><code>sse</code> wraps the live stream in an SSE writer. It sets the <code>text/event-stream</code>
+content type and a <code>no-cache</code> directive, then passes the controller and an SSE
+writer to the block:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$request</span>.<span class="k">method</span>;      <span class="c1"># &#39;POST&#39;</span>
-
-<span class="nv">$request</span>.<span class="n">is-get</span>;      <span class="c1"># False</span>
-<span class="nv">$request</span>.<span class="n">is-post</span>;     <span class="c1"># True</span>
-<span class="nv">$request</span>.<span class="n">is-put</span>;
-<span class="nv">$request</span>.<span class="n">is-patch</span>;
-<span class="nv">$request</span>.<span class="n">is-delete</span>;
-<span class="nv">$request</span>.<span class="n">is-head</span>;
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">method</span> <span class="n">events</span> {
+  <span class="nb">self</span>.<span class="n">sse</span>(-&gt; <span class="nv">$controller</span>, <span class="nv">$sse</span> {
+    <span class="nv">$sse</span>.<span class="nb">write</span>(<span class="s">&#39;hello&#39;</span>, <span class="n">event</span> =&gt; <span class="s">&#39;greeting&#39;</span>);
+    <span class="nv">$sse</span>.<span class="nb">write</span>(<span class="s">&#39;world&#39;</span>);
+  });
+}
 </code></pre></div></td></tr></table></div>
-<h2 id="path-and-query-string">Path and query string<a class="headerlink" href="#path-and-query-string" title="Permanent link">&para;</a></h2>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$request</span>.<span class="nb">path</span>;          <span class="c1"># &#39;/users&#39;</span>
-<span class="nv">$request</span>.<span class="n">query-string</span>;  <span class="c1"># &#39;role=admin&#39;</span>
-</code></pre></div></td></tr></table></div>
-<p><code>query-params</code> parses the query string on first access (and memoizes it).
-Values are percent- and plus-decoded, and repeated keys collect into an ordered
-array:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1"># /search?q=a%20b&amp;tag=x&amp;tag=y</span>
-<span class="nv">$request</span>.<span class="n">query-params</span>;     <span class="c1"># { q =&gt; &#39;a b&#39;, tag =&gt; [&#39;x&#39;, &#39;y&#39;] }</span>
-</code></pre></div></td></tr></table></div>
-<h2 id="headers">Headers<a class="headerlink" href="#headers" title="Permanent link">&para;</a></h2>
-<p>Header lookups are case-insensitive, and multi-value headers are joined with
-<code>,</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$request</span>.<span class="n">header</span>(<span class="s">&#39;content-type&#39;</span>);   <span class="c1"># &#39;application/json&#39;</span>
-<span class="nv">$request</span>.<span class="n">has-header</span>(<span class="s">&#39;Host&#39;</span>);       <span class="c1"># True</span>
-<span class="nv">$request</span>.<span class="n">has-header</span>(<span class="s">&#39;x-missing&#39;</span>);  <span class="c1"># False</span>
-</code></pre></div></td></tr></table></div>
-<p><code>is-xhr</code> reports an AJAX request (<code>X-Requested-With: XMLHttpRequest</code>):</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$request</span>.<span class="n">is-xhr</span>;   <span class="c1"># True when the header is present</span>
-</code></pre></div></td></tr></table></div>
-<h2 id="scheme-host-port-and-ssl">Scheme, host, port, and SSL<a class="headerlink" href="#scheme-host-port-and-ssl" title="Permanent link">&para;</a></h2>
-<p>These derive from the connection and from proxy headers, so they are correct
-behind a reverse proxy:</p>
+<p><code>write</code> emits one event frame. <code>event</code>, <code>id</code>, and <code>retry</code> precede the data, and a
+multiline payload is split across <code>data:</code> fields:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$request</span>.<span class="n">scheme</span>;     <span class="c1"># &#39;https&#39;  (X-Forwarded-Proto overrides the connection scheme)</span>
-<span class="nv">$request</span>.<span class="n">is-ssl</span>;     <span class="c1"># True when the scheme is https</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>event: greeting
+data: hello
 
-<span class="nv">$request</span>.<span class="n">host</span>;       <span class="c1"># &#39;example.com&#39;  (X-Forwarded-Host overrides Host; port stripped)</span>
-<span class="nv">$request</span>.<span class="n">port</span>;       <span class="c1"># 3000</span>
+data: world
 </code></pre></div></td></tr></table></div>
-<p><code>port</code> is resolved in order: an explicit port on the host header, then
-<code>X-Forwarded-Port</code>, then the scheme default (<code>443</code> for https, <code>80</code> for http).</p>
-<h2 id="remote-ip">Remote IP<a class="headerlink" href="#remote-ip" title="Permanent link">&para;</a></h2>
-<p><code>remote-ip</code> prefers the first entry of <code>X-Forwarded-For</code> (the originating
-client) and falls back to the connection's peer address:</p>
+<p>Pass defaults to <code>sse</code> to apply them to every frame; a per-write option overrides
+the default:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1"># X-Forwarded-For: 203.0.113.5, 10.0.0.1</span>
-<span class="nv">$request</span>.<span class="n">remote-ip</span>;   <span class="c1"># &#39;203.0.113.5&#39;</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">sse</span>(-&gt; <span class="nv">$controller</span>, <span class="nv">$sse</span> {
+  <span class="nv">$sse</span>.<span class="nb">write</span>(<span class="s">&#39;tick&#39;</span>);                 <span class="c1"># retry: 5000 applied</span>
+  <span class="nv">$sse</span>.<span class="nb">write</span>(<span class="s">&#39;pong&#39;</span>, <span class="n">retry</span> =&gt; <span class="mi">1000</span>);  <span class="c1"># overridden for this frame</span>
+}, <span class="n">retry</span> =&gt; <span class="mi">5000</span>);
 </code></pre></div></td></tr></table></div>
-<h2 id="body">Body<a class="headerlink" href="#body" title="Permanent link">&para;</a></h2>
-<p>The body is read lazily. A <code>Callable</code> source is invoked only on the first call
-to <code>body</code>, and the result is memoized. A <code>Blob</code> is decoded as UTF-8, and a
-missing body reads as the empty string:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$request</span>.<span class="n">body</span>;   <span class="c1"># &#39;{&quot;name&quot;:&quot;Ada&quot;}&#39;</span>
+<p><code>comment</code> writes an SSE comment line (<code>: text</code>), which serves as a heartbeat to
+keep an idle connection alive without delivering an event:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$sse</span>.<span class="nb">comment</span>(<span class="s">&#39;keep-alive&#39;</span>);
 </code></pre></div></td></tr></table></div>
-<p>Reading the raw body never consumes or parses it. Structured parameter parsing
-(form bodies, JSON, multipart) is layered on top by the controller.</p>
-<h2 id="variant">Variant<a class="headerlink" href="#variant" title="Permanent link">&para;</a></h2>
-<p>A variant marks a device-specific view selection. It is undefined until set, and
-<code>set-variant</code> assigns it:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$request</span>.<span class="n">set-variant</span>(<span class="s">&#39;phone&#39;</span>);
-<span class="nv">$request</span>.<span class="n">variant</span>;   <span class="c1"># &#39;phone&#39;</span>
-</code></pre></div></td></tr></table></div>
-<p><code>detect-variant</code> reads the <code>User-Agent</code> header and returns <code>phone</code> for a mobile
-agent, <code>tablet</code> for an iPad-style agent, or an undefined value otherwise. Wire it
-in by hand when a variant should follow the device:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$request</span>.<span class="n">set-variant</span>(<span class="nv">$request</span>.<span class="n">detect-variant</span>);
-</code></pre></div></td></tr></table></div>
-<p>The controller uses the variant to branch <code>respond-to</code> blocks and to prefer a
-variant template such as <code>show.html+phone.haml</code>.</p>
 
 
 
