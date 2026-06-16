@@ -1,0 +1,137 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use JSON::Fast;
+use MVC::Keayl::Request;
+use MVC::Keayl::Parameters;
+use MVC::Keayl::Storage;
+use MVC::Keayl::Storage::Service;
+use MVC::Keayl::Storage::Attached;
+use MVC::Keayl::Storage::Variant;
+use MVC::Keayl::Storage::Serving;
+
+my $temp-counter = 0;
+
+sub temp-root(--> IO::Path) {
+  $*TMPDIR.add('keayl-variant-' ~ $*PID ~ '-' ~ $temp-counter++)
+}
+
+sub cleanup(IO::Path $root) {
+  return unless $root.e;
+  for $root.dir -> $entry {
+    $entry.f ?? $entry.unlink !! cleanup($entry);
+  }
+  $root.rmdir;
+}
+
+sub params(%data) {
+  MVC::Keayl::Parameters.new(%data)
+}
+
+class StoragePhoto does Attachable {
+  has $.id;
+}
+StoragePhoto.has-one-attached('image');
+
+# variant keys
+
+{
+  my $blob = MVC::Keayl::Storage::Blob.build('image-bytes', filename => 'a.png', content-type => 'image/png');
+  $blob.id = 1;
+
+  my $small = MVC::Keayl::Storage::Variant::Variant.new(blob => $blob, transformations => %( resize => '100x100' ));
+  my $large = MVC::Keayl::Storage::Variant::Variant.new(blob => $blob, transformations => %( resize => '500x500' ));
+
+  ok $small.key.starts-with($blob.key ~ '/variants/'), 'a variant key is namespaced under the source blob';
+  isnt $small.key, $large.key, 'different transformations produce different variant keys';
+  is $small.key, MVC::Keayl::Storage::Variant::Variant.new(blob => $blob, transformations => %( resize => '100x100' )).key,
+    'the same transformations produce a stable variant key';
+}
+
+# identity transform round-trips through the service
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $photo = StoragePhoto.new(id => 1);
+  $photo.image.attach(%( io => 'original', filename => 'p.png', content-type => 'image/png' ));
+
+  my $variant = $photo.image.variant(resize => '50x50');
+
+  nok $variant.is-processed, 'a variant is not processed until requested';
+  is $variant.download.decode, 'original', 'processing a variant transforms and stores it';
+  ok $variant.is-processed, 'a processed variant is cached in the service';
+
+  reset-storage;
+  cleanup($root);
+}
+
+# pluggable transformer
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+  set-storage-transformer(MVC::Keayl::Storage::Variant::CallableTransformer.new(
+    block => sub ($bytes, %transformations) { ('[' ~ %transformations<resize> ~ ']' ~ $bytes.decode).encode('utf-8') },
+  ));
+
+  my $photo = StoragePhoto.new(id => 2);
+  $photo.image.attach(%( io => 'pixels', filename => 'q.png', content-type => 'image/png' ));
+
+  my $variant = $photo.image.variant(resize => '10x10');
+  is $variant.download.decode, '[10x10]pixels', 'a pluggable transformer drives the variant bytes';
+
+  reset-storage;
+  cleanup($root);
+}
+
+# direct upload endpoint
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $response = MVC::Keayl::Storage::Serving::DirectUploadsController.new(
+    params => params({ blob => { filename => 'upload.txt', content-type => 'text/plain', byte-size => 5, checksum => 'abc' } }),
+  ).dispatch('create');
+
+  is $response.status, 201, 'the direct-upload endpoint creates the blob record';
+
+  my %payload = from-json($response.body);
+  ok %payload<signed-id>.chars > 0, 'the direct-upload response returns a signed blob id';
+  ok %payload<direct-upload><url>.starts-with('/keayl/disk/'), 'the direct-upload response returns an upload url';
+  is %payload<direct-upload><headers><Content-Type>, 'text/plain', 'the direct-upload response echoes the content type header';
+
+  reset-storage;
+  cleanup($root);
+}
+
+# direct upload receives bytes
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $blob = MVC::Keayl::Storage::Blob.build('', filename => 'late.txt', content-type => 'text/plain');
+  storage-repository.create-blob($blob);
+  my $token = storage-verifier.generate($blob.key, purpose => 'upload', expires-in => 300);
+
+  my $request  = MVC::Keayl::Request.new(method => 'PUT', body => 'uploaded-content');
+  my $response = MVC::Keayl::Storage::Serving::DiskController.new(
+    :$request,
+    params => params({ token => $token }),
+  ).dispatch('update');
+
+  is $response.status, 204, 'the disk controller acknowledges the upload';
+  is storage-service.download($blob.key).decode, 'uploaded-content', 'the disk controller stores the uploaded bytes';
+
+  reset-storage;
+  cleanup($root);
+}
+
+done-testing;

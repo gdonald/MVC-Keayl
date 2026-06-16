@@ -1,0 +1,151 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Parameters;
+use MVC::Keayl::Storage;
+use MVC::Keayl::Storage::Service;
+use MVC::Keayl::Storage::Attached;
+use MVC::Keayl::Storage::Serving;
+
+my $temp-counter = 0;
+
+sub temp-root(--> IO::Path) {
+  $*TMPDIR.add('keayl-serving-' ~ $*PID ~ '-' ~ $temp-counter++)
+}
+
+sub cleanup(IO::Path $root) {
+  return unless $root.e;
+  for $root.dir -> $entry {
+    $entry.f ?? $entry.unlink !! cleanup($entry);
+  }
+  $root.rmdir;
+}
+
+sub make-blob(Str $body, Str $filename, Str $content-type) {
+  my $blob = MVC::Keayl::Storage::Blob.build($body, :$filename, :$content-type);
+  storage-repository.create-blob($blob);
+  storage-service.upload($blob.key, $body);
+  $blob
+}
+
+sub params(%data) {
+  MVC::Keayl::Parameters.new(%data)
+}
+
+# signed serving paths
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $blob = make-blob('content', 'file.txt', 'text/plain');
+
+  my $redirect = blob-serving-path($blob);
+  my $proxy    = blob-serving-path($blob, :proxy);
+
+  ok $redirect.starts-with('/keayl/blobs/redirect/'), 'a redirect path uses the redirect route';
+  ok $proxy.starts-with('/keayl/blobs/proxy/'), 'a proxy path uses the proxy route';
+  ok $redirect.ends-with('/file.txt'), 'the serving path ends with the filename';
+
+  reset-storage;
+  cleanup($root);
+}
+
+# redirect controller
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $blob   = make-blob('redirect-me', 'r.txt', 'text/plain');
+  my $signed = storage-verifier.generate($blob.id, purpose => 'blob');
+
+  my $response = MVC::Keayl::Storage::Serving::RedirectController.new(
+    params => params({ signed-id => $signed }),
+  ).dispatch('show');
+
+  is $response.status, 302, 'the redirect controller issues a redirect';
+  is $response.header('Location'), storage-service.url($blob.key), 'the redirect controller points at the service url';
+
+  reset-storage;
+  cleanup($root);
+}
+
+{
+  reset-storage;
+  set-storage-service(DiskService.new(root => temp-root));
+
+  my $response = MVC::Keayl::Storage::Serving::RedirectController.new(
+    params => params({ signed-id => 'tampered--00' }),
+  ).dispatch('show');
+
+  is $response.status, 404, 'a tampered signed id is not found';
+
+  reset-storage;
+}
+
+# proxy controller
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $blob   = make-blob('proxy-bytes', 'p.png', 'image/png');
+  my $signed = storage-verifier.generate($blob.id, purpose => 'blob');
+
+  my $response = MVC::Keayl::Storage::Serving::ProxyController.new(
+    params => params({ signed-id => $signed }),
+  ).dispatch('show');
+
+  is $response.body, 'proxy-bytes', 'the proxy controller streams the blob bytes';
+  is $response.header('content-type'), 'image/png', 'the proxy controller sets the blob content type';
+  is $response.header('Content-Disposition'), 'inline; filename="p.png"', 'the proxy controller defaults to inline disposition';
+
+  reset-storage;
+  cleanup($root);
+}
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $blob   = make-blob('attach-me', 'd.txt', 'text/plain');
+  my $signed = storage-verifier.generate($blob.id, purpose => 'blob');
+
+  my $response = MVC::Keayl::Storage::Serving::ProxyController.new(
+    params => params({ signed-id => $signed, disposition => 'attachment' }),
+  ).dispatch('show');
+
+  is $response.header('Content-Disposition'), 'attachment; filename="d.txt"', 'the proxy controller honours an attachment disposition';
+
+  reset-storage;
+  cleanup($root);
+}
+
+# expiring signed urls
+
+{
+  reset-storage;
+  my $root = temp-root;
+  my $time = 1000;
+  set-storage-service(DiskService.new(:$root));
+
+  my $blob     = make-blob('expiring', 'e.txt', 'text/plain');
+  my $verifier = MVC::Keayl::Storage::Verifier.new(secret => 'keayl-storage', clock => sub { $time });
+  my $signed   = $verifier.generate($blob.id, purpose => 'blob', expires-in => 60);
+
+  is $verifier.verify($signed, purpose => 'blob'), $blob.id, 'a signed url verifies before expiry';
+
+  $time = 1100;
+  nok $verifier.verify($signed, purpose => 'blob').defined, 'a signed url stops verifying after expiry';
+
+  reset-storage;
+  cleanup($root);
+}
+
+done-testing;

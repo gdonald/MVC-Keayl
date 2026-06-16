@@ -1,0 +1,212 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Storage;
+use MVC::Keayl::Storage::Service;
+use MVC::Keayl::Storage::Repository;
+use MVC::Keayl::Storage::Attached;
+
+my $temp-counter = 0;
+
+sub temp-root(--> IO::Path) {
+  $*TMPDIR.add('keayl-storage-' ~ $*PID ~ '-' ~ $temp-counter++)
+}
+
+sub cleanup(IO::Path $root) {
+  return unless $root.e;
+  for $root.dir -> $entry {
+    $entry.f ?? $entry.unlink !! cleanup($entry);
+  }
+  $root.rmdir;
+}
+
+class StorageUser does Attachable {
+  has $.id;
+}
+StorageUser.has-one-attached('avatar');
+StorageUser.has-many-attached('documents');
+
+# blob records
+
+{
+  my $blob = MVC::Keayl::Storage::Blob.build('hello world', filename => 'greeting.txt', content-type => 'text/plain');
+
+  is $blob.byte-size, 11, 'a built blob records its byte size';
+  is $blob.checksum, checksum-for('hello world'), 'a built blob computes a checksum';
+  is $blob.extension, 'txt', 'a blob derives its extension from the filename';
+  nok $blob.is-image, 'a text blob is not an image';
+  ok $blob.key.chars > 0, 'a built blob gets a storage key';
+}
+
+{
+  my $blob = MVC::Keayl::Storage::Blob.build('x', filename => 'pic.png', content-type => 'image/png');
+  ok $blob.is-image, 'an image blob reports being an image';
+}
+
+# disk service
+
+{
+  my $root    = temp-root;
+  my $service = DiskService.new(:$root);
+
+  $service.upload('abcdef12', 'payload');
+
+  ok $service.exist('abcdef12'), 'the disk service reports an uploaded key as existing';
+  is $service.download('abcdef12').decode, 'payload', 'the disk service downloads what it uploaded';
+  nok $service.exist('missing0').so, 'the disk service reports a missing key as absent';
+
+  $service.delete('abcdef12');
+  nok $service.exist('abcdef12'), 'the disk service deletes a key';
+
+  cleanup($root);
+}
+
+# external service
+
+{
+  my class FakeClient {
+    has %.store;
+    method upload($key, $data, *%) { %!store{$key} = $data }
+    method download($key)          { %!store{$key} }
+    method delete($key)            { %!store{$key}:delete }
+    method exist($key)             { %!store{$key}:exists }
+    method url($key, *%)           { "https://cdn.test/$key" }
+  }
+
+  my $service = ExternalService.new(client => FakeClient.new);
+  $service.upload('k1', 'data');
+
+  ok $service.exist('k1'), 'the external service round-trips existence through the client';
+  is $service.download('k1').decode, 'data', 'the external service downloads through the client';
+  is $service.url('k1'), 'https://cdn.test/k1', 'the external service builds a url through the client';
+}
+
+# mirror service
+
+{
+  my $primary-root = temp-root;
+  my $mirror-root  = temp-root;
+  my $primary = DiskService.new(root => $primary-root);
+  my $mirror  = DiskService.new(root => $mirror-root);
+
+  my $service = MirrorService.new(:$primary, mirrors => [$mirror]);
+  $service.upload('deadbeef', 'replicated');
+
+  ok $primary.exist('deadbeef'), 'the mirror service writes to the primary';
+  ok $mirror.exist('deadbeef'), 'the mirror service writes to every mirror';
+  is $service.download('deadbeef').decode, 'replicated', 'the mirror service reads from the primary';
+
+  $service.delete('deadbeef');
+  nok $mirror.exist('deadbeef'), 'the mirror service deletes from every mirror';
+
+  cleanup($primary-root);
+  cleanup($mirror-root);
+}
+
+# has-one-attached
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $user = StorageUser.new(id => 1);
+  nok $user.avatar.is-attached, 'a fresh record has no attachment';
+
+  $user.avatar.attach(%( io => 'avatar-bytes', filename => 'me.png', content-type => 'image/png' ));
+
+  ok $user.avatar.is-attached, 'attaching links a blob to the record';
+  is $user.avatar.filename, 'me.png', 'the attachment exposes the blob filename';
+  is $user.avatar.download.decode, 'avatar-bytes', 'the attachment downloads the uploaded bytes';
+
+  reset-storage;
+  cleanup($root);
+}
+
+# attach by signed blob id
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+  my $repository = storage-repository;
+
+  my $blob = MVC::Keayl::Storage::Blob.build('shared', filename => 'doc.txt', content-type => 'text/plain');
+  $repository.create-blob($blob);
+  my $signed = storage-verifier.generate($blob.id, purpose => 'blob');
+
+  my $user = StorageUser.new(id => 7);
+  $user.avatar.attach($signed);
+
+  is $user.avatar.blob.id, $blob.id, 'attaching a signed blob id links the existing blob';
+
+  reset-storage;
+  cleanup($root);
+}
+
+# replacing a one-attachment
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $user = StorageUser.new(id => 2);
+  $user.avatar.attach(%( io => 'first', filename => 'a.txt' ));
+  $user.avatar.attach(%( io => 'second', filename => 'b.txt' ));
+
+  is $user.avatar.filename, 'b.txt', 'attaching again replaces the single attachment';
+
+  reset-storage;
+  cleanup($root);
+}
+
+# detach and purge
+
+{
+  reset-storage;
+  my $root = temp-root;
+  my $service = DiskService.new(:$root);
+  set-storage-service($service);
+
+  my $user = StorageUser.new(id => 3);
+  $user.avatar.attach(%( io => 'gone', filename => 'g.txt' ));
+  my $key = $user.avatar.blob.key;
+
+  $user.avatar.purge;
+
+  nok $user.avatar.is-attached, 'purge unlinks the attachment';
+  nok $service.exist($key), 'purge deletes the blob from the service';
+
+  reset-storage;
+  cleanup($root);
+}
+
+# has-many-attached
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+
+  my $user = StorageUser.new(id => 4);
+  $user.documents.attach(
+    %( io => 'one', filename => '1.txt' ),
+    %( io => 'two', filename => '2.txt' ),
+  );
+
+  is $user.documents.elems, 2, 'has-many-attached records every attachment';
+  is $user.documents.blobs.map(*.filename).sort.join(','), '1.txt,2.txt', 'has-many exposes each blob';
+
+  reset-storage;
+  cleanup($root);
+}
+
+# undeclared attachment
+
+{
+  my $user = StorageUser.new(id => 5);
+  dies-ok { $user.nonexistent }, 'an undeclared attachment name is a method-not-found error';
+}
+
+done-testing;

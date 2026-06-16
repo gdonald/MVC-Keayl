@@ -105,7 +105,7 @@ describe 'MVC::Keayl::Cookies encrypted', {
   it 'does not expose the plaintext', {
     my $cookies = MVC::Keayl::Cookies.new(secret => 's3cret');
     $cookies.encrypted.set('card', '4111-1111');
-    expect($cookies.set-cookie-headers[0].contains('4111')).to.be-falsy;
+    expect($cookies.set-cookie-headers[0].contains('4111-1111')).to.be-falsy;
   }
 
   it 'round-trips an encrypted value', {

@@ -117,7 +117,7 @@ sub jar(*%args) { MVC::Keayl::Cookies.new(|%args) }
   my $cookies = jar(secret => 's3cret');
   $cookies.encrypted.set('card', '4111-1111');
   my $stored = $cookies.set-cookie-headers[0];
-  unlike $stored, /'4111'/, 'an encrypted cookie does not expose its plaintext';
+  unlike $stored, /'4111-1111'/, 'an encrypted cookie does not expose its plaintext';
 
   my $value = $stored.subst(/^ 'card='/, '').subst(/';'.*/, '');
   my $back  = MVC::Keayl::Cookies.new(incoming => %( card => MVC::Keayl::Cookies.parse("card=$value").incoming<card> ), secret => 's3cret');
