@@ -33,6 +33,7 @@ nav:
   - WebSockets: cable.md
   - Active Storage: active-storage.md
   - Action Text: action-text.md
+  - Action Mailbox: action-mailbox.md
 theme:
   name: 'material'
 markdown_extensions:

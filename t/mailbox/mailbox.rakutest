@@ -1,0 +1,221 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Mailbox;
+use MVC::Keayl::Mailbox::Router;
+use MVC::Keayl::Mailbox::Ingress;
+
+my $raw = qq:to/EMAIL/.trim;
+From: Alice <alice\@example.com>
+To: Support <support\@example.com>, help\@example.com
+Cc: watcher\@example.com
+Subject: Need help with billing
+Message-ID: <abc123\@example.com>
+
+Please help me, my invoice is wrong.
+EMAIL
+
+# message parsing
+
+{
+  my $message = parse-message($raw);
+
+  is $message.from, 'alice@example.com', 'the parser extracts the sender address';
+  is $message.to.sort.join(','), 'help@example.com,support@example.com', 'the parser extracts every recipient address';
+  is $message.cc.head, 'watcher@example.com', 'the parser extracts cc addresses';
+  is $message.subject, 'Need help with billing', 'the parser extracts the subject';
+  is $message.message-id, '<abc123@example.com>', 'the parser extracts the message id';
+  is $message.body.trim, 'Please help me, my invoice is wrong.', 'the parser keeps the body';
+}
+
+{
+  my $folded = "Subject: a very long\n  folded subject line\nFrom: a\@b.com\n\nbody";
+  is parse-message($folded).subject, 'a very long folded subject line', 'the parser unfolds continuation lines';
+}
+
+# state machine
+
+{
+  my $email = InboundEmail.new(:$raw);
+
+  ok $email.is-pending, 'a fresh inbound email is pending';
+
+  $email.processing-bang;
+  ok $email.is-processing, 'an inbound email can move to processing';
+
+  $email.delivered-bang;
+  ok $email.is-delivered, 'an inbound email can move to delivered';
+
+  $email.bounced-bang;
+  ok $email.is-bounced, 'an inbound email can move to bounced';
+
+  $email.failed-bang;
+  ok $email.is-failed, 'an inbound email can move to failed';
+}
+
+# mailbox processing and callbacks
+
+{
+  my @log;
+
+  my class SupportMailbox is Mailbox {
+    method process { @log.push('process:' ~ self.message.subject) }
+  }
+  SupportMailbox.before-processing(-> $m { @log.push('before') });
+  SupportMailbox.after-processing(-> $m { @log.push('after') });
+
+  my $email = InboundEmail.new(:$raw);
+  SupportMailbox.new(inbound-email => $email).perform-processing;
+
+  is @log.join(','), 'before,process:Need help with billing,after', 'processing runs before, process, then after';
+  ok $email.is-delivered, 'a processed email is delivered';
+}
+
+# bouncing
+
+{
+  my @log;
+
+  my class BounceMailbox is Mailbox {
+    method process { self.bounce }
+  }
+  BounceMailbox.after-processing(-> $m { @log.push('after') });
+  BounceMailbox.on-bounce(-> $m { @log.push('bounced') });
+
+  my $email = InboundEmail.new(:$raw);
+  BounceMailbox.new(inbound-email => $email).perform-processing;
+
+  ok $email.is-bounced, 'bouncing marks the email bounced';
+  is @log.join(','), 'bounced', 'bouncing runs the bounce callback and skips after-processing';
+}
+
+# failure and rescue
+
+{
+  my @log;
+
+  my class FailMailbox is Mailbox {
+    method process { die 'boom' }
+  }
+  FailMailbox.rescue-from(Exception, -> $m, $error { @log.push('rescued:' ~ $error.message) });
+
+  my $email = InboundEmail.new(:$raw);
+  FailMailbox.new(inbound-email => $email).perform-processing;
+
+  ok $email.is-failed, 'an exception marks the email failed';
+  is @log.head, 'rescued:boom', 'a matching rescue handler runs on failure';
+}
+
+{
+  my class UnrescuedMailbox is Mailbox {
+    method process { die 'unhandled' }
+  }
+
+  my $email = InboundEmail.new(:$raw);
+  dies-ok { UnrescuedMailbox.new(inbound-email => $email).perform-processing },
+    'an unrescued failure is re-raised';
+  ok $email.is-failed, 'the email is still marked failed when not rescued';
+}
+
+# routing
+
+{
+  my class RepliesMailbox is Mailbox { method process { } }
+  my class DefaultMailbox is Mailbox { method process { } }
+
+  my $router = Router.new;
+  $router.routing(to => 'support@example.com', mailbox => RepliesMailbox);
+  $router.routing(all => True, mailbox => DefaultMailbox);
+
+  is $router.mailbox-for(InboundEmail.new(:$raw)).^name, 'RepliesMailbox', 'a matching recipient picks its mailbox';
+
+  my $other = InboundEmail.new(raw => "To: nobody\@example.com\nFrom: x\@y.com\n\nhi");
+  is $router.mailbox-for($other).^name, 'DefaultMailbox', 'an unmatched email falls through to the catch-all';
+}
+
+{
+  my class SubjectMailbox is Mailbox { method process { } }
+
+  my $router = Router.new;
+  $router.routing(subject => 'billing', mailbox => SubjectMailbox);
+
+  ok $router.mailbox-for(InboundEmail.new(:$raw)) !=:= Nil, 'a subject substring matches';
+  ok $router.mailbox-for(InboundEmail.new(raw => "Subject: hello\n\nx")) =:= Nil, 'a non-matching subject does not route';
+}
+
+{
+  my class FromMailbox is Mailbox { method process { } }
+
+  my $router = Router.new;
+  $router.routing(from => rx:i/ '@example.com' $/, mailbox => FromMailbox);
+
+  ok $router.mailbox-for(InboundEmail.new(:$raw)) !=:= Nil, 'a regex sender matcher matches';
+}
+
+# ingress
+
+{
+  my @processed;
+
+  my class IngressMailbox is Mailbox {
+    method process { @processed.push(self.message.subject) }
+  }
+
+  my $router = Router.new;
+  $router.routing(all => True, mailbox => IngressMailbox);
+
+  my $ingress = RelayIngress.new(:$router);
+  my $email   = $ingress.receive($raw);
+
+  ok $email.is-delivered, 'the relay ingress routes and delivers the email';
+  is $ingress.repository.all.elems, 1, 'the ingress records the inbound email';
+  is @processed.head, 'Need help with billing', 'the routed mailbox processed the message';
+}
+
+{
+  my class PollMailbox is Mailbox { method process { } }
+
+  my class FakeSource {
+    has @.messages;
+    method fetch { @!messages }
+  }
+
+  my $router = Router.new;
+  $router.routing(all => True, mailbox => PollMailbox);
+
+  my $source  = FakeSource.new(messages => [$raw, $raw]);
+  my $ingress = SourceIngress.new(:$router, :$source);
+
+  is $ingress.poll.elems, 2, 'a source ingress pulls and processes every fetched message';
+}
+
+# relay controller
+
+{
+  my class WebMailbox is Mailbox { method process { } }
+
+  my $router = Router.new;
+  $router.routing(all => True, mailbox => WebMailbox);
+
+  reset-mailbox-ingress;
+  set-mailbox-ingress(RelayIngress.new(:$router));
+
+  my $request  = MVC::Keayl::Request.new(method => 'POST', body => $raw);
+  my $response = MVC::Keayl::Mailbox::Ingress::RelayController.new(:$request).dispatch('create');
+
+  is $response.status, 204, 'the relay controller accepts a posted raw email';
+
+  reset-mailbox-ingress;
+}
+
+{
+  reset-mailbox-ingress;
+
+  my $request  = MVC::Keayl::Request.new(method => 'POST', body => 'x');
+  my $response = MVC::Keayl::Mailbox::Ingress::RelayController.new(:$request).dispatch('create');
+
+  is $response.status, 503, 'the relay controller reports unavailable without a configured ingress';
+}
+
+done-testing;
