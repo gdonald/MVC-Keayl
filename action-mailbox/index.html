@@ -8,13 +8,11 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/adapters/">
+        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/action-mailbox/">
       
       
-        <link rel="prev" href="../middleware/">
+        <link rel="prev" href="../action-text/">
       
-      
-        <link rel="next" href="../routing/">
       
       
         
@@ -25,7 +23,7 @@
     
     
       
-        <title>Server adapters - MVC::Keayl</title>
+        <title>Action Mailbox - MVC::Keayl</title>
       
     
     
@@ -66,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#server-adapters" class="md-skip">
+        <a href="#action-mailbox" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Server adapters
+              Action Mailbox
             
           </span>
         </div>
@@ -327,37 +325,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Server adapters
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../adapters/" class="md-nav__link">
         
   
   
@@ -373,59 +344,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-adapter-contract" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The adapter contract
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#test-adapter" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Test adapter
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cro-adapter" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cro adapter
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1136,10 +1054,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../action-mailbox/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Action Mailbox
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1155,6 +1100,115 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inbound-email" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inbound email
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mailboxes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mailboxes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mailboxes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bouncing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bouncing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Routing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ingress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ingress
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ingress">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relay-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relay endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1186,10 +1240,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-adapter-contract" class="md-nav__link">
+  <a href="#inbound-email" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The adapter contract
+        Inbound email
       
     </span>
   </a>
@@ -1197,10 +1251,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#test-adapter" class="md-nav__link">
+  <a href="#mailboxes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Test adapter
+        Mailboxes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mailboxes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bouncing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bouncing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Routing
       
     </span>
   </a>
@@ -1208,13 +1301,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cro-adapter" class="md-nav__link">
+  <a href="#ingress" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cro adapter
+        Ingress
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Ingress">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relay-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relay endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1238,49 +1348,14 @@
   
 
 
-<h1 id="server-adapters">Server adapters<a class="headerlink" href="#server-adapters" title="Permanent link">&para;</a></h1>
-<p>A server adapter bridges a concrete HTTP server to the framework. Its one job is
-the abstract contract: a request comes in, a status / headers / body go out.
-Because every adapter wraps the same <a href="../middleware/">endpoint</a> app, swapping the
-underlying server (production Cro, or the in-memory test driver) changes only
-which adapter you construct.</p>
-<h2 id="the-adapter-contract">The adapter contract<a class="headerlink" href="#the-adapter-contract" title="Permanent link">&para;</a></h2>
-<p><code>MVC::Keayl::Adapter</code> is a role carrying the built app and turning a
-<a href="../request/"><code>Request</code></a> into the finalized response tuple:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> (<span class="nv">$status</span>, <span class="nv">$headers</span>, <span class="nv">$body</span>) = <span class="nv">$adapter</span>.<span class="nb">handle</span>(<span class="nv">$request</span>);
-</code></pre></div></td></tr></table></div>
-<p><code>handle</code> calls the app and finalizes the <a href="../response/"><code>Response</code></a>, so a concrete
-adapter only has to translate its server's native request and response types to
-and from the framework's.</p>
-<h2 id="test-adapter">Test adapter<a class="headerlink" href="#test-adapter" title="Permanent link">&para;</a></h2>
-<p><code>MVC::Keayl::Adapter::Test</code> drives the whole stack in memory (no socket), which
-makes it the tool for testing controllers, middleware, and routes:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Adapter::Test</span>;
-
-<span class="k">my</span> <span class="nv">$adapter</span> = <span class="n">MVC::Keayl::Adapter::Test</span>.<span class="nb">new</span>(:<span class="n">app</span>(<span class="nv">$built-app</span>));
-
-<span class="k">my</span> <span class="nv">$response</span> = <span class="nv">$adapter</span>.<span class="nb">get</span>(<span class="s">&#39;/users&#39;</span>);
-<span class="k">my</span> <span class="nv">$created</span>  = <span class="nv">$adapter</span>.<span class="n">post</span>(<span class="s">&#39;/users&#39;</span>, :<span class="n">body</span>(<span class="s">&#39;name=Ada&#39;</span>), :<span class="n">headers</span>({ <span class="n">Host</span> =&gt; <span class="s">&#39;example.com&#39;</span> }));
-</code></pre></div></td></tr></table></div>
-<p><code>request($method, $target, …)</code> is the general form; <code>get</code> / <code>post</code> / <code>put</code> /
-<code>patch</code> / <code>delete</code> / <code>head</code> are shorthands. Each builds a <code>Request</code>, runs it
-through the app, and returns the <code>Response</code> for inspection:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$response</span>.<span class="nb">status</span>;
-<span class="nv">$response</span>.<span class="n">header</span>(<span class="s">&#39;Content-Type&#39;</span>);
-<span class="nv">$response</span>.<span class="n">body</span>;
-</code></pre></div></td></tr></table></div>
-<p>Named arguments (<code>:headers</code>, <code>:body</code>, <code>:scheme</code>, <code>:remote-address</code>) are passed
-straight through to the request.</p>
-<h2 id="cro-adapter">Cro adapter<a class="headerlink" href="#cro-adapter" title="Permanent link">&para;</a></h2>
-<p><code>MVC::Keayl::Adapter::Cro</code> is the reference production adapter, backed by
-<a href="https://cro.raku.org/">Cro</a>:</p>
+<h1 id="action-mailbox">Action Mailbox<a class="headerlink" href="#action-mailbox" title="Permanent link">&para;</a></h1>
+<p>Action Mailbox routes inbound email into mailbox classes. A raw message enters
+through an ingress, becomes an inbound-email record with a processing state
+machine, is matched to a mailbox by recipient, sender, or subject, and is
+processed with callbacks.</p>
+<h2 id="inbound-email">Inbound email<a class="headerlink" href="#inbound-email" title="Permanent link">&para;</a></h2>
+<p><code>parse-message</code> turns a raw RFC 822 string into a <code>Message</code> with unfolded
+headers and a body:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1291,25 +1366,147 @@ straight through to the request.</p>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Adapter::Cro</span>;
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Mailbox</span>;
 
-<span class="k">my</span> <span class="nv">$adapter</span> = <span class="n">MVC::Keayl::Adapter::Cro</span>.<span class="nb">new</span>(
-  :<span class="n">app</span>(<span class="nv">$built-app</span>),
-  :<span class="n">host</span>(<span class="s">&#39;0.0.0.0&#39;</span>),
-  :<span class="n">port</span>(<span class="mi">8080</span>),
-);
+<span class="k">my</span> <span class="nv">$message</span> = <span class="n">parse-message</span>(<span class="nv">$raw</span>);
 
-<span class="nv">$adapter</span>.<span class="nb">start</span>;
-<span class="c1"># ... serve ...</span>
-<span class="nv">$adapter</span>.<span class="n">stop</span>;
+<span class="nv">$message</span>.<span class="nb">from</span>;        <span class="c1"># the sender address</span>
+<span class="nv">$message</span>.<span class="nb">to</span>;          <span class="c1"># the recipient addresses</span>
+<span class="nv">$message</span>.<span class="n">cc</span>;
+<span class="nv">$message</span>.<span class="n">recipients</span>;  <span class="c1"># to + cc</span>
+<span class="nv">$message</span>.<span class="n">subject</span>;
+<span class="nv">$message</span>.<span class="n">message-id</span>;
+<span class="nv">$message</span>.<span class="n">header</span>(<span class="s">&#39;x-spam-score&#39;</span>);
+<span class="nv">$message</span>.<span class="n">body</span>;
 </code></pre></div></td></tr></table></div>
-<p>For each incoming Cro request the adapter builds a <code>Request</code> (method, target,
-headers, body, and the client address), runs the app, and copies the resulting
-status, headers, and body onto the Cro response. <code>Content-Length</code> is left to Cro,
-which derives it from the serialized body.</p>
-<p>The <code>:scheme</code> you give the adapter (<code>http</code> by default) tells requests whether
-they arrived over TLS; behind a proxy, the request's own <code>X-Forwarded-Proto</code>
-handling still applies.</p>
+<p>An <code>InboundEmail</code> wraps the raw message and tracks its state. It starts
+<code>pending</code> and transitions through <code>processing</code>, then <code>delivered</code>, <code>bounced</code>, or
+<code>failed</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$email</span> = <span class="n">InboundEmail</span>.<span class="nb">new</span>(:<span class="nv">$raw</span>);
+
+<span class="nv">$email</span>.<span class="n">is-pending</span>;        <span class="c1"># True</span>
+<span class="nv">$email</span>.<span class="n">processing-bang</span>;
+<span class="nv">$email</span>.<span class="n">delivered-bang</span>;    <span class="c1"># or bounced-bang / failed-bang</span>
+
+<span class="nv">$email</span>.<span class="nb">message</span>;           <span class="c1"># the parsed Message</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="mailboxes">Mailboxes<a class="headerlink" href="#mailboxes" title="Permanent link">&para;</a></h2>
+<p>A mailbox subclasses <code>Mailbox</code> and implements <code>process</code>. Callbacks run around
+processing, and the inbound email is marked <code>delivered</code> when <code>process</code> returns:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">SupportMailbox</span> <span class="k">is</span> <span class="n">Mailbox</span> {
+  <span class="k">method</span> <span class="n">process</span> {
+    <span class="c1"># self.message is the parsed inbound message</span>
+  }
+}
+
+<span class="n">SupportMailbox</span>.<span class="o">before-</span><span class="n">processing</span>(-&gt; <span class="nv">$mailbox</span> { ... });
+<span class="n">SupportMailbox</span>.<span class="o">after-</span><span class="n">processing</span>(-&gt; <span class="nv">$mailbox</span> { ... });
+</code></pre></div></td></tr></table></div>
+<p><code>perform-processing</code> drives the lifecycle: it marks the email <code>processing</code>, runs
+the before callbacks, calls <code>process</code>, runs the after callbacks, and marks the
+email <code>delivered</code>.</p>
+<h3 id="bouncing">Bouncing<a class="headerlink" href="#bouncing" title="Permanent link">&para;</a></h3>
+<p>Calling <code>bounce</code> inside processing marks the email <code>bounced</code>, runs the
+<code>on-bounce</code> callbacks, and halts the rest of processing (the after callbacks are
+skipped):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">RepliesMailbox</span> <span class="k">is</span> <span class="n">Mailbox</span> {
+  <span class="k">method</span> <span class="n">process</span> {
+    <span class="nb">self</span>.<span class="n">bounce</span> <span class="k">unless</span> <span class="nb">self</span>.<span class="nb">message</span>.<span class="nb">from</span>;
+  }
+}
+
+<span class="n">RepliesMailbox</span>.<span class="n">on-bounce</span>(-&gt; <span class="nv">$mailbox</span> { ... });
+</code></pre></div></td></tr></table></div>
+<h3 id="failures">Failures<a class="headerlink" href="#failures" title="Permanent link">&para;</a></h3>
+<p>An exception raised during processing marks the email <code>failed</code>. A matching
+<code>rescue-from</code> handler runs; with no handler, the exception is re-raised:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">ImportMailbox</span> <span class="k">is</span> <span class="n">Mailbox</span> {
+  <span class="k">method</span> <span class="n">process</span> { ... }
+}
+
+<span class="n">ImportMailbox</span>.<span class="n">rescue-from</span>(<span class="o">X</span>::<span class="n">Parse</span>, -&gt; <span class="nv">$mailbox</span>, <span class="nv">$error</span> { ... });
+</code></pre></div></td></tr></table></div>
+<h2 id="routing">Routing<a class="headerlink" href="#routing" title="Permanent link">&para;</a></h2>
+<p>A <code>Router</code> maps inbound email to a mailbox. Each <code>routing</code> rule matches on
+recipient, <code>to</code>, <code>from</code>, or <code>subject</code>, takes a <code>matching</code> predicate over the
+inbound email, or <code>all</code> for a catch-all. Conditions accept an exact string or a
+regex (subject and a string match as a substring); every condition in a rule
+must match. The first matching rule wins:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Mailbox::Router</span>;
+
+<span class="k">my</span> <span class="nv">$router</span> = <span class="n">Router</span>.<span class="nb">new</span>;
+<span class="nv">$router</span>.<span class="n">routing</span>(<span class="nb">to</span> =&gt; <span class="s">&#39;support@example.com&#39;</span>, <span class="n">mailbox</span> =&gt; <span class="n">SupportMailbox</span>);
+<span class="nv">$router</span>.<span class="n">routing</span>(<span class="nb">from</span> =&gt; <span class="sr">rx:i/ &#39;@billing.example.com&#39; $/</span>, <span class="n">mailbox</span> =&gt; <span class="n">BillingMailbox</span>);
+<span class="nv">$router</span>.<span class="n">routing</span>(<span class="n">subject</span> =&gt; <span class="s">&#39;invoice&#39;</span>, <span class="n">mailbox</span> =&gt; <span class="n">InvoiceMailbox</span>);
+<span class="nv">$router</span>.<span class="n">routing</span>(<span class="n">matching</span> =&gt; -&gt; <span class="nv">$email</span> { <span class="nv">$email</span>.<span class="nb">message</span>.<span class="n">header</span>(<span class="s">&#39;x-spam&#39;</span>).<span class="nb">defined</span> }, <span class="n">mailbox</span> =&gt; <span class="n">SpamMailbox</span>);
+<span class="nv">$router</span>.<span class="n">routing</span>(<span class="nb">all</span> =&gt; <span class="nb">True</span>, <span class="n">mailbox</span> =&gt; <span class="n">DefaultMailbox</span>);
+
+<span class="nv">$router</span>.<span class="n">route</span>(<span class="nv">$email</span>);          <span class="c1"># finds the mailbox and processes the email</span>
+<span class="nv">$router</span>.<span class="n">mailbox-for</span>(<span class="nv">$email</span>);    <span class="c1"># the matched mailbox class, or Nil</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="ingress">Ingress<a class="headerlink" href="#ingress" title="Permanent link">&para;</a></h2>
+<p>An ingress receives raw email, records an <code>InboundEmail</code>, and hands it to the
+router. <code>RelayIngress</code> takes one message at a time, as from a webhook relay:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Mailbox::Ingress</span>;
+
+<span class="k">my</span> <span class="nv">$ingress</span> = <span class="n">RelayIngress</span>.<span class="nb">new</span>(:<span class="nv">$router</span>);
+<span class="nv">$ingress</span>.<span class="nb">receive</span>(<span class="nv">$raw</span>);          <span class="c1"># records and routes the message</span>
+<span class="nv">$ingress</span>.<span class="n">repository</span>.<span class="nb">all</span>;         <span class="c1"># every recorded inbound email</span>
+</code></pre></div></td></tr></table></div>
+<p><code>SourceIngress</code> pulls from a generic source (an SMTP or POP mailbox), processing
+every fetched message:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$ingress</span> = <span class="n">SourceIngress</span>.<span class="nb">new</span>(:<span class="nv">$router</span>, :<span class="nv">$source</span>);
+<span class="nv">$ingress</span>.<span class="nb">poll</span>;                   <span class="c1"># fetches from source.fetch and processes each</span>
+</code></pre></div></td></tr></table></div>
+<p>Records persist through a repository.
+<code>MVC::Keayl::Mailbox::Ingress::Repository</code> defines the interface and
+<code>MemoryRepository</code> is the in-process implementation.</p>
+<h3 id="relay-endpoint">Relay endpoint<a class="headerlink" href="#relay-endpoint" title="Permanent link">&para;</a></h3>
+<p><code>RelayController</code> is the HTTP relay endpoint. Configure the ingress once, and the
+controller hands each posted raw email to it:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">set-mailbox-ingress</span>(<span class="n">RelayIngress</span>.<span class="nb">new</span>(:<span class="nv">$router</span>));
+</code></pre></div></td></tr></table></div>
+<p><code>POST</code>ing a raw message to the controller returns <code>204</code>; with no configured
+ingress it returns <code>503</code>.</p>
 
 
 
