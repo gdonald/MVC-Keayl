@@ -38,6 +38,8 @@
     "MVC::Keayl::Cable::Connection": "lib/MVC/Keayl/Cable/Connection.rakumod",
     "MVC::Keayl::Cable::PubSub": "lib/MVC/Keayl/Cable/PubSub.rakumod",
     "MVC::Keayl::Cable::PubSub::InMemory": "lib/MVC/Keayl/Cable/PubSub/InMemory.rakumod",
+    "MVC::Keayl::Cable::PubSub::External": "lib/MVC/Keayl/Cable/PubSub/External.rakumod",
+    "MVC::Keayl::Cable::Broadcasting": "lib/MVC/Keayl/Cable/Broadcasting.rakumod",
     "MVC::Keayl::Cache": "lib/MVC/Keayl/Cache.rakumod",
     "MVC::Keayl::CLI": "lib/MVC/Keayl/CLI.rakumod",
     "MVC::Keayl::Caching": "lib/MVC/Keayl/Caching.rakumod",

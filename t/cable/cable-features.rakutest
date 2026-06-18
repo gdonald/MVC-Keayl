@@ -1,0 +1,214 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Cable::PubSub::InMemory;
+use MVC::Keayl::Cable::PubSub::External;
+use MVC::Keayl::Cable::Connection;
+use MVC::Keayl::Cable::Channel;
+use MVC::Keayl::Cable::Broadcasting;
+
+sub connection(:@received!, :%identifiers, :$pubsub!, :$class = MVC::Keayl::Cable::Connection) {
+  $class.new(
+    :$pubsub,
+    sink        => -> $message { @received.push: $message },
+    identifiers => %identifiers,
+  )
+}
+
+class AuthConnection is MVC::Keayl::Cable::Connection {
+  method connect {
+    if self.identifiers<token> eq 'good' {
+      self.set-identifier('current-user', 'ada');
+    } else {
+      self.reject-unauthorized-connection;
+    }
+  }
+}
+AuthConnection.identified-by('current-user');
+
+# identified-by and authentication
+
+{
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn = connection(:@received, identifiers => %( token => 'good' ), :$pubsub, class => AuthConnection);
+
+  $conn.open;
+
+  nok $conn.is-rejected, 'a valid connection is accepted';
+  is $conn.current-user, 'ada', 'an identified-by name reads its identifier';
+}
+
+{
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn = connection(:@received, identifiers => %( token => 'bad' ), :$pubsub, class => AuthConnection);
+
+  $conn.open;
+
+  ok $conn.is-rejected, 'reject-unauthorized-connection rejects the connection';
+}
+
+# subscription reject
+
+{
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn = connection(:@received, identifiers => %( room => '1' ), :$pubsub);
+
+  my class GuardedChannel is MVC::Keayl::Cable::Channel {
+    method subscribed {
+      self.stream-from('room:1');
+      self.reject;
+    }
+  }
+
+  my $channel = GuardedChannel.new(connection => $conn);
+  $conn.add-subscription($channel);
+
+  ok $channel.is-rejected, 'a channel can reject its subscription';
+  is $conn.subscriptions.elems, 0, 'a rejected channel is not added to the connection';
+  is $pubsub.subscriber-count('room:1'), 0, 'a rejected subscription tears down its streams';
+}
+
+# subscribed and unsubscribed callbacks
+
+{
+  my @events;
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn = connection(:@received, :$pubsub);
+
+  my class LifecycleChannel is MVC::Keayl::Cable::Channel {
+    has @.events;
+    method subscribed   { @.events.push('subscribed') }
+    method unsubscribed { @.events.push('unsubscribed') }
+  }
+
+  my $channel = LifecycleChannel.new(connection => $conn);
+  $conn.add-subscription($channel);
+  $conn.disconnect;
+
+  is $channel.events.join(','), 'subscribed,unsubscribed', 'subscribe and unsubscribe run the lifecycle callbacks';
+}
+
+# periodic timers
+
+{
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn = connection(:@received, :$pubsub);
+
+  my class HeartbeatChannel is MVC::Keayl::Cable::Channel {
+    has $.beats = 0;
+    method beat { $!beats++ }
+  }
+  HeartbeatChannel.periodically('beat', every => 3);
+
+  my $channel = HeartbeatChannel.new(connection => $conn);
+
+  is $channel.periodic-timers.elems, 1, 'periodically registers a timer';
+  is $channel.periodic-timers[0]<every>, 3, 'the timer records its interval';
+
+  $channel.run-periodic-timers;
+  is $channel.beats, 1, 'running the periodic timers fires the registered method';
+}
+
+# stream-for and coders
+
+{
+  my @received;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  my $conn = connection(:@received, :$pubsub);
+
+  my class RoomChannel is MVC::Keayl::Cable::Channel {
+    method subscribed { self.stream-for('lobby', coder => JsonCoder.new) }
+  }
+
+  my $channel = RoomChannel.new(connection => $conn);
+  $conn.add-subscription($channel);
+
+  $channel.broadcast-to('room:lobby', %( text => 'hi' ), coder => JsonCoder.new);
+
+  is @received[0]<text>, 'hi', 'stream-for with a coder decodes a broadcast back into data';
+}
+
+# broadcast-to-target via the server pub/sub
+
+{
+  reset-cable-pubsub;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  set-cable-pubsub($pubsub);
+
+  my @got;
+  $pubsub.subscribe('broadcast:lobby', -> $message { @got.push: $message });
+
+  my class BroadcastChannel is MVC::Keayl::Cable::Channel { }
+  BroadcastChannel.broadcast-to-target('lobby', 'hello');
+
+  is @got, ['hello'], 'broadcast-to-target publishes to the broadcasting stream';
+
+  reset-cable-pubsub;
+}
+
+# model broadcasts helper
+
+{
+  reset-cable-pubsub;
+  my $pubsub = MVC::Keayl::Cable::PubSub::InMemory.new;
+  set-cable-pubsub($pubsub);
+
+  my @got;
+  $pubsub.subscribe('Post:7', -> $message { @got.push: $message });
+
+  my class Post does Broadcastable {
+    has $.id;
+  }
+
+  my $post = Post.new(id => 7);
+  $post.broadcast-append-to($post, target => 'posts', content => '<li>new</li>');
+
+  is @got[0]<action>, 'append', 'the model broadcasts helper sends an append action';
+  is @got[0]<content>, '<li>new</li>', 'the broadcast carries the rendered content';
+
+  reset-cable-pubsub;
+}
+
+# external pub/sub backend
+
+{
+  my class FakeRedis {
+    has %.streams;
+    has Int $.next-id is rw = 0;
+    method subscribe($stream, &callback) {
+      my $id = $!next-id++;
+      (%!streams{$stream} //= []).push: %( :$id, :&callback );
+      $id
+    }
+    method unsubscribe($id) {
+      for %!streams.keys -> $stream {
+        %!streams{$stream} = %!streams{$stream}.grep({ .<id> != $id }).Array;
+      }
+      True
+    }
+    method publish($stream, $message) {
+      .<callback>($message) for (%!streams{$stream} // []).list;
+    }
+    method subscriber-count($stream) { (%!streams{$stream} // []).elems }
+  }
+
+  my $pubsub = MVC::Keayl::Cable::PubSub::External.new(client => FakeRedis.new);
+
+  my @got;
+  my $id = $pubsub.subscribe('room:1', -> $message { @got.push: $message });
+  $pubsub.broadcast('room:1', 'networked');
+
+  is @got, ['networked'], 'the external backend delivers a broadcast through its client';
+  is $pubsub.subscriber-count('room:1'), 1, 'the external backend reports subscriber counts';
+
+  $pubsub.unsubscribe($id);
+  $pubsub.broadcast('room:1', 'gone');
+  is @got, ['networked'], 'unsubscribing through the external backend stops delivery';
+}
+
+done-testing;
