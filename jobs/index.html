@@ -1030,6 +1030,67 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Queue adapters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#durable-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Durable adapter
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scheduling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retries-discards-and-rescues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retries, discards, and rescues
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Callbacks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arguments-and-global-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arguments and Global IDs
+      
+    </span>
+  </a>
+  
 </li>
       
     </ul>
@@ -1194,6 +1255,67 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Queue adapters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#durable-adapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Durable adapter
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scheduling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retries-discards-and-rescues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retries, discards, and rescues
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Callbacks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arguments-and-global-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arguments and Global IDs
+      
+    </span>
+  </a>
+  
 </li>
       
     </ul>
@@ -1267,6 +1389,80 @@ always runnable without setup.</p>
 </code></pre></div></td></tr></table></div>
 <p><code>reset-queue-adapter</code> clears the configured adapter, returning to the inline
 default.</p>
+<h3 id="durable-adapter">Durable adapter<a class="headerlink" href="#durable-adapter" title="Permanent link">&para;</a></h3>
+<p><code>...::QueueAdapter::Database</code> persists each job through a pluggable store instead
+of holding it in memory. <code>enqueue</code> serializes the job (class, arguments, queue,
+priority, scheduled time) into the store; <code>work</code> reads the eligible rows, runs
+them, and removes each as it finishes. Jobs run highest priority first, and a job
+scheduled for the future is skipped until its time arrives (judged against the
+adapter's <code>clock</code>):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$adapter</span> = <span class="n">MVC::Keayl::Job::QueueAdapter::Database</span>.<span class="nb">new</span>;
+<span class="n">MVC::Keayl::Job</span>.<span class="n">queue-adapter</span>(<span class="nv">$adapter</span>);
+
+<span class="n">WelcomeJob</span>.<span class="n">perform-later</span>(<span class="mi">42</span>);   <span class="c1"># persisted in the store</span>
+<span class="nv">$adapter</span>.<span class="n">work</span>;                  <span class="c1"># runs every due job</span>
+</code></pre></div></td></tr></table></div>
+<p><code>MemoryStore</code> is the built-in store; a DB-backed store implements the same
+<code>Store</code> role (<code>insert</code>, <code>eligible</code>, <code>remove</code>, <code>all</code>).</p>
+<h2 id="scheduling">Scheduling<a class="headerlink" href="#scheduling" title="Permanent link">&para;</a></h2>
+<p><code>set</code> configures a job before enqueuing it:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">WelcomeJob</span>.<span class="n">set</span>(<span class="n">queue</span> =&gt; <span class="s">&#39;mailers&#39;</span>, <span class="n">priority</span> =&gt; <span class="mi">10</span>).<span class="n">perform-later</span>(<span class="mi">42</span>);
+<span class="n">WelcomeJob</span>.<span class="n">set</span>(<span class="nb">wait</span> =&gt; <span class="mi">300</span>).<span class="n">perform-later</span>(<span class="mi">42</span>);         <span class="c1"># 300 seconds from now</span>
+<span class="n">WelcomeJob</span>.<span class="n">set</span>(<span class="n">wait-until</span> =&gt; <span class="nv">$epoch</span>).<span class="n">perform-later</span>(<span class="mi">42</span>); <span class="c1"># at an absolute time</span>
+</code></pre></div></td></tr></table></div>
+<p><code>wait</code> is relative to the job clock (<code>MVC::Keayl::Job.clock</code>, settable for tests);
+<code>wait-until</code> is an absolute time. The scheduled time is recorded on the job and
+honored by the durable adapter.</p>
+<h2 id="retries-discards-and-rescues">Retries, discards, and rescues<a class="headerlink" href="#retries-discards-and-rescues" title="Permanent link">&para;</a></h2>
+<p><code>retry-on</code> re-enqueues a job when a matching error is raised, up to <code>attempts</code>
+total runs, waiting <code>wait</code> between tries. <code>wait</code> is a number of seconds or a
+callable of the attempt number for a backoff. When the attempts run out, the
+job runs the <code>with</code> block or re-raises:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">ImportJob</span> <span class="k">is</span> <span class="n">MVC::Keayl::Job</span> { ... }
+<span class="n">ImportJob</span>.<span class="n">retry-on</span>(<span class="o">X</span>::<span class="n">Timeout</span>, <span class="nb">wait</span> =&gt; <span class="mi">5</span>, <span class="n">attempts</span> =&gt; <span class="mi">3</span>);
+<span class="n">ImportJob</span>.<span class="n">retry-on</span>(<span class="o">X</span>::<span class="n">RateLimited</span>, <span class="nb">wait</span> =&gt; -&gt; <span class="nv">$n</span> { <span class="nv">$n</span> * <span class="nv">$n</span> }, <span class="n">attempts</span> =&gt; <span class="mi">10</span>);
+</code></pre></div></td></tr></table></div>
+<p><code>discard-on</code> swallows a matching error so the job is dropped without retrying.
+<code>rescue-from</code> runs a handler for a matching error:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">ImportJob</span>.<span class="n">discard-on</span>(<span class="o">X</span>::<span class="n">RecordGone</span>);
+<span class="n">ImportJob</span>.<span class="n">rescue-from</span>(<span class="o">X</span>::<span class="n">Parse</span>, -&gt; <span class="nv">$job</span>, <span class="nv">$error</span> { <span class="nb">report</span>(<span class="nv">$error</span>) });
+</code></pre></div></td></tr></table></div>
+<p>The most specific handler for the raised error wins, and a later registration
+beats an earlier one at the same specificity.</p>
+<h2 id="callbacks">Callbacks<a class="headerlink" href="#callbacks" title="Permanent link">&para;</a></h2>
+<p><code>before-perform</code>, <code>after-perform</code>, and <code>around-perform</code> wrap a job's execution;
+<code>before-enqueue</code>, <code>after-enqueue</code>, and <code>around-enqueue</code> wrap enqueuing. Each
+before/after callback takes the job; each around callback takes the job and the
+continuation:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">ImportJob</span>.<span class="o">before-</span><span class="n">perform</span>(-&gt; <span class="nv">$job</span> { ... });
+<span class="n">ImportJob</span>.<span class="n">around-perform</span>(-&gt; <span class="nv">$job</span>, <span class="nv">&amp;next</span> { <span class="n">instrument</span>({ <span class="nb">next</span>() }) });
+</code></pre></div></td></tr></table></div>
+<h2 id="arguments-and-global-ids">Arguments and Global IDs<a class="headerlink" href="#arguments-and-global-ids" title="Permanent link">&para;</a></h2>
+<p>A job argument that is a record (an object with an <code>id</code> whose class has a <code>find</code>)
+serializes to a Global ID string, <code>gid://keayl/&lt;Class&gt;/&lt;id&gt;</code>, and is relocated
+when the job runs. This lets the durable adapter persist a reference to a record
+rather than a copy:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Job::GlobalID</span>;
+
+<span class="n">to-gid</span>(<span class="nv">$user</span>);                       <span class="c1"># &#39;gid://keayl/User/42&#39;</span>
+<span class="n">locate</span>(<span class="s">&#39;gid://keayl/User/42&#39;</span>);       <span class="c1"># User.find(42)</span>
+</code></pre></div></td></tr></table></div>
+<p><code>serialize-arguments</code> and <code>deserialize-arguments</code> apply this over a whole
+argument capture, leaving plain values untouched and converting records to and
+from Global IDs.</p>
 
 
 
