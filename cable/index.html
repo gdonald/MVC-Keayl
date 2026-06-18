@@ -1046,6 +1046,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Connections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#identification-and-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identification and authentication
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1053,6 +1070,56 @@
     <span class="md-ellipsis">
       
         Channels
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Channels">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rejecting-a-subscription" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rejecting a subscription
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#streaming-for-a-model-and-coders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming for a model and coders
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#periodic-timers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Periodic timers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#broadcasting-from-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Broadcasting from models
       
     </span>
   </a>
@@ -1194,6 +1261,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Connections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#identification-and-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identification and authentication
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1201,6 +1285,56 @@
     <span class="md-ellipsis">
       
         Channels
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Channels">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rejecting-a-subscription" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rejecting a subscription
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#streaming-for-a-model-and-coders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming for a model and coders
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#periodic-timers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Periodic timers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#broadcasting-from-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Broadcasting from models
       
     </span>
   </a>
@@ -1259,6 +1393,32 @@ user or room):</p>
 </code></pre></div></td></tr></table></div>
 <p><code>add-subscription($channel)</code> registers a channel and subscribes it; <code>disconnect</code>
 tears every subscription down.</p>
+<h3 id="identification-and-authentication">Identification and authentication<a class="headerlink" href="#identification-and-authentication" title="Permanent link">&para;</a></h3>
+<p>Declare the identifiers a connection carries with <code>identified-by</code>, and
+authenticate in <code>connect</code>. <code>set-identifier</code> records a verified identity;
+<code>reject-unauthorized-connection</code> refuses the connection. <code>open</code> runs <code>connect</code>,
+catching a rejection, after which <code>is-rejected</code> reports the outcome. A declared
+identifier reads back as a method:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">AppConnection</span> <span class="k">is</span> <span class="n">MVC::Keayl::Cable::Connection</span> {
+  <span class="k">method</span> <span class="nb">connect</span> {
+    <span class="k">my</span> <span class="nv">$user</span> = <span class="n">find-verified-user</span>(<span class="nb">self</span>.<span class="n">identifiers</span><span class="s">&lt;token&gt;</span>);
+    <span class="nv">$user</span> ?? <span class="nb">self</span>.<span class="n">set-identifier</span>(<span class="s">&#39;current-user&#39;</span>, <span class="nv">$user</span>) !! <span class="nb">self</span>.<span class="n">reject-unauthorized-connection</span>;
+  }
+}
+<span class="n">AppConnection</span>.<span class="n">identified-by</span>(<span class="s">&#39;current-user&#39;</span>);
+
+<span class="nv">$conn</span>.<span class="nb">open</span>;
+<span class="nv">$conn</span>.<span class="n">current-user</span>;   <span class="c1"># the verified identifier</span>
+</code></pre></div></td></tr></table></div>
 <h2 id="channels">Channels<a class="headerlink" href="#channels" title="Permanent link">&para;</a></h2>
 <p>Subclass <code>MVC::Keayl::Cable::Channel</code>. Override <code>subscribed</code> to start streaming,
 <code>unsubscribed</code> to clean up, and add a method per action a client can invoke:</p>
@@ -1292,13 +1452,64 @@ tears every subscription down.</p>
 </ul>
 <p><code>unsubscribe</code> (run for you on <code>disconnect</code>) drops the channel's stream
 subscriptions and calls <code>unsubscribed</code>.</p>
+<h3 id="rejecting-a-subscription">Rejecting a subscription<a class="headerlink" href="#rejecting-a-subscription" title="Permanent link">&para;</a></h3>
+<p><code>subscribed</code> may call <code>reject</code> to refuse the subscription. A rejected channel is
+not added to the connection, and any streams it set up are torn down:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">method</span> <span class="n">subscribed</span> {
+  <span class="nb">self</span>.<span class="n">reject</span> <span class="k">unless</span> <span class="nb">self</span>.<span class="n">connection</span>.<span class="n">current-user</span>.<span class="n">can-access</span>(<span class="nb">self</span>.<span class="nb">params</span><span class="s">&lt;room&gt;</span>);
+}
+</code></pre></div></td></tr></table></div>
+<h3 id="streaming-for-a-model-and-coders">Streaming for a model and coders<a class="headerlink" href="#streaming-for-a-model-and-coders" title="Permanent link">&para;</a></h3>
+<p><code>stream-for($target)</code> derives the stream name from a model (its
+<code>broadcasting-for</code>, namespaced by the channel) instead of a raw string. A
+<code>coder</code> encodes broadcasts and decodes received messages; <code>JsonCoder</code> serializes
+to and from JSON:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">method</span> <span class="n">subscribed</span> {
+  <span class="nb">self</span>.<span class="n">stream-for</span>(<span class="nv">$room</span>, <span class="n">coder</span> =&gt; <span class="n">JsonCoder</span>.<span class="nb">new</span>);
+}
+</code></pre></div></td></tr></table></div>
+<p><code>broadcast-to-target($target, $data)</code> publishes to a model's broadcasting through
+the server pub/sub (set with <code>set-cable-pubsub</code>).</p>
+<h3 id="periodic-timers">Periodic timers<a class="headerlink" href="#periodic-timers" title="Permanent link">&para;</a></h3>
+<p><code>periodically</code> registers a recurring callback. <code>run-periodic-timers</code> fires the
+registered timers (the transport drives this on the configured interval):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">PresenceChannel</span> <span class="k">is</span> <span class="n">MVC::Keayl::Cable::Channel</span> {
+  <span class="k">method</span> <span class="n">ping</span> { <span class="nb">self</span>.<span class="n">transmit</span>(<span class="s">&#39;ping&#39;</span>) }
+}
+<span class="n">PresenceChannel</span>.<span class="n">periodically</span>(<span class="s">&#39;ping&#39;</span>, <span class="n">every</span> =&gt; <span class="mi">3</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="broadcasting-from-models">Broadcasting from models<a class="headerlink" href="#broadcasting-from-models" title="Permanent link">&para;</a></h2>
+<p>A model that does <code>MVC::Keayl::Cable::Broadcasting::Broadcastable</code> broadcasts
+updates to a stream through the configured server pub/sub.
+<code>broadcast-append-to</code>, <code>broadcast-replace-to</code>, and <code>broadcast-remove-to</code> send a
+payload naming the action, target, and content; <code>broadcast-to</code> sends an
+arbitrary payload:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Post</span> <span class="k">does</span> <span class="n">Broadcastable</span> { <span class="k">has</span> <span class="nv">$.id</span> }
+
+<span class="nv">$post</span>.<span class="n">broadcast-append-to</span>(<span class="nv">$post</span>, <span class="nb">target</span> =&gt; <span class="s">&#39;posts&#39;</span>, <span class="n">content</span> =&gt; <span class="nv">$rendered-html</span>);
+</code></pre></div></td></tr></table></div>
+<p>The broadcast reaches the channels streaming that broadcasting, which transmit
+it to their clients.</p>
 <h2 id="pubsub-backends">Pub/sub backends<a class="headerlink" href="#pubsub-backends" title="Permanent link">&para;</a></h2>
 <p>A backend is any <code>MVC::Keayl::Cable::PubSub</code>, a role with <code>subscribe($stream,
 &amp;callback)</code>, <code>unsubscribe($id)</code>, and <code>broadcast($stream, $message)</code>.
 <code>MVC::Keayl::Cable::PubSub::InMemory</code> is the built-in, single-process backend; it
-tracks subscribers per stream and fans a broadcast out to each one. Swap in a
-Redis- or message-queue-backed implementation of the same role to share
-broadcasts across processes.</p>
+tracks subscribers per stream and fans a broadcast out to each one.</p>
+<p><code>MVC::Keayl::Cable::PubSub::External</code> shares broadcasts across processes by
+delegating to a networked client (Redis- or PostgreSQL-shaped). The client
+provides <code>subscribe($stream, &amp;callback)</code>, <code>unsubscribe($id)</code>,
+<code>publish($stream, $message)</code>, and <code>subscriber-count($stream)</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$pubsub</span> = <span class="n">MVC::Keayl::Cable::PubSub::External</span>.<span class="nb">new</span>(<span class="n">client</span> =&gt; <span class="nv">$redis-client</span>);
+</code></pre></div></td></tr></table></div>
 
 
 
