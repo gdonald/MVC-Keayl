@@ -78,6 +78,8 @@
     "MVC::Keayl::Mailer::Delivery::File": "lib/MVC/Keayl/Mailer/Delivery/File.rakumod",
     "MVC::Keayl::Mailer::Delivery::SMTP": "lib/MVC/Keayl/Mailer/Delivery/SMTP.rakumod",
     "MVC::Keayl::Mailer::Delivery::Test": "lib/MVC/Keayl/Mailer/Delivery/Test.rakumod",
+    "MVC::Keayl::Mailer::DeliveryJob": "lib/MVC/Keayl/Mailer/DeliveryJob.rakumod",
+    "MVC::Keayl::Mailer::Preview": "lib/MVC/Keayl/Mailer/Preview.rakumod",
     "MVC::Keayl::Mailbox": "lib/MVC/Keayl/Mailbox.rakumod",
     "MVC::Keayl::Mailbox::Router": "lib/MVC/Keayl/Mailbox/Router.rakumod",
     "MVC::Keayl::Mailbox::Ingress": "lib/MVC/Keayl/Mailbox/Ingress.rakumod",

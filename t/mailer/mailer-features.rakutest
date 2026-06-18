@@ -1,0 +1,214 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Mailer;
+use MVC::Keayl::Mail;
+use MVC::Keayl::Mailer::Delivery::Test;
+use MVC::Keayl::Mailer::Preview;
+use MVC::Keayl::View;
+use MVC::Keayl::I18n;
+use MVC::Keayl::Job;
+use MVC::Keayl::Job::QueueAdapter::Test;
+use MVC::Keayl::Parameters;
+
+sub renderer { MVC::Keayl::View.new(paths => ['specs/lib/views']) }
+
+class NoticeMailer is MVC::Keayl::Mailer {
+  method welcome($name) {
+    self.mail(to => 'user@example.com', from => 'noreply@example.com', subject => 'Welcome', locals => %( :$name ));
+  }
+}
+
+# reply-to and multiple recipients
+
+{
+  my class ListMailer is MVC::Keayl::Mailer {
+    method notify {
+      self.mail(to => ['a@x.com', 'b@x.com'], cc => 'c@x.com', bcc => 'd@x.com', reply-to => 'reply@x.com', subject => 'Hi');
+    }
+  }
+
+  my $mail = ListMailer.new.build('notify');
+
+  is $mail.to.elems, 2, 'multiple recipients are kept';
+  is $mail.reply-to, 'reply@x.com', 'reply-to is set on the mail';
+  is $mail.recipients.sort.join(','), 'a@x.com,b@x.com,c@x.com,d@x.com', 'recipients include to, cc, and bcc';
+  like $mail.encoded, /'Reply-To: reply@x.com'/, 'the encoded message carries the reply-to header';
+}
+
+# attachments
+
+{
+  my class FileMailer is MVC::Keayl::Mailer {
+    method report {
+      self.attachments<report.pdf> = 'PDF-BYTES';
+      self.mail(to => 'a@x.com', subject => 'Report');
+    }
+  }
+
+  my $mail = FileMailer.new.build('report');
+  my $encoded = $mail.encoded;
+
+  is $mail.attachments.elems, 1, 'the attachment is added to the mail';
+  like $encoded, /'multipart/mixed'/, 'a mail with an attachment is multipart/mixed';
+  like $encoded, /'Content-Disposition: attachment; filename="report.pdf"'/, 'the attachment sets a content disposition';
+  like $encoded, /'application/pdf'/, 'the attachment content type is inferred from the filename';
+}
+
+{
+  my class InlineMailer is MVC::Keayl::Mailer {
+    method newsletter {
+      self.attachments.inline<logo.png> = %( content-type => 'image/png', content => 'PNG-BYTES' );
+      self.mail(to => 'a@x.com', subject => 'News');
+    }
+  }
+
+  my $encoded = InlineMailer.new.build('newsletter').encoded;
+
+  like $encoded, /'Content-Disposition: inline; filename="logo.png"'/, 'an inline attachment uses an inline disposition';
+  like $encoded, /'Content-ID: <logo.png>'/, 'an inline attachment carries a content id';
+}
+
+# class-level defaults
+
+{
+  my class DefaultsMailer is MVC::Keayl::Mailer {
+    method ping { self.mail(to => 'a@x.com', subject => 'Ping') }
+  }
+  DefaultsMailer.default(from => 'default@x.com', reply-to => 'reply@x.com');
+
+  my $mail = DefaultsMailer.new.build('ping');
+
+  is $mail.from, 'default@x.com', 'a class default supplies the sender';
+  is $mail.reply-to, 'reply@x.com', 'a class default supplies the reply-to';
+}
+
+{
+  my class OverrideMailer is MVC::Keayl::Mailer {
+    method ping { self.mail(to => 'a@x.com', from => 'explicit@x.com', subject => 'Ping') }
+  }
+  OverrideMailer.default(from => 'default@x.com');
+
+  is OverrideMailer.new.build('ping').from, 'explicit@x.com', 'an explicit sender overrides the class default';
+}
+
+# before/after action callbacks
+
+{
+  my class CallbackMailer is MVC::Keayl::Mailer {
+    has @.log;
+    method ping { @.log.push('action'); self.mail(to => 'a@x.com', subject => 'Ping') }
+  }
+  CallbackMailer.before-action(-> $m { $m.log.push('before') });
+  CallbackMailer.after-action(-> $m { $m.log.push('after') });
+
+  my $mailer = CallbackMailer.new;
+  $mailer.build('ping');
+
+  is $mailer.log.join(','), 'before,action,after', 'before and after callbacks wrap the action';
+}
+
+# i18n subject lookup
+
+{
+  my class GreetingMailer is MVC::Keayl::Mailer {
+    method welcome($name) { self.mail(to => 'u@x.com', locals => %( :$name )) }
+  }
+
+  my $i18n = MVC::Keayl::I18n.new(
+    default-locale => 'en',
+    store => %( en => { greeting_mailer => { welcome => { subject => 'Hello %{name}' } } } ),
+  );
+
+  my $mail = GreetingMailer.new(:$i18n).build('welcome', 'Ada');
+
+  is $mail.subject, 'Hello Ada', 'a missing subject is looked up and interpolated from i18n';
+}
+
+# deliver-later through the job queue
+
+{
+  MVC::Keayl::Mailer::Delivery::Test.clear;
+  my $adapter = MVC::Keayl::Job::QueueAdapter::Test.new;
+  MVC::Keayl::Job.queue-adapter($adapter);
+
+  my $mailer = NoticeMailer.new(view-renderer => renderer(), delivery => MVC::Keayl::Mailer::Delivery::Test.new);
+  $mailer.deliver-later('welcome', 'Ada');
+
+  is $adapter.enqueued.elems, 1, 'deliver-later enqueues a delivery job instead of delivering now';
+  is MVC::Keayl::Mailer::Delivery::Test.deliveries.elems, 0, 'nothing is delivered until the job runs';
+
+  $adapter.perform-all;
+  is MVC::Keayl::Mailer::Delivery::Test.deliveries.elems, 1, 'running the job delivers the mail';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+  MVC::Keayl::Mailer::Delivery::Test.clear;
+}
+
+# interceptors and observers
+
+{
+  MVC::Keayl::Mailer::Delivery::Test.clear;
+  MVC::Keayl::Mailer.reset-interceptors;
+  MVC::Keayl::Mailer.reset-observers;
+
+  my @observed;
+  MVC::Keayl::Mailer.register-interceptor(-> $mail { $mail.to = ['redirected@x.com'] });
+  MVC::Keayl::Mailer.register-observer(-> $mail { @observed.push($mail.subject) });
+
+  my $mailer = NoticeMailer.new(view-renderer => renderer(), delivery => MVC::Keayl::Mailer::Delivery::Test.new);
+  $mailer.deliver('welcome', 'Ada');
+
+  is MVC::Keayl::Mailer::Delivery::Test.deliveries[0].to, ['redirected@x.com'], 'an interceptor rewrites the mail before delivery';
+  is @observed.head, 'Welcome', 'an observer sees the mail after delivery';
+
+  MVC::Keayl::Mailer.reset-interceptors;
+  MVC::Keayl::Mailer.reset-observers;
+  MVC::Keayl::Mailer::Delivery::Test.clear;
+}
+
+# previews
+
+{
+  my class NoticePreview is Preview {
+    method welcome { NoticeMailer.new(view-renderer => renderer()).build('welcome', 'Ada') }
+  }
+
+  Previews.reset;
+  Previews.register('notice_mailer', NoticePreview);
+
+  is Previews.names, ['notice_mailer'], 'the registry lists registered previews';
+  is Previews.emails('notice_mailer'), ['welcome'], 'the registry lists a preview\'s emails';
+
+  isa-ok Previews.mail('notice_mailer', 'welcome'), MVC::Keayl::Mail, 'a preview builds a mail';
+  nok Previews.mail('notice_mailer', 'unknown').defined, 'an unknown email is not previewable';
+
+  Previews.reset;
+}
+
+{
+  my class NoticePreview is Preview {
+    method welcome { NoticeMailer.new(view-renderer => renderer()).build('welcome', 'Ada') }
+  }
+  Previews.reset;
+  Previews.register('notice_mailer', NoticePreview);
+
+  my $params   = MVC::Keayl::Parameters.new({ preview => 'notice_mailer', email => 'welcome', part => 'html' });
+  my $response = MVC::Keayl::Mailer::Preview::PreviewController.new(:$params).dispatch('show');
+
+  like $response.body, /'Welcome, Ada'/, 'the preview controller renders the html part';
+  is $response.header('content-type'), 'text/html; charset=utf-8', 'the preview defaults to the html part';
+
+  Previews.reset;
+}
+
+{
+  Previews.reset;
+  my $params   = MVC::Keayl::Parameters.new({ preview => 'missing', email => 'welcome' });
+  my $response = MVC::Keayl::Mailer::Preview::PreviewController.new(:$params).dispatch('show');
+
+  is $response.status, 404, 'the preview controller returns 404 for an unknown preview';
+}
+
+done-testing;
