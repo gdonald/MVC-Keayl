@@ -2,6 +2,7 @@ use v6.d;
 use MVC::Keayl::Application;
 use MVC::Keayl::Routing;
 use MVC::Keayl::Adapter::Cro;
+use MVC::Keayl::Credentials;
 
 unit module MVC::Keayl::CLI;
 
@@ -31,6 +32,7 @@ sub usage(--> Str) is export {
       console                 open a REPL with the app loaded (alias: c)
       generate <type> <name>  run a generator (alias: g)
                                 types: controller, scaffold
+      credentials-edit        decrypt, edit, and re-encrypt the credentials
       version                 print the {NAME} version
       help                    show this message
 
@@ -151,7 +153,54 @@ sub scaffold-app(Str:D $name, IO() :$into = '.'.IO --> List) is export {
     @created.push: $relative;
   }
 
+  my $master-key = generate-master-key();
+
+  my $key-file = $root.add('config/master.key');
+  $key-file.parent.mkdir;
+  $key-file.spurt: $master-key;
+  @created.push: 'config/master.key';
+
+  my $credentials-file = $root.add('config/credentials.yml.enc');
+  $credentials-file.spurt: encrypt-content(initial-credentials(), $master-key);
+  @created.push: 'config/credentials.yml.enc';
+
   @created.List
+}
+
+sub initial-credentials(--> Str) {
+  "secret-key-base: " ~ generate-master-key() ~ generate-master-key() ~ "\n"
+}
+
+sub launch-editor(Str:D $current --> Str) {
+  my $tmp    = $*TMPDIR.add('keayl-credentials-' ~ $*PID ~ '.yml');
+  my $editor = %*ENV<EDITOR> // %*ENV<VISUAL> // 'vi';
+
+  $tmp.spurt: $current;
+  run $editor, $tmp.Str;
+
+  my $edited = $tmp.slurp;
+  $tmp.unlink;
+
+  $edited
+}
+
+sub credentials-edit(IO() :$root = '.'.IO, Str :$env, :&edit, :%env-vars = %*ENV, :$out = $*OUT, :$err = $*ERR --> Int) is export {
+  my $credentials = try MVC::Keayl::Credentials.resolve(:$root, :$env, :%env-vars);
+
+  without $credentials {
+    $err.say: "{NAME}: no master key configured (set KEAYL_MASTER_KEY or create config/master.key)";
+    return 1;
+  }
+
+  my $current = $credentials.content;
+  $current = initial-credentials() if $current eq '';
+
+  my $updated = (&edit // &launch-editor)($current);
+
+  $credentials.save-content($updated);
+  $out.say: "{NAME}: credentials updated";
+
+  0
 }
 
 sub camelize(Str:D $name --> Str) is export {
@@ -466,5 +515,7 @@ sub gitignore(--> Str) {
     /db/*.sqlite3
     /.precomp
     /tmp
+    /config/master.key
+    /config/credentials/*.key
     IGNORE
 }

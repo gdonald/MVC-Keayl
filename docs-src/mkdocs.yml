@@ -20,6 +20,7 @@ nav:
   - Transport & host security: transport-security.md
   - HTTP authentication: http-authentication.md
   - Secrets: secrets.md
+  - Encrypted credentials: credentials.md
   - Content negotiation: content-negotiation.md
   - Caching & streaming: caching.md
   - Live streaming & SSE: live-streaming.md

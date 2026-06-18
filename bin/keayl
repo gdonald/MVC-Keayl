@@ -52,6 +52,8 @@ sub generate(Str:D $type, Str:D $name, @actions --> Int) {
   }
 }
 
+multi sub MAIN('credentials-edit', Str :$env) { exit credentials-edit(:$env); }
+
 multi sub MAIN(Bool :$version) {
   if $version {
     say version(app-base());

@@ -97,6 +97,7 @@
     "MVC::Keayl::Middleware::SecureHeaders": "lib/MVC/Keayl/Middleware/SecureHeaders.rakumod",
     "MVC::Keayl::MiddlewareStack": "lib/MVC/Keayl/MiddlewareStack.rakumod",
     "MVC::Keayl::Secrets": "lib/MVC/Keayl/Secrets.rakumod",
+    "MVC::Keayl::Credentials": "lib/MVC/Keayl/Credentials.rakumod",
     "MVC::Keayl::ParameterFilter": "lib/MVC/Keayl/ParameterFilter.rakumod",
     "MVC::Keayl::Parameters": "lib/MVC/Keayl/Parameters.rakumod",
     "MVC::Keayl::Params": "lib/MVC/Keayl/Params.rakumod",
