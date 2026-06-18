@@ -71,6 +71,8 @@
     "MVC::Keayl::Job::QueueAdapter::Async": "lib/MVC/Keayl/Job/QueueAdapter/Async.rakumod",
     "MVC::Keayl::Job::QueueAdapter::Inline": "lib/MVC/Keayl/Job/QueueAdapter/Inline.rakumod",
     "MVC::Keayl::Job::QueueAdapter::Test": "lib/MVC/Keayl/Job/QueueAdapter/Test.rakumod",
+    "MVC::Keayl::Job::QueueAdapter::Database": "lib/MVC/Keayl/Job/QueueAdapter/Database.rakumod",
+    "MVC::Keayl::Job::GlobalID": "lib/MVC/Keayl/Job/GlobalID.rakumod",
     "MVC::Keayl::Live": "lib/MVC/Keayl/Live.rakumod",
     "MVC::Keayl::Mail": "lib/MVC/Keayl/Mail.rakumod",
     "MVC::Keayl::Mailer": "lib/MVC/Keayl/Mailer.rakumod",

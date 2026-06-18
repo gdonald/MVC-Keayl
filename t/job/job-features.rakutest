@@ -1,0 +1,234 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Job;
+use MVC::Keayl::Job::QueueAdapter::Test;
+use MVC::Keayl::Job::QueueAdapter::Database;
+use MVC::Keayl::Job::GlobalID;
+
+class RecordJob is MVC::Keayl::Job {
+  method perform($sink, $value) { $sink.push: $value }
+}
+
+class FlakyJob is MVC::Keayl::Job {
+  method perform($sink) { $sink.push('try'); die 'transient' }
+}
+FlakyJob.retry-on(Exception, wait => 0, attempts => 3);
+
+class DiscardJob is MVC::Keayl::Job {
+  method perform($sink) { $sink.push('ran'); die 'nope' }
+}
+DiscardJob.discard-on(Exception);
+
+class RescueJob is MVC::Keayl::Job {
+  has @.log;
+  method perform { die 'oops' }
+}
+RescueJob.rescue-from(Exception, -> $job, $error { $job.log.push('rescued:' ~ $error.message) });
+
+class CallbackJob is MVC::Keayl::Job {
+  method perform($sink) { $sink.push('perform') }
+}
+CallbackJob.before-perform(-> $j { $j.arguments[0].push('before') });
+CallbackJob.after-perform(-> $j { $j.arguments[0].push('after') });
+
+class EnqueueCallbackJob is MVC::Keayl::Job {
+  method perform($sink) { }
+}
+EnqueueCallbackJob.before-enqueue(-> $j { $j.arguments[0].push('enqueued') });
+
+class Widget {
+  has $.id;
+  method find($id) { Widget.new(id => $id.Int) }
+}
+
+class WidgetJob is MVC::Keayl::Job {
+  method perform($sink, $widget) { $sink.push($widget.id) }
+}
+
+# The database adapter serializes arguments, so its jobs write to a shared sink
+# they close over rather than to a passed-in array.
+my @db-ran;
+my @db-order;
+my @db-widget-ran;
+
+class DbRecordJob is MVC::Keayl::Job {
+  method perform($value) { @db-ran.push($value) }
+}
+
+class DbWidgetJob is MVC::Keayl::Job {
+  method perform($widget) { @db-widget-ran.push($widget.id) }
+}
+
+class DbPriorityJob is MVC::Keayl::Job {
+  method perform($label) { @db-order.push($label) }
+}
+
+# set carries queue and priority
+
+{
+  my $adapter = MVC::Keayl::Job::QueueAdapter::Test.new;
+  MVC::Keayl::Job.queue-adapter($adapter);
+
+  RecordJob.set(queue => 'low', priority => 7).perform-later([], 1);
+
+  is $adapter.enqueued[0].queue-name, 'low', 'set assigns the queue';
+  is $adapter.enqueued[0].priority, 7, 'set assigns the priority';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+}
+
+# set with wait schedules the job
+
+{
+  MVC::Keayl::Job.clock(sub { 1000 });
+  my $adapter = MVC::Keayl::Job::QueueAdapter::Test.new;
+  MVC::Keayl::Job.queue-adapter($adapter);
+
+  RecordJob.set(wait => 60).perform-later([], 1);
+  is $adapter.enqueued[0].scheduled-at, 1060, 'set with wait schedules relative to the clock';
+
+  RecordJob.set(wait-until => 5000).perform-later([], 1);
+  is $adapter.enqueued[1].scheduled-at, 5000, 'set with wait-until schedules at the absolute time';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+  MVC::Keayl::Job.reset-clock;
+}
+
+# retry-on re-runs up to the attempt limit
+
+{
+  MVC::Keayl::Job.reset-queue-adapter;
+
+  my @tries;
+  dies-ok { FlakyJob.perform-now(@tries) }, 'a job that keeps failing eventually raises';
+  is @tries.elems, 3, 'retry-on runs the job up to the attempt limit';
+}
+
+# discard-on swallows the error
+
+{
+  MVC::Keayl::Job.reset-queue-adapter;
+
+  my @ran;
+  lives-ok { DiscardJob.perform-now(@ran) }, 'discard-on swallows a matching error';
+  is @ran, ['ran'], 'the discarded job still ran once';
+}
+
+# rescue-from handles the error
+
+{
+  my $job = RescueJob.new;
+  lives-ok { $job.execute }, 'rescue-from swallows a matching error';
+  is $job.log.head, 'rescued:oops', 'rescue-from runs its handler';
+}
+
+# perform callbacks
+
+{
+  my @sink;
+  CallbackJob.perform-now(@sink);
+  is @sink.join(','), 'before,perform,after', 'before and after callbacks wrap perform';
+}
+
+# enqueue callbacks
+
+{
+  MVC::Keayl::Job.reset-queue-adapter;
+  my @sink;
+  EnqueueCallbackJob.perform-later(@sink);
+  is @sink, ['enqueued'], 'before-enqueue runs when the job is enqueued';
+}
+
+# global id serialization
+
+{
+  my $widget = Widget.new(id => 42);
+
+  is to-gid($widget), 'gid://keayl/Widget/42', 'a record serializes to a global id';
+  is locate('gid://keayl/Widget/42').id, 42, 'a global id locates the record';
+  nok locate('gid://keayl/Missing/1').defined, 'an unresolvable global id locates nothing';
+}
+
+{
+  my $widget = Widget.new(id => 5);
+  my %serialized = serialize-arguments(\('label', $widget));
+
+  is %serialized<positional>[0], 'label', 'a plain argument serializes unchanged';
+  is %serialized<positional>[1]<_keayl_gid>, 'gid://keayl/Widget/5', 'a record argument serializes to a global id';
+
+  my $restored = deserialize-arguments(%serialized);
+  is $restored.list[1].id, 5, 'a serialized record argument deserializes back to the record';
+}
+
+# database adapter
+
+{
+  @db-ran = ();
+  my $adapter = MVC::Keayl::Job::QueueAdapter::Database.new;
+  MVC::Keayl::Job.queue-adapter($adapter);
+
+  DbRecordJob.perform-later(1);
+
+  is $adapter.store.all.elems, 1, 'the database adapter persists the job';
+  is @db-ran, [], 'a persisted job does not run until worked';
+
+  $adapter.work;
+  is @db-ran, [1], 'work runs the persisted job';
+  is $adapter.store.all.elems, 0, 'a worked job is removed from the store';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+}
+
+# database adapter honours scheduling
+
+{
+  @db-ran = ();
+  my $time = 1000;
+  my $adapter = MVC::Keayl::Job::QueueAdapter::Database.new(clock => sub { $time });
+  MVC::Keayl::Job.queue-adapter($adapter);
+
+  DbRecordJob.set(wait-until => 2000).perform-later(9);
+
+  $adapter.work;
+  is @db-ran, [], 'a future-scheduled job is not worked before its time';
+
+  $time = 2000;
+  $adapter.work;
+  is @db-ran, [9], 'the job runs once its scheduled time arrives';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+}
+
+# database adapter round-trips a record argument
+
+{
+  @db-widget-ran = ();
+  my $adapter = MVC::Keayl::Job::QueueAdapter::Database.new;
+  MVC::Keayl::Job.queue-adapter($adapter);
+
+  DbWidgetJob.perform-later(Widget.new(id => 99));
+  $adapter.work;
+
+  is @db-widget-ran, [99], 'the database adapter serializes and relocates a record argument';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+}
+
+# database adapter works higher priority first
+
+{
+  @db-order = ();
+  my $adapter = MVC::Keayl::Job::QueueAdapter::Database.new;
+  MVC::Keayl::Job.queue-adapter($adapter);
+
+  DbPriorityJob.set(priority => 1).perform-later('low');
+  DbPriorityJob.set(priority => 9).perform-later('high');
+
+  $adapter.work;
+  is @db-order, ['high', 'low'], 'higher-priority jobs are worked first';
+
+  MVC::Keayl::Job.reset-queue-adapter;
+}
+
+done-testing;
