@@ -1,0 +1,213 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Assets;
+use MVC::Keayl::Assets::Serving;
+use MVC::Keayl::Parameters;
+use MVC::Keayl::Helpers::Asset;
+use MVC::Keayl::CLI;
+
+my $temp-counter = 0;
+
+sub temp-root(--> IO::Path) {
+  my $root = $*TMPDIR.add('keayl-assets-' ~ $*PID ~ '-' ~ $temp-counter++);
+  $root.mkdir;
+  $root
+}
+
+sub cleanup(IO::Path $root) {
+  return unless $root.e;
+  for $root.dir -> $entry {
+    $entry.f ?? $entry.unlink !! cleanup($entry);
+  }
+  $root.rmdir;
+}
+
+sub params(%data) {
+  MVC::Keayl::Parameters.new(%data)
+}
+
+# fingerprinting
+
+{
+  is digest-for('body { color: red }'), digest-for('body { color: red }'), 'the same content digests the same';
+  isnt digest-for('a'), digest-for('b'), 'different content digests differently';
+
+  my $name = digested-name('application.css', 'body {}');
+  ok $name ~~ /^ 'application-' <[0..9a..f]>+ '.css' $/, 'a digested name embeds the digest before the extension';
+}
+
+# manifest build
+
+{
+  my $source = temp-root;
+  $source.add('css').mkdir;
+  $source.add('css/app.css').spurt('body { color: red }');
+  $source.add('logo.png').spurt('PNGDATA');
+
+  my $output = temp-root;
+  my $manifest = MVC::Keayl::Assets::Manifest.build($source, :$output);
+
+  ok $manifest.lookup('css/app.css').starts-with('css/app-'), 'the manifest maps a logical path to its digested name';
+  ok $output.add($manifest.lookup('css/app.css')).e, 'the digested file is written to the output directory';
+  is $output.add($manifest.lookup('logo.png')).slurp, 'PNGDATA', 'the digested file keeps the original content';
+
+  cleanup($source);
+  cleanup($output);
+}
+
+# manifest round-trips through json
+
+{
+  my $manifest = MVC::Keayl::Assets::Manifest.new(assets => %( 'app.css' => 'app-abc.css' ));
+  my $restored = MVC::Keayl::Assets::Manifest.from-json($manifest.to-json);
+
+  is $restored.lookup('app.css'), 'app-abc.css', 'a manifest round-trips through json';
+}
+
+# resolver through the manifest
+
+{
+  my $manifest = MVC::Keayl::Assets::Manifest.new(assets => %( 'application.css' => 'application-abc123.css' ));
+  my &resolver = manifest-resolver($manifest);
+
+  is &resolver('application', 'css'), '/assets/application-abc123.css', 'the resolver maps a logical name to its digested path';
+  is &resolver('unknown.js', Str), '/assets/unknown.js', 'the resolver passes an unknown asset through';
+  is &resolver('https://cdn/app.css', Str), 'https://cdn/app.css', 'the resolver leaves an external url alone';
+}
+
+# helpers resolve through the manifest
+
+{
+  my $manifest = MVC::Keayl::Assets::Manifest.new(assets => %( 'application.css' => 'application-abc.css', 'logo.png' => 'logo-def.png' ));
+  my &resolver = manifest-resolver($manifest);
+
+  like stylesheet-link-tag('application', :&resolver).Str, /'href="/assets/application-abc.css"'/, 'stylesheet-link-tag resolves through the manifest';
+  like image-tag('logo.png', :&resolver).Str, /'src="/assets/logo-def.png"'/, 'image-tag resolves through the manifest';
+}
+
+# the digested-resolver uses the configured manifest
+
+{
+  reset-asset-manifest;
+  set-asset-manifest(MVC::Keayl::Assets::Manifest.new(assets => %( 'application.css' => 'application-xyz.css' )));
+
+  is digested-resolver('application', 'css'), '/assets/application-xyz.css', 'the digested-resolver consults the configured manifest';
+
+  reset-asset-manifest;
+}
+
+# import maps
+
+{
+  my $importmap = MVC::Keayl::Assets::ImportMap.new;
+  $importmap.pin('application', preload => True);
+  $importmap.pin('lodash', to => 'https://cdn/lodash.js');
+
+  is $importmap.imports<application>, '/assets/application.js', 'pin defaults the module url under /assets';
+  is $importmap.imports<lodash>, 'https://cdn/lodash.js', 'pin honours an explicit url';
+}
+
+{
+  my $dir = temp-root;
+  $dir.add('controllers').mkdir;
+  $dir.add('controllers/hello.js').spurt('export {}');
+  $dir.add('controllers/world.js').spurt('export {}');
+
+  my $importmap = MVC::Keayl::Assets::ImportMap.new;
+  $importmap.pin-all-from($dir.add('controllers'), under => 'controllers');
+
+  is $importmap.imports.keys.sort.join(','), 'controllers/hello,controllers/world', 'pin-all-from pins every module in a directory';
+  is $importmap.imports<controllers/hello>, '/assets/controllers/hello.js', 'pin-all-from builds the module url';
+
+  cleanup($dir);
+}
+
+# importmap tags
+
+{
+  my $importmap = MVC::Keayl::Assets::ImportMap.new;
+  $importmap.pin('application', preload => True);
+
+  my $tags = javascript-importmap-tags($importmap).Str;
+
+  like $tags, /'<script type="importmap">'/, 'importmap tags emit the importmap script';
+  like $tags, /'"application"'/, 'the importmap lists the pinned module';
+  like $tags, /'<link href="/assets/application.js" rel="modulepreload" />'/, 'a preloaded pin emits a modulepreload link';
+}
+
+# importmap tags resolve through a manifest
+
+{
+  my $manifest = MVC::Keayl::Assets::Manifest.new(assets => %( 'application.js' => 'application-abc.js' ));
+  my $importmap = MVC::Keayl::Assets::ImportMap.new;
+  $importmap.pin('application', preload => True);
+
+  my $tags = javascript-importmap-tags($importmap, :$manifest).Str;
+  like $tags, /'/assets/application-abc.js'/, 'importmap tags resolve module urls through the manifest';
+}
+
+# static serving
+
+{
+  my $root = temp-root;
+  $root.add('application-abc.css').spurt('body { color: red }');
+
+  reset-asset-root;
+  set-asset-root($root);
+
+  my $response = MVC::Keayl::Assets::Serving::AssetsController.new(params => params({ path => 'application-abc.css' })).dispatch('show');
+
+  is $response.body, 'body { color: red }', 'the assets controller serves the digested file';
+  is $response.header('Cache-Control'), 'public, max-age=31536000, immutable', 'a digested asset is served with an immutable long-lived cache header';
+
+  reset-asset-root;
+  cleanup($root);
+}
+
+{
+  my $root = temp-root;
+  reset-asset-root;
+  set-asset-root($root);
+
+  my $traversal = MVC::Keayl::Assets::Serving::AssetsController.new(params => params({ path => '../secret' })).dispatch('show');
+  is $traversal.status, 404, 'the assets controller rejects a path traversal';
+
+  my $missing = MVC::Keayl::Assets::Serving::AssetsController.new(params => params({ path => 'nope.css' })).dispatch('show');
+  is $missing.status, 404, 'the assets controller returns 404 for an unknown asset';
+
+  reset-asset-root;
+  cleanup($root);
+}
+
+# assets-precompile
+
+{
+  my $root = temp-root;
+  $root.add('app/assets/css').mkdir;
+  $root.add('app/assets/css/app.css').spurt('body {}');
+
+  my $status = assets-precompile(:$root, out => class { method say($) {} }.new);
+  is $status, 0, 'assets-precompile reports success';
+
+  my $manifest-file = $root.add('public/assets/manifest.json');
+  ok $manifest-file.e, 'assets-precompile writes the manifest';
+
+  my $manifest = MVC::Keayl::Assets::Manifest.from-json($manifest-file.slurp);
+  ok $root.add('public/assets').add($manifest.lookup('css/app.css')).e, 'assets-precompile writes the digested file';
+
+  cleanup($root);
+}
+
+{
+  my $root = temp-root;
+  my @errors;
+  my $status = assets-precompile(:$root, err => class { method say($m) { @errors.push: $m } }.new);
+
+  is $status, 1, 'assets-precompile fails without an asset source';
+  like @errors.join, /'no asset source'/, 'assets-precompile explains the missing source';
+
+  cleanup($root);
+}
+
+done-testing;

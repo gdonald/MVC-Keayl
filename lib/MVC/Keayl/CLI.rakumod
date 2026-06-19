@@ -3,6 +3,7 @@ use MVC::Keayl::Application;
 use MVC::Keayl::Routing;
 use MVC::Keayl::Adapter::Cro;
 use MVC::Keayl::Credentials;
+use MVC::Keayl::Assets;
 
 unit module MVC::Keayl::CLI;
 
@@ -33,6 +34,7 @@ sub usage(--> Str) is export {
       generate <type> <name>  run a generator (alias: g)
                                 types: controller, scaffold
       credentials-edit        decrypt, edit, and re-encrypt the credentials
+      assets-precompile       fingerprint assets and build the manifest
       version                 print the {NAME} version
       help                    show this message
 
@@ -182,6 +184,22 @@ sub launch-editor(Str:D $current --> Str) {
   $tmp.unlink;
 
   $edited
+}
+
+sub assets-precompile(IO() :$root = '.'.IO, IO() :$source = $root.add('app/assets'), IO() :$output = $root.add('public/assets'), :$out = $*OUT, :$err = $*ERR --> Int) is export {
+  unless $source.e {
+    $err.say: "{NAME}: no asset source directory at {$source}";
+    return 1;
+  }
+
+  $output.mkdir;
+
+  my $manifest = MVC::Keayl::Assets::Manifest.build($source, :$output);
+  $output.add('manifest.json').spurt: $manifest.to-json;
+
+  $out.say: "{NAME}: precompiled {$manifest.assets.elems} assets to {$output}";
+
+  0
 }
 
 sub credentials-edit(IO() :$root = '.'.IO, Str :$env, :&edit, :%env-vars = %*ENV, :$out = $*OUT, :$err = $*ERR --> Int) is export {
