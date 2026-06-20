@@ -28,6 +28,7 @@ nav:
   - Live streaming & SSE: live-streaming.md
   - Application & configuration: application.md
   - Command-line interface: cli.md
+  - Health checks & PWA: health-and-pwa.md
   - Test support: test-support.md
   - Logging: logging.md
   - Instrumentation: instrumentation.md
