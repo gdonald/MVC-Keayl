@@ -112,9 +112,59 @@ actions, HAML views (`index`, `show`, `new`, `edit`, and a shared `_form`
 partial), and a `resources` route inserted into `config/routes.raku`. The
 resource name is pluralized for the controller, views, and route.
 
+### mailer, job, channel
+
+```
+keayl generate mailer user welcome
+keayl generate job cleanup
+keayl generate channel chat
+```
+
+`mailer` writes a `MVC::Keayl::Mailer` subclass with a method per action and an
+html and text view for each. `job` writes a `MVC::Keayl::Job` subclass with a
+`perform` method. `channel` writes a `MVC::Keayl::Cable::Channel` subclass with
+`subscribed` and `unsubscribed` callbacks. Each also writes a matching `t/` test
+and `specs/` spec stub.
+
+### model, migration, resource
+
+```
+keayl generate model post title:string body:text
+keayl generate migration create-comments body:text
+keayl generate resource post title:string
+```
+
+`model` writes an [`ORM::ActiveRecord`](application.md) model and a timestamped
+`db/migrate` migration that creates the table, with each `name:type` becoming a
+typed column. `migration` writes just the migration. `resource` writes a model
+plus a controller and a `resources` route. Fields default to `string` when no
+type is given.
+
+### helper
+
+```
+keayl generate helper posts
+```
+
+Writes a helper module (`app/helpers/PostsHelper.rakumod`).
+
 ### Route insertion
 
 A generator inserts its route stubs just inside the `routes` (or `draw`) block of
 `config/routes.raku`, skipping any stub already present. If the file has no
 routes block, the generator still writes the other files and reports that it
 could not add the routes.
+
+## Defaults a new app ships
+
+`keayl new` writes a few framework defaults:
+
+- A health-check endpoint at `/up`
+  (`MVC::Keayl::HealthController`) that returns `200` with a green page.
+- A PWA manifest at `/manifest.json` and a service worker at `/service-worker.js`
+  (`MVC::Keayl::PWAController`).
+- Static exception pages `public/404.html`, `public/422.html`, and
+  `public/500.html`.
+
+The health and PWA controllers are registered in the generated
+`config/application.raku`, and the routes are wired in `config/routes.raku`.

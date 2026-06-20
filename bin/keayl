@@ -41,12 +41,19 @@ multi sub MAIN('c')       { exit console(); }
 multi sub MAIN('generate', $type, $name, *@actions) { exit generate($type, $name, @actions); }
 multi sub MAIN('g',        $type, $name, *@actions) { exit generate($type, $name, @actions); }
 
-sub generate(Str:D $type, Str:D $name, @actions --> Int) {
+sub generate(Str:D $type, Str:D $name, @rest --> Int) {
   given $type {
-    when 'controller' { generate-controller($name, @actions) }
+    when 'controller' { generate-controller($name, @rest) }
     when 'scaffold'   { generate-scaffold($name) }
+    when 'mailer'     { generate-mailer($name, @rest) }
+    when 'job'        { generate-job($name) }
+    when 'channel'    { generate-channel($name) }
+    when 'helper'     { generate-helper($name) }
+    when 'model'      { generate-model($name, @rest) }
+    when 'migration'  { generate-migration($name, @rest) }
+    when 'resource'   { generate-resource($name, @rest) }
     default {
-      note "$NAME: unknown generator '$type' (expected: controller, scaffold)";
+      note "$NAME: unknown generator '$type' (expected: controller, scaffold, mailer, job, channel, helper, model, migration, resource)";
       2;
     }
   }

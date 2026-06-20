@@ -30,6 +30,8 @@
     "MVC::Keayl::Adapter::Cro": "lib/MVC/Keayl/Adapter/Cro.rakumod",
     "MVC::Keayl::Adapter::Test": "lib/MVC/Keayl/Adapter/Test.rakumod",
     "MVC::Keayl::APIController": "lib/MVC/Keayl/APIController.rakumod",
+    "MVC::Keayl::HealthController": "lib/MVC/Keayl/HealthController.rakumod",
+    "MVC::Keayl::PWAController": "lib/MVC/Keayl/PWAController.rakumod",
     "MVC::Keayl::Assets": "lib/MVC/Keayl/Assets.rakumod",
     "MVC::Keayl::Assets::Serving": "lib/MVC/Keayl/Assets/Serving.rakumod",
     "MVC::Keayl::ActionText": "lib/MVC/Keayl/ActionText.rakumod",

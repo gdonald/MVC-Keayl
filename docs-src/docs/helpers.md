@@ -283,7 +283,7 @@ the surrounding text. `excerpt` extracts a window of text around a phrase with
 omission markers, and `word-wrap` breaks lines at a width:
 
 ```perl6
-highlight('You searched for rails', 'rails');         # You searched for <mark>rails</mark>
+highlight('You searched for tiger', 'tiger');         # You searched for <mark>tiger</mark>
 excerpt('This is a beautiful morning', 'beautiful', radius => 5);   # ...is a beautiful morn...
 word-wrap('The quick brown fox', line-width => 10);   # "The quick\nbrown fox"
 ```

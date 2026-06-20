@@ -32,7 +32,9 @@ sub usage(--> Str) is export {
       routes                  print the route table
       console                 open a REPL with the app loaded (alias: c)
       generate <type> <name>  run a generator (alias: g)
-                                types: controller, scaffold
+                                types: controller, scaffold, mailer, job,
+                                       channel, helper, model, migration,
+                                       resource
       credentials-edit        decrypt, edit, and re-encrypt the credentials
       assets-precompile       fingerprint assets and build the manifest
       version                 print the {NAME} version
@@ -143,6 +145,9 @@ sub scaffold-app(Str:D $name, IO() :$into = '.'.IO --> List) is export {
     'config/routes.raku'                  => routes-raku(),
     'app/controllers/HomeController.rakumod' => home-controller(),
     'app/views/home/index.haml'           => home-view($name),
+    'public/404.html'                     => exception-page('404', 'Not Found', 'The page you were looking for does not exist.'),
+    'public/422.html'                     => exception-page('422', 'Unprocessable Entity', 'The change you wanted was rejected.'),
+    'public/500.html'                     => exception-page('500', 'Internal Server Error', 'We are sorry, but something went wrong.'),
     'README.md'                           => readme($name),
     '.gitignore'                          => gitignore();
 
@@ -298,6 +303,204 @@ sub generate-controller(Str:D $name, @actions, IO() :$root = '.'.IO, :$out = $*O
   );
 
   0
+}
+
+sub mailer-class-name(Str:D $name --> Str)  { camelize($name) ~ 'Mailer' }
+sub job-class-name(Str:D $name --> Str)     { camelize($name) ~ 'Job' }
+sub channel-class-name(Str:D $name --> Str) { camelize($name) ~ 'Channel' }
+sub helper-module-name(Str:D $name --> Str) { camelize($name) ~ 'Helper' }
+sub model-class-name(Str:D $name --> Str)   { camelize(singularize($name)) }
+
+sub parse-fields(@fields --> List) {
+  @fields.map(-> $field {
+    my ($field-name, $type) = $field.split(':', 2);
+    %( name => $field-name, type => ($type // 'string') )
+  }).List
+}
+
+sub component-test(IO() $root, Str:D $relative, Str:D $class, Str:D $use, :$out = $*OUT) {
+  emit-file($root.add("t/{$relative}.rakutest"), test-stub($class, $use), :$out);
+  emit-file($root.add("specs/{$relative}-spec.raku"), spec-stub($class, $use), :$out);
+}
+
+sub test-stub(Str:D $class, Str:D $use --> Str) {
+  fill(q:to/RAKU/, %( '__CLASS__' => $class, '__USE__' => $use ));
+    use v6.d;
+    use lib 'lib';
+    use Test;
+    use __USE__;
+
+    # TODO: test __CLASS__
+
+    done-testing;
+    RAKU
+}
+
+sub spec-stub(Str:D $class, Str:D $use --> Str) {
+  fill(q:to/RAKU/, %( '__CLASS__' => $class, '__USE__' => $use ));
+    use lib 'lib';
+    use BDD::Behave;
+    use __USE__;
+
+    describe '__CLASS__', {
+      # TODO: describe __CLASS__
+    }
+    RAKU
+}
+
+sub generate-mailer(Str:D $name, @actions, IO() :$root = '.'.IO, :$out = $*OUT --> Int) is export {
+  my $class = mailer-class-name($name);
+  my $path  = $name.lc ~ '_mailer';
+
+  emit-file($root.add("app/mailers/$class.rakumod"), mailer-source($class, @actions), :$out);
+
+  for @actions -> $action {
+    emit-file($root.add("app/views/$path/$action.html.haml"), "%p $class\#$action", :$out);
+    emit-file($root.add("app/views/$path/$action.text.haml"), "$class\#$action", :$out);
+  }
+
+  component-test($root, "mailers/$name", $class, $class, :$out);
+
+  0
+}
+
+sub generate-job(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT --> Int) is export {
+  my $class = job-class-name($name);
+
+  emit-file($root.add("app/jobs/$class.rakumod"), job-source($class), :$out);
+  component-test($root, "jobs/$name", $class, $class, :$out);
+
+  0
+}
+
+sub generate-channel(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT --> Int) is export {
+  my $class = channel-class-name($name);
+
+  emit-file($root.add("app/channels/$class.rakumod"), channel-source($class), :$out);
+  component-test($root, "channels/$name", $class, $class, :$out);
+
+  0
+}
+
+sub generate-helper(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT --> Int) is export {
+  my $module = helper-module-name($name);
+
+  emit-file($root.add("app/helpers/$module.rakumod"), helper-source($module, $name), :$out);
+  component-test($root, "helpers/$name", $module, $module, :$out);
+
+  0
+}
+
+sub generate-migration(Str:D $name, @fields, IO() :$root = '.'.IO, Str :$timestamp, :$out = $*OUT --> Int) is export {
+  my $stamp = $timestamp // migration-timestamp();
+  my $table = $name.subst(/^ ['create' <[-_]>] /, '');
+
+  emit-file(
+    $root.add("db/migrate/$stamp-$name.raku"),
+    migration-source(camelize($name), $table, parse-fields(@fields)),
+    :$out,
+  );
+
+  0
+}
+
+sub generate-model(Str:D $name, @fields, IO() :$root = '.'.IO, Str :$timestamp, :$out = $*OUT --> Int) is export {
+  my $class = model-class-name($name);
+  my $table = pluralize($class.lc);
+
+  emit-file($root.add("app/models/$class.rakumod"), model-source($class), :$out);
+  generate-migration("create-$table", @fields, :$root, :$timestamp, :$out);
+  component-test($root, "models/$name", $class, $class, :$out);
+
+  0
+}
+
+sub generate-resource(Str:D $name, @fields, IO() :$root = '.'.IO, :$out = $*OUT, :$err = $*ERR --> Int) is export {
+  my $singular = singularize($name).lc;
+  my $plural   = pluralize($singular);
+  my $class    = controller-class-name($plural);
+
+  generate-model($singular, @fields, :$root, :$out);
+
+  emit-file($root.add("app/controllers/$class.rakumod"), controller-source($class, []), :$out);
+  insert-routes($root.add('config/routes.raku'), ["resources '$plural';"], :$out, :$err);
+
+  0
+}
+
+sub migration-timestamp(--> Str) {
+  my $now = DateTime.now;
+  sprintf '%04d%02d%02d%02d%02d%02d', $now.year, $now.month, $now.day, $now.hour, $now.minute, $now.second.Int
+}
+
+sub mailer-source(Str:D $class, @actions --> Str) {
+  my $methods = @actions.map(-> $action {
+    "method $action \{\n  self.mail(to => 'to\@example.com', subject => '{$action.tc}');\n}"
+  }).join("\n\n");
+
+  fill(q:to/RAKU/, %( '__CLASS__' => $class, '__METHODS__' => $methods ));
+    use v6.d;
+    use MVC::Keayl::Mailer;
+
+    unit class __CLASS__ is MVC::Keayl::Mailer;
+
+    __METHODS__
+    RAKU
+}
+
+sub job-source(Str:D $class --> Str) {
+  fill(q:to/RAKU/, %( '__CLASS__' => $class ));
+    use v6.d;
+    use MVC::Keayl::Job;
+
+    unit class __CLASS__ is MVC::Keayl::Job;
+
+    method perform() {
+    }
+    RAKU
+}
+
+sub channel-source(Str:D $class --> Str) {
+  fill(q:to/RAKU/, %( '__CLASS__' => $class ));
+    use v6.d;
+    use MVC::Keayl::Cable::Channel;
+
+    unit class __CLASS__ is MVC::Keayl::Cable::Channel;
+
+    method subscribed {
+    }
+
+    method unsubscribed {
+    }
+    RAKU
+}
+
+sub helper-source(Str:D $module, Str:D $name --> Str) {
+  fill(q:to/RAKU/, %( '__MODULE__' => $module ));
+    use v6.d;
+
+    unit module __MODULE__;
+    RAKU
+}
+
+sub migration-source(Str:D $class, Str:D $table, @fields --> Str) {
+  my $columns = @fields.map(-> %field { "      {%field<name>} => \{ :{%field<type>} }" }).join(",\n");
+
+  fill(q:to/RAKU/, %( '__CLASS__' => $class, '__TABLE__' => $table, '__COLUMNS__' => $columns ));
+    use ORM::ActiveRecord::Schema::Migration;
+
+    class __CLASS__ is Migration {
+      method up {
+        self.create-table: '__TABLE__', [
+    __COLUMNS__
+        ]
+      }
+
+      method down {
+        self.drop-table: '__TABLE__';
+      }
+    }
+    RAKU
 }
 
 sub generate-scaffold(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT, :$err = $*ERR --> Int) is export {
@@ -467,15 +670,33 @@ sub application-raku(--> Str) {
     use MVC::Keayl::Application;
     use MVC::Keayl::Config;
     use MVC::Keayl::Routing;
+    use MVC::Keayl::HealthController;
+    use MVC::Keayl::PWAController;
     use lib 'app/controllers';
     use HomeController;
 
     MVC::Keayl::Application.new(
       config      => MVC::Keayl::Config.load('config/application.json'),
       router      => load-routes('config/routes.raku'),
-      controllers => [HomeController],
+      controllers => [HomeController, MVC::Keayl::HealthController, MVC::Keayl::PWAController],
     );
     RAKU
+}
+
+sub exception-page(Str:D $code, Str:D $title, Str:D $message --> Str) {
+  fill(q:to/HTML/, %( '__CODE__' => $code, '__TITLE__' => $title, '__MESSAGE__' => $message ));
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>__CODE__ __TITLE__</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+      </head>
+      <body>
+        <h1>__CODE__ __TITLE__</h1>
+        <p>__MESSAGE__</p>
+      </body>
+    </html>
+    HTML
 }
 
 sub routes-raku(--> Str) {
@@ -484,6 +705,11 @@ sub routes-raku(--> Str) {
 
     routes {
       root to => 'home#index';
+
+      get '/up', to => 'health#show';
+
+      get '/manifest.json',     to => 'pwa#manifest';
+      get '/service-worker.js', to => 'pwa#service-worker';
     }
     RAKU
 }

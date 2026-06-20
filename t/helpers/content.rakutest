@@ -7,22 +7,22 @@ use MVC::Keayl::Helpers::Tag;
 # highlight
 
 {
-  is highlight('You searched for rails', 'rails').Str, 'You searched for <mark>rails</mark>',
+  is highlight('You searched for tiger', 'tiger').Str, 'You searched for <mark>tiger</mark>',
     'highlight wraps a phrase in a mark element';
 }
 
 {
-  is highlight('rails RAILS', 'rails').Str, '<mark>rails</mark> <mark>RAILS</mark>',
+  is highlight('tiger TIGER', 'tiger').Str, '<mark>tiger</mark> <mark>TIGER</mark>',
     'highlight matches case-insensitively and keeps the original text';
 }
 
 {
-  is highlight('use rails', 'rails', highlighter => '<em>\1</em>').Str, 'use <em>rails</em>',
+  is highlight('use tiger', 'tiger', highlighter => '<em>\1</em>').Str, 'use <em>tiger</em>',
     'highlight honours a custom highlighter';
 }
 
 {
-  is highlight('a < b rails', 'rails').Str, 'a &lt; b <mark>rails</mark>', 'highlight escapes the text it wraps';
+  is highlight('a < b tiger', 'tiger').Str, 'a &lt; b <mark>tiger</mark>', 'highlight escapes the text it wraps';
 }
 
 # excerpt

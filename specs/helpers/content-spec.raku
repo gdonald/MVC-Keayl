@@ -5,19 +5,19 @@ use MVC::Keayl::Helpers::Tag;
 
 describe 'MVC::Keayl highlight', {
   it 'wraps a phrase in a mark element', {
-    expect(highlight('You searched for rails', 'rails').Str).to.be('You searched for <mark>rails</mark>');
+    expect(highlight('You searched for tiger', 'tiger').Str).to.be('You searched for <mark>tiger</mark>');
   }
 
   it 'matches case-insensitively and keeps the original text', {
-    expect(highlight('rails RAILS', 'rails').Str).to.be('<mark>rails</mark> <mark>RAILS</mark>');
+    expect(highlight('tiger TIGER', 'tiger').Str).to.be('<mark>tiger</mark> <mark>TIGER</mark>');
   }
 
   it 'honours a custom highlighter', {
-    expect(highlight('use rails', 'rails', highlighter => '<em>\1</em>').Str).to.be('use <em>rails</em>');
+    expect(highlight('use tiger', 'tiger', highlighter => '<em>\1</em>').Str).to.be('use <em>tiger</em>');
   }
 
   it 'escapes the text it wraps', {
-    expect(highlight('a < b rails', 'rails').Str).to.be('a &lt; b <mark>rails</mark>');
+    expect(highlight('a < b tiger', 'tiger').Str).to.be('a &lt; b <mark>tiger</mark>');
   }
 }
 

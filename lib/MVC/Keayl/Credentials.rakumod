@@ -67,7 +67,7 @@ sub paths-for(IO::Path $root, $env --> List) {
 method resolve(IO() :$root = '.'.IO, Str :$env, Str :$master-key is copy, :%env-vars = %*ENV --> MVC::Keayl::Credentials) {
   my ($path, $key-path) = paths-for($root, $env);
 
-  $master-key //= %env-vars<KEAYL_MASTER_KEY> // (%env-vars<RAILS_MASTER_KEY> // ($key-path.e ?? $key-path.slurp.trim !! Str));
+  $master-key //= %env-vars<KEAYL_MASTER_KEY> // ($key-path.e ?? $key-path.slurp.trim !! Str);
 
   die 'no master key configured (set KEAYL_MASTER_KEY or write config/master.key)' without $master-key;
 

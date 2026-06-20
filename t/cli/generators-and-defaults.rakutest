@@ -1,0 +1,154 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::CLI;
+use MVC::Keayl::HealthController;
+use MVC::Keayl::PWAController;
+use MVC::Keayl::Dispatcher;
+use MVC::Keayl::Routing;
+use MVC::Keayl::Request;
+use JSON::Fast;
+use CLIFixtures;
+
+sub silent { StringSink.new }
+
+# mailer generator
+
+{
+  my $dir = temp-dir('gen-mailer');
+  is generate-mailer('user', ['welcome'], root => $dir, out => silent), 0, 'the mailer generator succeeds';
+
+  my $source = $dir.add('app/mailers/UserMailer.rakumod').slurp;
+  like $source, /'unit class UserMailer is MVC::Keayl::Mailer'/, 'the mailer subclasses the framework mailer';
+  like $source, /'method welcome'/, 'the mailer has the named action';
+  ok $dir.add('app/views/user_mailer/welcome.html.haml').e, 'the html view is generated';
+  ok $dir.add('app/views/user_mailer/welcome.text.haml').e, 'the text view is generated';
+  ok $dir.add('t/mailers/user.rakutest').e, 'a test file is generated';
+  ok $dir.add('specs/mailers/user-spec.raku').e, 'a spec file is generated';
+}
+
+# job generator
+
+{
+  my $dir = temp-dir('gen-job');
+  generate-job('cleanup', root => $dir, out => silent);
+
+  my $source = $dir.add('app/jobs/CleanupJob.rakumod').slurp;
+  like $source, /'unit class CleanupJob is MVC::Keayl::Job'/, 'the job subclasses the framework job';
+  like $source, /'method perform'/, 'the job has a perform method';
+  ok $dir.add('t/jobs/cleanup.rakutest').e, 'a job test file is generated';
+}
+
+# channel generator
+
+{
+  my $dir = temp-dir('gen-channel');
+  generate-channel('chat', root => $dir, out => silent);
+
+  my $source = $dir.add('app/channels/ChatChannel.rakumod').slurp;
+  like $source, /'unit class ChatChannel is MVC::Keayl::Cable::Channel'/, 'the channel subclasses the framework channel';
+  like $source, /'method subscribed'/, 'the channel has a subscribed callback';
+}
+
+# helper generator
+
+{
+  my $dir = temp-dir('gen-helper');
+  generate-helper('posts', root => $dir, out => silent);
+
+  my $source = $dir.add('app/helpers/PostsHelper.rakumod').slurp;
+  like $source, /'unit module PostsHelper'/, 'the helper is a module';
+}
+
+# model generator
+
+{
+  my $dir = temp-dir('gen-model');
+  generate-model('post', ['title:string', 'body:text'], root => $dir, timestamp => '20260101000000', out => silent);
+
+  my $model = $dir.add('app/models/Post.rakumod').slurp;
+  like $model, /'unit class Post is Model'/, 'the model delegates to ORM::ActiveRecord';
+
+  ok $dir.add('db/migrate/20260101000000-create-posts.raku').e, 'a migration is generated alongside the model';
+  my $migration = $dir.add('db/migrate/20260101000000-create-posts.raku').slurp;
+  like $migration, /'class CreatePosts is Migration'/, 'the migration is an ORM migration';
+  like $migration, /"self.create-table: 'posts'"/, 'the migration creates the table';
+  like $migration, /'title => { :string }'/, 'a field becomes a typed column';
+  like $migration, /'body => { :text }'/, 'a typed field uses its type';
+}
+
+# migration generator
+
+{
+  my $dir = temp-dir('gen-migration');
+  generate-migration('create-comments', ['body:text'], root => $dir, timestamp => '20260102000000', out => silent);
+
+  ok $dir.add('db/migrate/20260102000000-create-comments.raku').e, 'the migration file is generated with the timestamp prefix';
+}
+
+# resource generator
+
+{
+  my $dir = temp-dir('gen-resource');
+  base-routes-file($dir);
+  generate-resource('post', ['title:string'], root => $dir, out => silent, err => silent);
+
+  ok $dir.add('app/models/Post.rakumod').e, 'the resource generates a model';
+  ok $dir.add('app/controllers/PostsController.rakumod').e, 'the resource generates a controller';
+  like $dir.add('config/routes.raku').slurp, /"resources 'posts'"/, 'the resource adds a resources route';
+}
+
+# health-check endpoint
+
+{
+  my $response = MVC::Keayl::HealthController.new.dispatch('show');
+  is $response.status, 200, 'the health endpoint returns 200';
+  like $response.body, /'background-color: green'/, 'the health endpoint renders a green page';
+}
+
+# pwa manifest and service worker
+
+{
+  my $manifest = MVC::Keayl::PWAController.new.dispatch('manifest');
+  is $manifest.header('content-type'), 'application/manifest+json', 'the manifest is served as a manifest document';
+  is from-json($manifest.body)<start_url>, '/', 'the manifest declares a start url';
+
+  my $worker = MVC::Keayl::PWAController.new.dispatch('service-worker');
+  is $worker.header('content-type'), 'text/javascript', 'the service worker is served as javascript';
+  like $worker.body, /'addEventListener'/, 'the service worker registers an event listener';
+}
+
+# defaults wired into a generated route table
+
+{
+  my $router = routes {
+    get '/up', to => 'health#show';
+    get '/manifest.json', to => 'pwa#manifest';
+  };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(
+    :$router,
+    controllers => [MVC::Keayl::HealthController, MVC::Keayl::PWAController],
+  );
+
+  is $dispatcher.call(MVC::Keayl::Request.new(method => 'GET', path => '/up')).status, 200, '/up routes to the health controller';
+  is $dispatcher.call(MVC::Keayl::Request.new(method => 'GET', path => '/manifest.json')).header('content-type'),
+    'application/manifest+json', '/manifest.json routes to the pwa controller';
+}
+
+# new app ships defaults
+
+{
+  my $dir = temp-dir('new-defaults');
+  scaffold-app('blog', into => $dir);
+
+  ok $dir.add('blog/public/404.html').e, 'new ships a 404 page';
+  ok $dir.add('blog/public/422.html').e, 'new ships a 422 page';
+  ok $dir.add('blog/public/500.html').e, 'new ships a 500 page';
+  like $dir.add('blog/public/404.html').slurp, /'404 Not Found'/, 'the 404 page names the status';
+
+  like $dir.add('blog/config/routes.raku').slurp, /"get '/up'"/, 'new wires the health-check route';
+  like $dir.add('blog/config/routes.raku').slurp, /'service-worker'/, 'new wires the service-worker route';
+}
+
+done-testing;

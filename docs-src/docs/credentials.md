@@ -7,7 +7,7 @@ holds YAML; the master key is 32 hex characters.
 ## The vault
 
 `resolve` loads the credentials for an app root. It reads the master key from
-`KEAYL_MASTER_KEY` (or `RAILS_MASTER_KEY`), falling back to `config/master.key`,
+`KEAYL_MASTER_KEY`, falling back to `config/master.key`,
 and decrypts `config/credentials.yml.enc`:
 
 ```perl6

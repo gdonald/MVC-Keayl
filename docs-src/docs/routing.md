@@ -1,8 +1,8 @@
 # Routing
 
-Routes are declared in `config/routes.raku` with a DSL that mirrors Rails'
-`config/routes.rb`. A `routes` block builds a router that maps an incoming method
-and path to a controller action or an inline handler.
+Routes are declared in `config/routes.raku` with a declarative DSL. A `routes`
+block builds a router that maps an incoming method and path to a controller
+action or an inline handler.
 
 ```perl6
 use MVC::Keayl::Routing;
