@@ -27,6 +27,7 @@ nav:
   - Live streaming & SSE: live-streaming.md
   - Application & configuration: application.md
   - Command-line interface: cli.md
+  - Test support: test-support.md
   - Logging: logging.md
   - Instrumentation: instrumentation.md
   - Error reporting: error-reporting.md

@@ -65,6 +65,13 @@ method header(Str:D $name --> Str) {
   %!headers{$key}<values>.join(', ')
 }
 
+method header-values(Str:D $name --> List) {
+  my $key = $name.lc;
+  return () unless %!headers{$key}:exists;
+
+  %!headers{$key}<values>.List
+}
+
 method headers(--> Hash) {
   my %out;
 
