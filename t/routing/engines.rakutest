@@ -1,0 +1,139 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Engine;
+use MVC::Keayl::Dispatcher;
+use MVC::Keayl::Router;
+use MVC::Keayl::Routing;
+use MVC::Keayl::Controller;
+use MVC::Keayl::View;
+use MVC::Keayl::Request;
+
+class Blog::PostsController is MVC::Keayl::Controller {
+  method index { self.render(plain => 'blog posts') }
+  method show  { self.render(plain => 'blog post ' ~ self.params<id>) }
+}
+
+class HostController is MVC::Keayl::Controller {
+  method home     { self.render(plain => 'host home') }
+  method override { self.render(plain => 'host override') }
+}
+
+sub blog-engine {
+  MVC::Keayl::Engine.new(
+    namespace    => 'Blog',
+    controllers  => [Blog::PostsController],
+    view-paths   => ['engines/blog/app/views'],
+    routes-block => {
+      get '/posts',     to => 'posts#index';
+      get '/posts/:id', to => 'posts#show';
+    },
+  )
+}
+
+sub request($method, $path) {
+  MVC::Keayl::Request.new(:$method, :$path)
+}
+
+# isolate-namespace resolves engine controllers by their short name
+
+{
+  my $engine = blog-engine;
+  is $engine.namespace-path, 'blog', 'the engine derives a namespace path';
+
+  my $resolver = $engine.controller-resolver;
+  ok $resolver('posts') === Blog::PostsController, 'the engine resolves a short controller name within its namespace';
+  ok $resolver('blog/posts') === Blog::PostsController, 'the engine also resolves the full controller path';
+  ok $resolver('missing') =:= Mu, 'an unknown controller resolves to nothing';
+}
+
+# isolate-namespace can be set after construction
+
+{
+  my $engine = MVC::Keayl::Engine.new(controllers => [Blog::PostsController], routes-block => sub { });
+  $engine.isolate-namespace('Blog');
+  is $engine.namespace-path, 'blog', 'isolate-namespace sets the namespace';
+}
+
+# the engine builds its own router
+
+{
+  my $engine = blog-engine;
+  ok $engine.router.recognize('GET', '/posts').defined, 'the engine router recognizes its own routes';
+  is $engine.router.recognize('GET', '/posts/5').params<id>, '5', 'the engine router captures its own params';
+}
+
+# the engine endpoint dispatches its routes to its controllers
+
+{
+  my $engine = blog-engine;
+  my $endpoint = $engine.endpoint;
+
+  is $endpoint.call(request('GET', '/posts')).body, 'blog posts', 'the engine endpoint dispatches to a namespaced controller';
+  is $endpoint.call(request('GET', '/posts/7')).body, 'blog post 7', 'the engine endpoint passes route params through';
+}
+
+# mounting an engine in a host application
+
+{
+  my $engine = blog-engine;
+
+  my $host-router = routes {
+    get '/', to => 'host#home';
+    mount $engine.endpoint, at => '/blog';
+  };
+  my $host = MVC::Keayl::Dispatcher.new(router => $host-router, controllers => [HostController]);
+
+  is $host.call(request('GET', '/')).body, 'host home', 'the host serves its own routes';
+  is $host.call(request('GET', '/blog/posts')).body, 'blog posts', 'a request below the mount point reaches the engine';
+  is $host.call(request('GET', '/blog/posts/3')).body, 'blog post 3', 'mounted engine params survive the rebase';
+}
+
+# host routes override engine routes when declared before the mount
+
+{
+  my $engine = blog-engine;
+
+  my $host-router = routes {
+    get '/blog/posts', to => 'host#override';
+    mount $engine.endpoint, at => '/blog';
+  };
+  my $host = MVC::Keayl::Dispatcher.new(router => $host-router, controllers => [HostController]);
+
+  is $host.call(request('GET', '/blog/posts')).body, 'host override', 'a host route declared before the mount overrides the engine';
+  is $host.call(request('GET', '/blog/posts/9')).body, 'blog post 9', 'unmatched host paths still fall through to the engine';
+}
+
+# view path contribution and host overrides
+
+{
+  my $engine = blog-engine;
+  my $endpoint = $engine.endpoint(view-path-overrides => ['app/views/blog']);
+
+  my @paths = $endpoint.controller-options<view-renderer>.paths;
+  is @paths, ['app/views/blog', 'engines/blog/app/views'], 'host override view paths precede the engine view paths';
+}
+
+{
+  my $engine = blog-engine;
+  is $engine.view-paths, ['engines/blog/app/views'], 'the engine contributes its own view paths';
+
+  $engine.append-view-paths('engines/blog/extra/views');
+  is $engine.view-paths.tail, 'engines/blog/extra/views', 'an engine can append view paths';
+}
+
+# initializers
+
+{
+  my @ran;
+  my $engine = MVC::Keayl::Engine.new(controllers => [], routes-block => sub { });
+  $engine.initializer('seed-cache', -> $e { @ran.push('seed-cache') });
+  $engine.initializer('warm-pool', -> $e { @ran.push('warm-pool') });
+
+  is $engine.initializer-names, ['seed-cache', 'warm-pool'], 'the engine records its initializers';
+
+  $engine.run-initializers;
+  is @ran, ['seed-cache', 'warm-pool'], 'run-initializers runs each initializer in order';
+}
+
+done-testing;

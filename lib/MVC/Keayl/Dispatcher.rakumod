@@ -37,6 +37,16 @@ method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
     return $result ~~ MVC::Keayl::Response ?? $result !! MVC::Keayl::Response.new(body => ~$result);
   }
 
+  with $match.target -> $target {
+    if $target.^can('app') {
+      my $app         = $target.app;
+      my $sub-request = $request.rebase('/' ~ ($match.params<mounted_path> // ''));
+      my $result      = $app ~~ Callable ?? $app($sub-request) !! $app.call($sub-request);
+
+      return $result ~~ MVC::Keayl::Response ?? $result !! MVC::Keayl::Response.new(body => ~$result);
+    }
+  }
+
   my $class = self!resolve($match.controller);
   return self!not-found($request) if $class =:= Mu;
 

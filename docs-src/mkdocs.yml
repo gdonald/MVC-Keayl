@@ -8,6 +8,7 @@ nav:
   - Middleware: middleware.md
   - Server adapters: adapters.md
   - Routing: routing.md
+  - Engines: engines.md
   - Controllers: controllers.md
   - Views: views.md
   - View helpers: helpers.md

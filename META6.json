@@ -53,6 +53,7 @@
     "MVC::Keayl::Cookies": "lib/MVC/Keayl/Cookies.rakumod",
     "MVC::Keayl::CSRF": "lib/MVC/Keayl/CSRF.rakumod",
     "MVC::Keayl::Endpoint": "lib/MVC/Keayl/Endpoint.rakumod",
+    "MVC::Keayl::Engine": "lib/MVC/Keayl/Engine.rakumod",
     "MVC::Keayl::Errors": "lib/MVC/Keayl/Errors.rakumod",
     "MVC::Keayl::ErrorReporter": "lib/MVC/Keayl/ErrorReporter.rakumod",
     "MVC::Keayl::ErrorReporting": "lib/MVC/Keayl/ErrorReporting.rakumod",

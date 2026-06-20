@@ -209,3 +209,15 @@ method query-params(--> Hash) {
 
   %!query-params
 }
+
+method rebase(Str:D $path --> ::?CLASS) {
+  self.WHAT.new(
+    method         => $!method,
+    :$path,
+    query-string   => $!query-string,
+    headers        => %!headers,
+    body           => self.body,
+    scheme         => self.scheme,
+    remote-address => self.remote-ip,
+  )
+}
