@@ -14,7 +14,7 @@
         <link rel="prev" href="../application/">
       
       
-        <link rel="next" href="../logging/">
+        <link rel="next" href="../test-support/">
       
       
         
@@ -384,6 +384,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../controllers/" class="md-nav__link">
         
   
@@ -446,6 +473,33 @@
     
   
     View helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../asset-pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Asset pipeline
   
 
     
@@ -981,6 +1035,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#mailer-job-channel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mailer, job, channel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-migration-resource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        model, migration, resource
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        helper
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#route-insertion" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -996,10 +1083,48 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#defaults-a-new-app-ships" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defaults a new app ships
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../test-support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1352,6 +1477,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#mailer-job-channel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mailer, job, channel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-migration-resource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        model, migration, resource
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        helper
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#route-insertion" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1364,6 +1522,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#defaults-a-new-app-ships" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defaults a new app ships
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1463,11 +1632,51 @@ controller with <code>index</code>, <code>show</code>, <code>new</code>, <code>c
 actions, HAML views (<code>index</code>, <code>show</code>, <code>new</code>, <code>edit</code>, and a shared <code>_form</code>
 partial), and a <code>resources</code> route inserted into <code>config/routes.raku</code>. The
 resource name is pluralized for the controller, views, and route.</p>
+<h3 id="mailer-job-channel">mailer, job, channel<a class="headerlink" href="#mailer-job-channel" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl generate mailer user welcome
+keayl generate job cleanup
+keayl generate channel chat
+</code></pre></div></td></tr></table></div>
+<p><code>mailer</code> writes a <code>MVC::Keayl::Mailer</code> subclass with a method per action and an
+html and text view for each. <code>job</code> writes a <code>MVC::Keayl::Job</code> subclass with a
+<code>perform</code> method. <code>channel</code> writes a <code>MVC::Keayl::Cable::Channel</code> subclass with
+<code>subscribed</code> and <code>unsubscribed</code> callbacks. Each also writes a matching <code>t/</code> test
+and <code>specs/</code> spec stub.</p>
+<h3 id="model-migration-resource">model, migration, resource<a class="headerlink" href="#model-migration-resource" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl generate model post title:string body:text
+keayl generate migration create-comments body:text
+keayl generate resource post title:string
+</code></pre></div></td></tr></table></div>
+<p><code>model</code> writes an <a href="../application/"><code>ORM::ActiveRecord</code></a> model and a timestamped
+<code>db/migrate</code> migration that creates the table, with each <code>name:type</code> becoming a
+typed column. <code>migration</code> writes just the migration. <code>resource</code> writes a model
+plus a controller and a <code>resources</code> route. Fields default to <code>string</code> when no
+type is given.</p>
+<h3 id="helper">helper<a class="headerlink" href="#helper" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl generate helper posts
+</code></pre></div></td></tr></table></div>
+<p>Writes a helper module (<code>app/helpers/PostsHelper.rakumod</code>).</p>
 <h3 id="route-insertion">Route insertion<a class="headerlink" href="#route-insertion" title="Permanent link">&para;</a></h3>
 <p>A generator inserts its route stubs just inside the <code>routes</code> (or <code>draw</code>) block of
 <code>config/routes.raku</code>, skipping any stub already present. If the file has no
 routes block, the generator still writes the other files and reports that it
 could not add the routes.</p>
+<h2 id="defaults-a-new-app-ships">Defaults a new app ships<a class="headerlink" href="#defaults-a-new-app-ships" title="Permanent link">&para;</a></h2>
+<p><code>keayl new</code> writes a few framework defaults:</p>
+<ul>
+<li>A health-check endpoint at <code>/up</code>
+  (<code>MVC::Keayl::HealthController</code>) that returns <code>200</code> with a green page.</li>
+<li>A PWA manifest at <code>/manifest.json</code> and a service worker at <code>/service-worker.js</code>
+  (<code>MVC::Keayl::PWAController</code>).</li>
+<li>Static exception pages <code>public/404.html</code>, <code>public/422.html</code>, and
+  <code>public/500.html</code>.</li>
+</ul>
+<p>The health and PWA controllers are registered in the generated
+<code>config/application.raku</code>, and the routes are wired in <code>config/routes.raku</code>.</p>
 
 
 

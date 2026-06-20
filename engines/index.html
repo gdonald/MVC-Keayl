@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/views/">
+        <link rel="canonical" href="https://gdonald.github.io/MVC-Keayl/engines/">
       
       
-        <link rel="prev" href="../controllers/">
+        <link rel="prev" href="../routing/">
       
       
-        <link rel="next" href="../helpers/">
+        <link rel="next" href="../controllers/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Views - MVC::Keayl</title>
+        <title>Engines - MVC::Keayl</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#views" class="md-skip">
+        <a href="#engines" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Views
+              Engines
             
           </span>
         </div>
@@ -381,10 +381,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../engines/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engines
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -400,6 +427,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#defining-an-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defining an engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#namespace-isolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Namespace isolation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-the-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building the endpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mounting-in-a-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mounting in a host
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#host-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Host overrides
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initializers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initializers
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -435,37 +548,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Views
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../views/" class="md-nav__link">
         
   
   
@@ -481,142 +567,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#template-resolution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Template resolution
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#handlers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Handlers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#caching-and-reloading" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Caching and reloading
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#inline-rendering" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Inline rendering
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#layouts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Layouts
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#content-for-and-yield" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        content-for and yield
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#partials" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Partials
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Partials">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#object-partials" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Object partials
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#collection-partials" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Collection partials
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#output-safety" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output safety
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1377,10 +1327,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#template-resolution" class="md-nav__link">
+  <a href="#defining-an-engine" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Template resolution
+        Defining an engine
       
     </span>
   </a>
@@ -1388,10 +1338,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#handlers" class="md-nav__link">
+  <a href="#namespace-isolation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Handlers
+        Namespace isolation
       
     </span>
   </a>
@@ -1399,10 +1349,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#caching-and-reloading" class="md-nav__link">
+  <a href="#building-the-endpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Caching and reloading
+        Building the endpoint
       
     </span>
   </a>
@@ -1410,10 +1360,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#inline-rendering" class="md-nav__link">
+  <a href="#mounting-in-a-host" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Inline rendering
+        Mounting in a host
       
     </span>
   </a>
@@ -1421,10 +1371,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#layouts" class="md-nav__link">
+  <a href="#host-overrides" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Layouts
+        Host overrides
       
     </span>
   </a>
@@ -1432,60 +1382,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#content-for-and-yield" class="md-nav__link">
+  <a href="#initializers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        content-for and yield
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#partials" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Partials
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Partials">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#object-partials" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Object partials
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#collection-partials" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Collection partials
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#output-safety" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output safety
+        Initializers
       
     </span>
   </a>
@@ -1512,160 +1412,86 @@
   
 
 
-<h1 id="views">Views<a class="headerlink" href="#views" title="Permanent link">&para;</a></h1>
-<p><code>MVC::Keayl::View</code> renders templates. It resolves a template by name, format, and
-handler, compiles it through a pluggable handler, and caches the result. HAML is
-the default handler, backed by <a href="https://github.com/gdonald/Template-HAML">Template::HAML</a>.</p>
+<h1 id="engines">Engines<a class="headerlink" href="#engines" title="Permanent link">&para;</a></h1>
+<p>An engine is a self-contained application packaged to mount inside a host. It
+carries its own routes, controllers, view paths, and initializers under an
+isolated namespace, and the host mounts it at a path.</p>
+<h2 id="defining-an-engine">Defining an engine<a class="headerlink" href="#defining-an-engine" title="Permanent link">&para;</a></h2>
+<p><code>MVC::Keayl::Engine</code> takes a namespace, the controllers it owns, its routes
+block, and the view paths it contributes:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Engine</span>;
+
+<span class="k">my</span> <span class="nv">$blog</span> = <span class="n">MVC::Keayl::Engine</span>.<span class="nb">new</span>(
+  <span class="n">namespace</span>    =&gt; <span class="s">&#39;Blog&#39;</span>,
+  <span class="n">controllers</span>  =&gt; [<span class="n">Blog::PostsController</span>, <span class="n">Blog::CommentsController</span>],
+  <span class="n">view-paths</span>   =&gt; [<span class="s">&#39;engines/blog/app/views&#39;</span>],
+  <span class="n">routes-block</span> =&gt; {
+    <span class="nb">get</span> <span class="s">&#39;/posts&#39;</span>,     <span class="nb">to</span> =&gt; <span class="s">&#39;posts#index&#39;</span>;
+    <span class="nb">get</span> <span class="s">&#39;/posts/:id&#39;</span>, <span class="nb">to</span> =&gt; <span class="s">&#39;posts#show&#39;</span>;
+  },
+);
+</code></pre></div></td></tr></table></div>
+<p><code>isolate-namespace</code> can also set the namespace after construction.</p>
+<h2 id="namespace-isolation">Namespace isolation<a class="headerlink" href="#namespace-isolation" title="Permanent link">&para;</a></h2>
+<p>Within the engine, a route target uses the short controller name. The engine
+resolves it inside its namespace, so <code>to =&gt; 'posts#index'</code> dispatches to
+<code>Blog::PostsController</code> (its <code>controller-path</code> is <code>blog/posts</code>). The full path
+works too. The engine's controllers are dispatched only by the engine, never by
+the host.</p>
+<h2 id="building-the-endpoint">Building the endpoint<a class="headerlink" href="#building-the-endpoint" title="Permanent link">&para;</a></h2>
+<p><code>endpoint</code> builds a dispatcher for the engine's routes and controllers. It is an
+endpoint like any other, so it can be called directly or mounted:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$blog</span>.<span class="n">endpoint</span>.<span class="n">call</span>(<span class="nv">$request</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="mounting-in-a-host">Mounting in a host<a class="headerlink" href="#mounting-in-a-host" title="Permanent link">&para;</a></h2>
+<p>Mount the engine endpoint in the host's routes. Requests below the mount point
+are rebased and handed to the engine:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::View</span>;
-
-<span class="k">my</span> <span class="nv">$view</span> = <span class="n">MVC::Keayl::View</span>.<span class="nb">new</span>(:<span class="n">paths</span>([<span class="s">&#39;app/views&#39;</span>]));
-
-<span class="nv">$view</span>.<span class="n">render-template</span>(<span class="s">&#39;users/show&#39;</span>, { <span class="n">user</span> =&gt; <span class="nv">$user</span> });
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$router</span> = <span class="n">routes</span> {
+  <span class="n">root</span> <span class="nb">to</span> =&gt; <span class="s">&#39;home#index&#39;</span>;
+  <span class="n">mount</span> <span class="nv">$blog</span>.<span class="n">endpoint</span>, <span class="nb">at</span> =&gt; <span class="s">&#39;/blog&#39;</span>;
+};
 </code></pre></div></td></tr></table></div>
-<h2 id="template-resolution">Template resolution<a class="headerlink" href="#template-resolution" title="Permanent link">&para;</a></h2>
-<p><code>render-template</code> resolves a name against each search path in turn, then by
-handler extension, preferring a format-qualified file:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>app/views/users/show.html+phone.haml  # users/show, format html, variant phone
-app/views/users/show.html.haml        # users/show, format html
-app/views/users/show.haml             # format-less fallback
-</code></pre></div></td></tr></table></div>
-<p>The default format is <code>html</code>, overridable per call with <code>:format</code>. A <code>:variant</code>
-prefers a variant-qualified file before the plain one, so <code>phone</code> resolves
-<code>show.html+phone.haml</code> and falls back to <code>show.html.haml</code>. When the View is given
-a controller, a name with no <code>/</code> is resolved relative to the controller's path
-(<code>UsersController</code> resolves under <code>users/</code>).</p>
-<h2 id="handlers">Handlers<a class="headerlink" href="#handlers" title="Permanent link">&para;</a></h2>
-<p>A handler compiles a template source and renders it with locals. The default
-<code>haml</code> handler renders HAML. Register others by extension:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$view</span>.<span class="n">register-handler</span>(<span class="s">&#39;txt&#39;</span>, <span class="n">MyTextHandler</span>.<span class="nb">new</span>);
-</code></pre></div></td></tr></table></div>
-<p>A handler does the <code>MVC::Keayl::View::Handler</code> role: <code>compile($source)</code> returns a
-compiled template, and <code>render($compiled, %locals)</code> produces the output.</p>
-<h2 id="caching-and-reloading">Caching and reloading<a class="headerlink" href="#caching-and-reloading" title="Permanent link">&para;</a></h2>
-<p>Compiled templates are cached by file. <code>reload</code> (on by default) re-checks the
-file's modification time and recompiles when it changes, which suits development.
-Setting <code>cache =&gt; False</code> disables caching so every render recompiles:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$view</span> = <span class="n">MVC::Keayl::View</span>.<span class="nb">new</span>(:<span class="n">paths</span>([<span class="s">&#39;app/views&#39;</span>]), :!<span class="n">reload</span>);   <span class="c1"># trust the cache</span>
-</code></pre></div></td></tr></table></div>
-<h2 id="inline-rendering">Inline rendering<a class="headerlink" href="#inline-rendering" title="Permanent link">&para;</a></h2>
-<p><code>render-inline</code> renders a template string directly, without resolving a file.</p>
-<h2 id="layouts">Layouts<a class="headerlink" href="#layouts" title="Permanent link">&para;</a></h2>
-<p>When an action renders a template, the rendered body is wrapped in a layout from
-<code>layouts/</code>. With no layout chosen, the <code>application</code> layout is used if it exists;
-otherwise the template renders on its own. Inside the layout, the wrapped body is
-available as the <code>content</code> local and through <code>yield</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%html</span>
-<span class="w">  </span><span class="nt">%body</span>
-<span class="w">    </span><span class="p">!=</span><span class="w"> </span><span class="vg">$yield</span><span class="p">()</span>
-</code></pre></div></td></tr></table></div>
-<p>Choose a layout per action with the <code>:layout</code> option, or for every action of a
-controller with the class-level <code>layout</code> declaration:</p>
+<p>A request for <code>/blog/posts/5</code> reaches the engine as <code>/posts/5</code>.</p>
+<h2 id="host-overrides">Host overrides<a class="headerlink" href="#host-overrides" title="Permanent link">&para;</a></h2>
+<p>A host route declared before the mount takes precedence, so the host can override
+an engine route:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">render</span>(<span class="s">&#39;show&#39;</span>, :<span class="n">layout</span>(<span class="s">&#39;print&#39;</span>));   <span class="c1"># this action only</span>
-
-<span class="k">class</span> <span class="n">AdminController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> { }
-<span class="n">AdminController</span>.<span class="n">layout</span>(<span class="s">&#39;admin&#39;</span>);          <span class="c1"># every action</span>
-
-<span class="nb">self</span>.<span class="n">render</span>(<span class="s">&#39;show&#39;</span>, :<span class="n">layout</span>(<span class="nb">False</span>));      <span class="c1"># no layout</span>
-</code></pre></div></td></tr></table></div>
-<p>An action-level <code>:layout</code> overrides a controller declaration, which overrides the
-<code>application</code> default.</p>
-<h2 id="content-for-and-yield">content-for and yield<a class="headerlink" href="#content-for-and-yield" title="Permanent link">&para;</a></h2>
-<p>A template captures named content with <code>content_for</code>, and the layout places it
-with <code>yield</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">-# in the template</span>
-<span class="p">=</span><span class="w"> </span><span class="vg">$content_for</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Dashboard&#39;</span><span class="p">)</span>
-
-<span class="cp">-# in the layout</span>
-<span class="nt">%title</span><span class="p">=</span><span class="w"> </span><span class="vg">$yield</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">)</span>
-<span class="nt">%body</span>
-<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="vg">$yield</span><span class="p">()</span>
-</code></pre></div></td></tr></table></div>
-<p><code>$yield()</code> returns the main body; <code>$yield(name)</code> returns the matching
-<code>content_for</code> capture, or an empty string when none was set.</p>
-<h2 id="partials">Partials<a class="headerlink" href="#partials" title="Permanent link">&para;</a></h2>
-<p>A partial is a template whose file name begins with an underscore. It is referred
-to without the underscore. <code>render-partial</code> renders one with locals:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$view</span>.<span class="n">render-partial</span>(<span class="s">&#39;users/form&#39;</span>, { <span class="n">user</span> =&gt; <span class="nv">$user</span> });   <span class="c1"># renders users/_form</span>
-</code></pre></div></td></tr></table></div>
-<p>A name with no path segment resolves under the controller's view path; a name
-with a <code>/</code> resolves from the views root, so <code>shared/menu</code> renders
-<code>shared/_menu</code> from any controller.</p>
-<p>Inside a template, the <code>partial</code> helper embeds a partial. Use <code>!=</code> so its HTML is
-not escaped:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%ul</span>
-<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="vg">$partial</span><span class="p">(</span><span class="s1">&#39;users/row&#39;</span><span class="p">,</span><span class="w"> </span><span class="sx">%( user =&gt; $user )</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-<h3 id="object-partials">Object partials<a class="headerlink" href="#object-partials" title="Permanent link">&para;</a></h3>
-<p><code>render-object</code> derives the partial from an object. By default the partial name
-and the local both come from the object's class name; an object can override the
-path with a <code>to-partial-path</code> method:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Post</span> {
-  <span class="k">method</span> <span class="n">to-partial-path</span> { <span class="s">&#39;posts/post&#39;</span> }   <span class="c1"># renders posts/_post, local `post`</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">routes</span> {
+  <span class="nb">get</span> <span class="s">&#39;/blog/posts&#39;</span>, <span class="nb">to</span> =&gt; <span class="s">&#39;marketing#featured&#39;</span>;   <span class="c1"># wins over the engine</span>
+  <span class="n">mount</span> <span class="nv">$blog</span>.<span class="n">endpoint</span>, <span class="nb">at</span> =&gt; <span class="s">&#39;/blog&#39;</span>;
 }
-
-<span class="nv">$view</span>.<span class="n">render-object</span>(<span class="nv">$post</span>);                  <span class="c1"># in a template: != $partial_for($post)</span>
 </code></pre></div></td></tr></table></div>
-<p>A controller renders an object directly with <code>render($post)</code>.</p>
-<h3 id="collection-partials">Collection partials<a class="headerlink" href="#collection-partials" title="Permanent link">&para;</a></h3>
-<p><code>render-collection</code> renders a partial once per item. Each render receives the
-item under the partial's local name and a zero-based <code>{local}_counter</code>:</p>
+<p>Unmatched paths still fall through to the engine.</p>
+<p>The host can also override an engine's views. Pass <code>view-path-overrides</code> when
+building the endpoint, and those paths are searched before the engine's, so a
+host template of the same name wins:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$blog</span>.<span class="n">endpoint</span>(<span class="n">view-path-overrides</span> =&gt; [<span class="s">&#39;app/views/blog&#39;</span>]);
+</code></pre></div></td></tr></table></div>
+<p><code>view-paths</code>, <code>helper-paths</code>, and <code>asset-paths</code> expose what the engine
+contributes, and <code>append-view-paths</code> (and its helper/asset counterparts) add
+more.</p>
+<h2 id="initializers">Initializers<a class="headerlink" href="#initializers" title="Permanent link">&para;</a></h2>
+<p>An engine registers initializers and runs them in order, for setup the engine
+needs at boot:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">-# greetings/_line.html.haml</span>
-<span class="nt">%p</span><span class="p">=</span><span class="w"> </span><span class="vg">$line</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="s1">&#39; #&#39;</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="vg">$line_counter</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$blog</span>.<span class="n">initializer</span>(<span class="s">&#39;seed-cache&#39;</span>, -&gt; <span class="nv">$engine</span> { ... });
+<span class="nv">$blog</span>.<span class="n">run-initializers</span>;
 </code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">!=</span><span class="w"> </span><span class="vg">$partial_each</span><span class="p">(</span><span class="s1">&#39;greetings/line&#39;</span><span class="p">,</span><span class="w"> </span><span class="vg">$lines</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-<p>A <code>spacer</code> partial renders between items:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$view</span>.<span class="n">render-collection</span>(<span class="s">&#39;greetings/line&#39;</span>, <span class="nv">@lines</span>, <span class="n">spacer</span> =&gt; <span class="s">&#39;greetings/divider&#39;</span>);
-</code></pre></div></td></tr></table></div>
-<p>A controller renders a collection with <code>render(:partial('line'), :collection(@lines))</code>.</p>
-<h2 id="output-safety">Output safety<a class="headerlink" href="#output-safety" title="Permanent link">&para;</a></h2>
-<p>HAML escapes interpolated values by default, so <code>= $value</code> is safe and <code>!= $value</code>
-emits raw HTML. <code>MVC::Keayl::SafeString</code> adds a safe-buffer type and helpers for
-composing and cleaning HTML.</p>
-<p><code>html-escape</code> encodes the markup-significant characters. <code>html-safe</code> and <code>raw</code>
-wrap a string as a <code>SafeString</code>, which reports <code>is-html-safe</code> and stringifies to
-its raw content. Concatenation escapes anything that is not already safe:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">html-safe</span>(<span class="s">&#39;&lt;b&gt;a&lt;/b&gt;&#39;</span>).<span class="n">concat</span>(<span class="s">&#39;&lt;unsafe&gt;&#39;</span>);     <span class="c1"># &lt;b&gt;a&lt;/b&gt;&amp;lt;unsafe&amp;gt;</span>
-<span class="n">safe-join</span>([<span class="n">html-safe</span>(<span class="s">&#39;&lt;b&gt;a&lt;/b&gt;&#39;</span>), <span class="s">&#39;&lt;x&gt;&#39;</span>]);    <span class="c1"># &lt;b&gt;a&lt;/b&gt;&amp;lt;x&amp;gt;</span>
-</code></pre></div></td></tr></table></div>
-<p><code>sanitize</code> keeps an allowlist of tags and attributes, removes <code>script</code> and <code>style</code>
-elements with their content, and strips event-handler attributes and
-<code>javascript:</code> URLs:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">sanitize</span>(<span class="s">&#39;&lt;a href=&quot;javascript:x()&quot; onclick=&quot;y()&quot;&gt;hi&lt;/a&gt;&#39;</span>);   <span class="c1"># &lt;a&gt;hi&lt;/a&gt;</span>
-<span class="n">sanitize</span>(<span class="s">&#39;&lt;b&gt;ok&lt;/b&gt;&#39;</span>, <span class="n">tags</span> =&gt; <span class="s">&lt;b i em&gt;</span>);                     <span class="c1"># custom allowlist</span>
-</code></pre></div></td></tr></table></div>
-<p><code>json-escape</code> encodes the characters that could end a <code>&lt;script&gt;</code> block (<code>&lt;</code>, <code>&gt;</code>,
-<code>&amp;</code>, and the line and paragraph separators) as <code>\uXXXX</code>, for embedding JSON in a
-script context.</p>
-<p>In templates these are available as the <code>escape</code>, <code>raw</code>, <code>sanitize</code>, and <code>json</code>
-helpers; pair <code>sanitize</code>/<code>raw</code> with <code>!=</code> so the cleaned HTML is not escaped again.</p>
 
 
 
