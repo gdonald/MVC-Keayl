@@ -1,0 +1,31 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::TestSupport;
+use Cro::HTTP::Client;
+use ServerFixtures;
+
+plan 4;
+
+my $server = LiveServer.new(app => EchoEndpoint.new);
+
+like $server.base-url, /^ 'http://127.0.0.1:' \d+ $/,
+   'builds a base URL from the scheme, host, and port';
+
+is $server.url('/widgets'), $server.base-url ~ '/widgets',
+   'joins a path onto the base URL';
+
+isnt $server.port, LiveServer.new(app => EchoEndpoint.new).port,
+   'chooses a different port for each server';
+
+{
+  my $running = LiveServer.new(app => EchoEndpoint.new).start;
+
+  LEAVE $running.stop;
+
+  my $response = await Cro::HTTP::Client.get($running.url('/ping'));
+
+  is $response.header('X-Path'), '/ping',
+     'serves the wrapped app over a real socket';
+}

@@ -37,6 +37,29 @@ $session.assert-select('Welcome');      # substring or a Regex over the body
 `assert-select` matches against the response body (a string substring or a
 regex), with an optional `text =>` to require additional content.
 
+## Live server
+
+`IntegrationSession` drives the app in memory, which covers most tests. When a
+test needs a real listening socket — driving the app from an external HTTP client
+or a browser — `LiveServer` serves a built endpoint over the
+[Cro adapter](adapters.md) on an ephemeral port:
+
+```perl6
+use MVC::Keayl::TestSupport;
+
+my $server = LiveServer.new(app => $application.endpoint).start;
+
+my $url = $server.url('/dashboard');   # http://127.0.0.1:<port>/dashboard
+# ... drive $url with any HTTP client or browser ...
+
+$server.stop;
+```
+
+`new` picks a free localhost port; override it with `host`, `port`, or `scheme`.
+`start` binds the socket and returns the server, `base-url` and `url($path)`
+build addresses against it, and `stop` shuts it down. Each `LiveServer` defaults
+to a distinct port, so several can run at once.
+
 ## Routing assertions
 
 These check a router both ways:

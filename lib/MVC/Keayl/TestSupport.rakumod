@@ -5,6 +5,7 @@ use MVC::Keayl::Router;
 use MVC::Keayl::Routing::UrlHelpers;
 use MVC::Keayl::Mailer::Delivery::Test;
 use MVC::Keayl::Job;
+use MVC::Keayl::Adapter::Cro;
 
 unit module MVC::Keayl::TestSupport;
 
@@ -116,6 +117,45 @@ class IntegrationSession is export {
     }
 
     self
+  }
+}
+
+sub free-port(--> Int) {
+  my $tap  = IO::Socket::Async.listen('127.0.0.1', 0).tap(-> $connection { $connection.close });
+  my $port = await $tap.socket-port;
+
+  $tap.close;
+
+  $port
+}
+
+class LiveServer is export {
+  has     $.app is required;
+  has Str $.host   = '127.0.0.1';
+  has Int $.port   = free-port();
+  has Str $.scheme = 'http';
+  has     $!adapter;
+
+  method base-url(--> Str) {
+    "$!scheme://$!host:$!port"
+  }
+
+  method url(Str:D $path = '' --> Str) {
+    self.base-url ~ $path
+  }
+
+  method start(--> ::?CLASS) {
+    return self if $!adapter.defined;
+
+    $!adapter = MVC::Keayl::Adapter::Cro.new(:$!app, :$!host, :$!port, :$!scheme);
+    $!adapter.start;
+
+    self
+  }
+
+  method stop(--> Nil) {
+    .stop with $!adapter;
+    $!adapter = Nil;
   }
 }
 

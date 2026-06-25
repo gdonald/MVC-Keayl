@@ -101,3 +101,34 @@ my $response = $app.call($request);
 ```
 
 An empty stack returns the endpoint unwrapped.
+
+## Serving static files
+
+`MVC::Keayl::Middleware::Static` serves files from a directory and passes every
+other request through to the app. It suits development and small deployments; in
+production a front-end server such as Apache or nginx usually serves the files
+directly.
+
+```perl6
+use MVC::Keayl::Middleware::Static;
+
+$stack.prepend('static', MVC::Keayl::Middleware::Static, root => 'public'.IO);
+```
+
+A request maps to a file beneath `root`, so `GET /css/app.css` serves
+`public/css/app.css`. Only `GET` and `HEAD` are handled; any other method, a
+missing file, or a directory passes through to the app. The content type is
+derived from the file extension, falling back to `application/octet-stream`.
+Parent-directory segments are refused, so a request cannot escape `root`.
+
+`url-prefix` serves a directory beneath a path prefix, stripping it before the
+lookup. With the settings below, `GET /assets/css/app.css` serves
+`assets/css/app.css`, while a path outside the prefix passes through:
+
+```perl6
+$stack.prepend('static', MVC::Keayl::Middleware::Static,
+  root       => 'assets'.IO,
+  url-prefix => '/assets');
+```
+
+Prepending keeps it outermost, so a matched file short-circuits before routing.

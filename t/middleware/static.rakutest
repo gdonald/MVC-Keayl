@@ -1,0 +1,74 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Endpoint;
+use MVC::Keayl::Request;
+use MVC::Keayl::Response;
+use MVC::Keayl::Middleware::Static;
+
+class StaticStubApp does MVC::Keayl::Endpoint {
+  method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
+    my $response = MVC::Keayl::Response.new;
+    $response.status = 200;
+    $response.body('app');
+    $response
+  }
+}
+
+sub static(*%args) {
+  MVC::Keayl::Middleware::Static.new(app => StaticStubApp.new, root => 'specs/fixtures/static'.IO, |%args)
+}
+
+sub request(*%args) {
+  MVC::Keayl::Request.new(method => 'GET', |%args)
+}
+
+plan 16;
+
+is static().call(request(path => '/app.css')).status, 200,
+   'serves a file with a 200';
+
+is static().call(request(path => '/app.css')).body, "body \{ color: red; }\n",
+   'serves the file contents as the body';
+
+is static().call(request(path => '/app.css')).content-type, 'text/css; charset=utf-8',
+   'sets the content type from the extension';
+
+is static().call(request(path => '/nested/deep.txt')).body, "deep\n",
+   'serves a nested path';
+
+is static().call(request(path => '/app.js')).content-type, 'text/javascript; charset=utf-8',
+   'maps a JavaScript file to a script content type';
+
+is static().call(request(path => '/icon.svg')).content-type, 'image/svg+xml',
+   'maps an SVG file to an image content type';
+
+is static().call(request(path => '/data.bin')).content-type, 'application/octet-stream',
+   'serves an unknown extension as octet-stream';
+
+is static().call(request(path => '/missing.css')).body, 'app',
+   'passes through when the file does not exist';
+
+is static().call(request(method => 'POST', path => '/app.css')).body, 'app',
+   'passes through a non-GET request';
+
+is static().call(request(path => '/nested')).body, 'app',
+   'passes through a directory path';
+
+is static().call(request(path => '/../secret.txt')).body, 'app',
+   'refuses to escape the root with a parent segment';
+
+is static(url-prefix => '/assets').call(request(path => '/assets/app.css')).body, "body \{ color: red; }\n",
+   'serves a file beneath the url prefix';
+
+is static(url-prefix => '/assets').call(request(path => '/app.css')).body, 'app',
+   'passes through a path outside the url prefix';
+
+is static(url-prefix => '/assets').call(request(path => '/assetsx/app.css')).body, 'app',
+   'does not treat a lookalike prefix as a match';
+
+is static().call(request(method => 'HEAD', path => '/app.css')).status, 200,
+   'answers HEAD with a 200';
+
+is static().call(request(method => 'HEAD', path => '/app.css')).body, '',
+   'answers HEAD with no body';
