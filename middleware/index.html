@@ -434,6 +434,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#serving-static-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Serving static files
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1043,6 +1054,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../health-and-pwa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Health checks & PWA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../test-support/" class="md-nav__link">
         
   
@@ -1404,6 +1442,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#serving-static-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Serving static files
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1524,6 +1573,32 @@ itself an endpoint you <code>call</code>:</p>
 <span class="k">my</span> <span class="nv">$response</span> = <span class="nv">$app</span>.<span class="n">call</span>(<span class="nv">$request</span>);
 </code></pre></div></td></tr></table></div>
 <p>An empty stack returns the endpoint unwrapped.</p>
+<h2 id="serving-static-files">Serving static files<a class="headerlink" href="#serving-static-files" title="Permanent link">&para;</a></h2>
+<p><code>MVC::Keayl::Middleware::Static</code> serves files from a directory and passes every
+other request through to the app. It suits development and small deployments; in
+production a front-end server such as Apache or nginx usually serves the files
+directly.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Middleware::Static</span>;
+
+<span class="nv">$stack</span>.<span class="nb">prepend</span>(<span class="s">&#39;static&#39;</span>, <span class="n">MVC::Keayl::Middleware::Static</span>, <span class="n">root</span> =&gt; <span class="s">&#39;public&#39;</span>.<span class="nb">IO</span>);
+</code></pre></div></td></tr></table></div>
+<p>A request maps to a file beneath <code>root</code>, so <code>GET /css/app.css</code> serves
+<code>public/css/app.css</code>. Only <code>GET</code> and <code>HEAD</code> are handled; any other method, a
+missing file, or a directory passes through to the app. The content type is
+derived from the file extension, falling back to <code>application/octet-stream</code>.
+Parent-directory segments are refused, so a request cannot escape <code>root</code>.</p>
+<p><code>url-prefix</code> serves a directory beneath a path prefix, stripping it before the
+lookup. With the settings below, <code>GET /assets/css/app.css</code> serves
+<code>assets/css/app.css</code>, while a path outside the prefix passes through:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$stack</span>.<span class="nb">prepend</span>(<span class="s">&#39;static&#39;</span>, <span class="n">MVC::Keayl::Middleware::Static</span>,
+  <span class="n">root</span>       =&gt; <span class="s">&#39;assets&#39;</span>.<span class="nb">IO</span>,
+  <span class="n">url-prefix</span> =&gt; <span class="s">&#39;/assets&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>Prepending keeps it outermost, so a matched file short-circuits before routing.</p>
 
 
 
