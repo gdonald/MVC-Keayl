@@ -545,6 +545,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Callbacks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#declaring-callbacks-inside-the-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring callbacks inside the class
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1522,6 +1539,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Callbacks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#declaring-callbacks-inside-the-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring callbacks inside the class
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1806,7 +1840,9 @@ work.</p>
 <h2 id="callbacks">Callbacks<a class="headerlink" href="#callbacks" title="Permanent link">&para;</a></h2>
 <p><code>before-action</code>, <code>after-action</code>, and <code>around-action</code> register callbacks on the
 controller class. A callback is a method name or a block. Around callbacks
-receive a continuation they invoke to run the rest of the chain:</p>
+receive a continuation they invoke to run the rest of the chain. The registration
+calls go after the class definition, because the class name is not yet bound to
+the composed type while the body is still being built:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1830,6 +1866,40 @@ gate it on a method or block:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">UsersController</span>.<span class="o">before-</span><span class="n">action</span>(<span class="s">&#39;authenticate&#39;</span>, <span class="n">except</span> =&gt; <span class="s">&lt;index show&gt;</span>);
 <span class="n">UsersController</span>.<span class="o">before-</span><span class="n">action</span>(<span class="s">&#39;require-admin&#39;</span>, <span class="k">if</span> =&gt; <span class="s">&#39;is-admin&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h3 id="declaring-callbacks-inside-the-class">Declaring callbacks inside the class<a class="headerlink" href="#declaring-callbacks-inside-the-class" title="Permanent link">&para;</a></h3>
+<p>To keep registration in the class body, call through <code>$?CLASS</code>, the handle to the
+class being defined:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">UsersController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> {
+  <span class="nv">$?CLASS</span>.<span class="o">before-</span><span class="n">action</span>(<span class="s">&#39;authenticate&#39;</span>, <span class="n">except</span> =&gt; <span class="s">&lt;index show&gt;</span>);
+  <span class="nv">$?CLASS</span>.<span class="n">around-action</span>(<span class="s">&#39;timer&#39;</span>);
+
+  <span class="k">method</span> <span class="n">authenticate</span> { ... }
+  <span class="k">method</span> <span class="n">timer</span>(<span class="nv">$next</span>) { ...; <span class="nv">$next</span>(); ... }
+  <span class="k">method</span> <span class="n">show</span> { ... }
+}
+</code></pre></div></td></tr></table></div>
+<p>Or attach a callback to its method with the <code>is before-action</code>, <code>is
+around-action</code>, and <code>is after-action</code> traits. The method is the callback, and the
+trait takes the same <code>only</code> / <code>except</code> / <code>if</code> / <code>unless</code> options:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">UsersController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> {
+  <span class="k">method</span> <span class="n">authenticate</span> <span class="k">is</span> <span class="o">before-</span><span class="n">action</span>(<span class="n">except</span> =&gt; <span class="s">&lt;index show&gt;</span>) { ... }
+  <span class="k">method</span> <span class="n">timer</span>(<span class="nv">$next</span>)  <span class="k">is</span> <span class="n">around-action</span> { ...; <span class="nv">$next</span>(); ... }
+  <span class="k">method</span> <span class="n">audit</span>         <span class="k">is</span> <span class="o">after-</span><span class="n">action</span>  { ... }
+  <span class="k">method</span> <span class="n">show</span> { ... }
+}
 </code></pre></div></td></tr></table></div>
 <p>A subclass inherits its parents' callbacks and can drop one with
 <code>skip-before-action</code> (and <code>skip-after-action</code> / <code>skip-around-action</code>), with the
