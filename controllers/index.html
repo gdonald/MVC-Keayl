@@ -1742,7 +1742,22 @@ are passed as options:</p>
 </code></pre></div></td></tr></table></div>
 <p>Template, inline, and layout rendering go through the controller's view renderer.
 When a renderer is configured, an action that does not render explicitly
-implicitly renders the template named after the action.</p>
+implicitly renders the template named after the action. An <code>index</code> action with no
+<code>render</code> call renders the <code>index</code> template, so the explicit call is rarely needed.</p>
+<p>Implicit render follows the request format. The default is <code>html</code>, but when the
+request asks for another format (a path extension such as <code>/feed.atom</code>) and a
+template exists for it, that template is rendered with the matching content type.
+The format-specific template is <code>name.&lt;format&gt;.&lt;handler&gt;</code> (for example
+<code>index.xml.haml</code>); the html layout is skipped for non-html formats. When no
+template exists for the requested format, implicit render falls back to the html
+template. Pass <code>format</code> to choose one explicitly:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">self</span>.<span class="n">render</span>(<span class="s">&#39;index&#39;</span>, <span class="nb">format</span> =&gt; <span class="s">&#39;xml&#39;</span>);   <span class="c1"># renders index.xml.haml, types it application/xml</span>
+</code></pre></div></td></tr></table></div>
+<p>The handler is the file's last extension, so the default HAML handler covers the
+markup formats it can emit (html, xml, atom, rss, svg). It does not produce JSON.
+For JSON, render data directly with <code>render(:json($data))</code> or
+<a href="../content-negotiation/"><code>respond-to</code></a>, or register a handler for a JSON template
+language so <code>index.json.&lt;handler&gt;</code> resolves.</p>
 <p>Rendering twice raises a double-render error.</p>
 <h2 id="redirects-and-head">Redirects and head<a class="headerlink" href="#redirects-and-head" title="Permanent link">&para;</a></h2>
 <p><code>redirect-to</code> sends a redirect with an empty body. It takes a path or URL, and an

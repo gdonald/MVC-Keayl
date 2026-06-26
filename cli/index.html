@@ -968,6 +968,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#running-a-new-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running a new app
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#server" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1437,6 +1448,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#running-a-new-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running a new app
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#server" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1596,11 +1618,32 @@ version.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl new blog
 </code></pre></div></td></tr></table></div>
 <p>This writes a starter layout: <code>config/application.json</code>, <code>config/application.raku</code>
-(which loads the config and routes and returns an <code>MVC::Keayl::Application</code>),
-<code>config/routes.raku</code> with a <code>root</code> route, a <code>HomeController</code>, a HAML view for its
-<code>index</code> action, a <code>README.md</code>, and a <code>.gitignore</code>.</p>
+(which loads the config and routes, wires static asset serving, and returns an
+<code>MVC::Keayl::Application</code>), <code>config/routes.raku</code> with a <code>root</code> route, a
+<code>HomeController</code>, an <code>application</code> layout, a HAML view for the <code>index</code> action,
+<code>bin/server</code>, <code>bin/dev</code>, and <code>bin/test</code> scripts, an <code>assets/</code> directory with a
+favicon and stylesheet, a browser spec for the home page, a <code>META6.json</code>, a
+<code>README.md</code>, and a <code>.gitignore</code>.</p>
 <p><code>scaffold-app($name, :$into)</code> returns the list of files it created, relative to
-the new application directory. <code>:into</code> defaults to the current directory.</p>
+the new application directory. <code>:into</code> defaults to the current directory. The
+<code>bin/</code> scripts are written executable.</p>
+<h2 id="running-a-new-app">Running a new app<a class="headerlink" href="#running-a-new-app" title="Permanent link">&para;</a></h2>
+<p>A scaffolded app ships its own runner scripts so it does not depend on <code>keayl</code>
+being on the PATH:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>bin/dev
+</code></pre></div></td></tr></table></div>
+<p><code>bin/dev</code> sets the development environment and host/port, then execs <code>bin/server</code>,
+which loads <code>config/application.raku</code> and serves it with the Cro adapter. Both
+honor <code>KEAYL_HOST</code> and <code>KEAYL_PORT</code>; <code>bin/dev</code> defaults them to <code>127.0.0.1:3000</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>bin/test
+</code></pre></div></td></tr></table></div>
+<p><code>bin/test</code> runs the <code>specs/</code> with behave, filtering the benign socket-teardown
+noise that browser specs produce. Setting <code>SHOW_CHROME</code> runs the browser specs in
+a visible window, serially.</p>
+<p>The generated <code>META6.json</code> depends on <code>MVC::Keayl</code> and <code>ORM::ActiveRecord</code>, and
+test-depends on <code>BDD::Behave</code>, <code>BDD::Behave::Playwright</code>, <code>WWW::Playwright</code>, and
+<code>ORM::Factory</code>, so <code>zef install --deps-only .</code> provisions everything the app and
+its specs need.</p>
 <h2 id="server">server<a class="headerlink" href="#server" title="Permanent link">&para;</a></h2>
 <p>Boot the application and serve it over HTTP with the Cro adapter:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1701,6 +1744,10 @@ could not add the routes.</p>
   (<code>MVC::Keayl::PWAController</code>).</li>
 <li>Static exception pages <code>public/404.html</code>, <code>public/422.html</code>, and
   <code>public/500.html</code>.</li>
+<li>An <code>application</code> layout under <code>app/views/layouts/</code> that the <code>HomeController</code>
+  renders through, linking the generated favicon and stylesheet.</li>
+<li><code>MVC::Keayl::Middleware::Static</code> prepended to the stack, serving the <code>assets/</code>
+  directory under <code>/assets</code>.</li>
 </ul>
 <p>The health and PWA controllers are registered in the generated
 <code>config/application.raku</code>, and the routes are wired in <code>config/routes.raku</code>.</p>
