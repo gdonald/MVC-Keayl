@@ -1962,6 +1962,9 @@ wrapped:</p>
 and choose attributes with <code>:include</code> or <code>:exclude</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">UsersController</span>.<span class="n">wrap-parameters</span>(<span class="s">&#39;person&#39;</span>, <span class="n">include</span> =&gt; <span class="s">&lt;name email&gt;</span>);
 </code></pre></div></td></tr></table></div>
+<p>Or declare it on the class with the <code>is wrap-parameters</code> trait:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">UsersController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> <span class="k">is</span> <span class="n">wrap-parameters</span>(<span class="s">&#39;person&#39;</span>, <span class="n">include</span> =&gt; <span class="s">&lt;name email&gt;</span>) { }
+</code></pre></div></td></tr></table></div>
 <p>Wrapping is skipped when the root key is already present in the params, so an
 explicitly nested body is left untouched.</p>
 <h2 id="custom-renderers">Custom renderers<a class="headerlink" href="#custom-renderers" title="Permanent link">&para;</a></h2>
@@ -1994,6 +1997,14 @@ turns the exception into a response:</p>
 
 <span class="n">ArticlesController</span>.<span class="n">rescue-from</span>(<span class="o">X</span>::<span class="n">MVC::Keayl::NotFound</span>, <span class="s">&#39;not-found&#39;</span>);
 </code></pre></div></td></tr></table></div>
+<p>Or attach the mapping to the handler method with the <code>is rescue-from</code> trait. The
+method is the handler, and the trait takes the exception type (or several):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">ArticlesController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> {
+  <span class="k">method</span> <span class="o">not-</span><span class="n">found</span>(<span class="nv">$error</span>) <span class="k">is</span> <span class="n">rescue-from</span>(<span class="o">X</span>::<span class="n">MVC::Keayl::NotFound</span>) { <span class="nb">self</span>.<span class="nb">head</span>(<span class="mi">404</span>) }
+}
+</code></pre></div></td></tr></table></div>
 <p>Lookup is inheritance-aware: when more than one registered type matches a raised
 exception, the most specific handler wins. A subclass inherits its parents'
 mappings and can override them.</p>
@@ -2012,6 +2023,13 @@ handler propagates.</p>
 }
 
 <span class="n">UsersController</span>.<span class="n">helper-method</span>(<span class="s">&#39;current-user&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>Or mark the method with the <code>is helper-method</code> trait:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">UsersController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> {
+  <span class="k">method</span> <span class="n">current-user</span> <span class="k">is</span> <span class="n">helper-method</span> { ... }
+}
 </code></pre></div></td></tr></table></div>
 <p><code>assign</code> records a value for the template:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -2047,6 +2065,29 @@ subclasses inherit them:</p>
 <p>Callbacks, <code>rescue-from</code> mappings, and <code>helper-method</code> declarations all collect
 across the inheritance chain, and a subclass can add to or override what it
 inherits.</p>
+<p>Every class-level declaration shown here has an <code>is</code> trait form so it can be
+written in the class header instead of a call after the class. The ones that
+attach to a method (<code>before-action</code>, <code>after-action</code>, <code>around-action</code>,
+<code>rescue-from</code>, <code>helper-method</code>) go on the method declaration; the ones that
+configure the whole controller (<code>layout</code>, <code>filter-parameters</code>, <code>add-flash-types</code>,
+<code>protect-from-forgery</code>, <code>rate-limit</code>, <code>wrap-parameters</code>,
+<code>http-basic-authenticate-with</code>) go on the class:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">UsersController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span>
+  <span class="k">is</span> <span class="n">layout</span>(<span class="s">&#39;admin&#39;</span>)
+  <span class="k">is</span> <span class="n">protect-from-forgery</span>
+{
+  <span class="k">method</span> <span class="n">authenticate</span> <span class="k">is</span> <span class="o">before-</span><span class="n">action</span>(<span class="n">except</span> =&gt; <span class="s">&lt;index show&gt;</span>) { ... }
+  <span class="k">method</span> <span class="o">not-</span><span class="n">found</span>(<span class="nv">$error</span>) <span class="k">is</span> <span class="n">rescue-from</span>(<span class="o">X</span>::<span class="n">MVC::Keayl::NotFound</span>) { <span class="nb">self</span>.<span class="nb">head</span>(<span class="mi">404</span>) }
+  <span class="k">method</span> <span class="n">current-user</span> <span class="k">is</span> <span class="n">helper-method</span> { ... }
+}
+</code></pre></div></td></tr></table></div>
 
 
 

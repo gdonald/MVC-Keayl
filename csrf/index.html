@@ -1381,6 +1381,9 @@ token that was issued to the current session. Enable it on a controller with
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">ApplicationController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> { }
 <span class="n">ApplicationController</span>.<span class="n">protect-from-forgery</span>;
 </code></pre></div></td></tr></table></div>
+<p>It also has an <code>is protect-from-forgery</code> trait form for the class header:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">ApplicationController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> <span class="k">is</span> <span class="n">protect-from-forgery</span> { }
+</code></pre></div></td></tr></table></div>
 <p>This registers a before-action that verifies the token on every unsafe verb
 (<code>POST</code>, <code>PUT</code>, <code>PATCH</code>, <code>DELETE</code>). Safe verbs (<code>GET</code>, <code>HEAD</code>, <code>OPTIONS</code>,
 <code>TRACE</code>) are not checked.</p>

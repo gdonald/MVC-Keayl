@@ -1587,6 +1587,9 @@ requests per discriminator within a window and blocks once the count passes the
 limit:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">PostsController</span>.<span class="n">rate-limit</span>(<span class="nb">to</span> =&gt; <span class="mi">100</span>, <span class="n">within</span> =&gt; <span class="mi">60</span>);
 </code></pre></div></td></tr></table></div>
+<p>It also has an <code>is rate-limit</code> trait form for the class header:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">PostsController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> <span class="k">is</span> <span class="n">rate-limit</span>(<span class="nb">to</span> =&gt; <span class="mi">100</span>, <span class="n">within</span> =&gt; <span class="mi">60</span>) { }
+</code></pre></div></td></tr></table></div>
 <p>By default the discriminator is the request's remote IP and an over-limit request
 gets <code>429 Too Many Requests</code> with a <code>Retry-After</code> header set to the window. <code>by</code>
 supplies a custom discriminator and <code>with</code> a custom over-limit handler; <code>store</code>

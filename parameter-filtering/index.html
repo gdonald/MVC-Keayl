@@ -1384,6 +1384,9 @@ and configured filters applied, for logging. Add controller-level names with
 <span class="c1"># in an action</span>
 <span class="nb">self</span>.<span class="n">filtered-params</span>;   <span class="c1"># safe to write to a log</span>
 </code></pre></div></td></tr></table></div>
+<p>It also has an <code>is filter-parameters</code> trait form for the class header:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">PaymentsController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> <span class="k">is</span> <span class="n">filter-parameters</span>(<span class="s">&#39;pin&#39;</span>, <span class="s">&#39;cvv&#39;</span>) { }
+</code></pre></div></td></tr></table></div>
 <p>Filtering copies the parameters, so the controller's <code>params</code> are untouched.</p>
 
 

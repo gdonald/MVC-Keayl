@@ -1417,6 +1417,9 @@ method on the flash, alongside the usual <code>flash&lt;key&gt;</code> access:</
 <span class="nb">self</span>.<span class="n">flash</span>.<span class="n">success</span>(<span class="s">&#39;Saved&#39;</span>);   <span class="c1"># writes flash&lt;success&gt;</span>
 <span class="nb">self</span>.<span class="n">flash</span>.<span class="n">success</span>;            <span class="c1"># reads flash&lt;success&gt;</span>
 </code></pre></div></td></tr></table></div>
+<p>It also has an <code>is add-flash-types</code> trait form for the class header:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">ApplicationController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> <span class="k">is</span> <span class="n">add-flash-types</span>(<span class="s">&#39;success&#39;</span>, <span class="s">&#39;error&#39;</span>) { }
+</code></pre></div></td></tr></table></div>
 <p>A method call for a type that was never registered raises. Registration is
 global, so a type added on the base controller is available everywhere.</p>
 

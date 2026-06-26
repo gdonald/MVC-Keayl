@@ -1607,6 +1607,9 @@ controller with the class-level <code>layout</code> declaration:</p>
 
 <span class="nb">self</span>.<span class="n">render</span>(<span class="s">&#39;show&#39;</span>, :<span class="n">layout</span>(<span class="nb">False</span>));      <span class="c1"># no layout</span>
 </code></pre></div></td></tr></table></div>
+<p>The <code>layout</code> declaration also has an <code>is layout</code> trait form for the class header:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">AdminController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span> <span class="k">is</span> <span class="n">layout</span>(<span class="s">&#39;admin&#39;</span>) { }
+</code></pre></div></td></tr></table></div>
 <p>An action-level <code>:layout</code> overrides a controller declaration, which overrides the
 <code>application</code> default.</p>
 <h2 id="content-for-and-yield">content-for and yield<a class="headerlink" href="#content-for-and-yield" title="Permanent link">&para;</a></h2>

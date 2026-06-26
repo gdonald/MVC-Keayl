@@ -1418,6 +1418,11 @@ before-action authenticating one fixed credential pair, honouring <code>only</co
   <span class="nb">name</span> =&gt; <span class="s">&#39;admin&#39;</span>, <span class="n">password</span> =&gt; <span class="s">&#39;secret&#39;</span>, <span class="n">realm</span> =&gt; <span class="s">&#39;Admin&#39;</span>, <span class="n">except</span> =&gt; <span class="s">&lt;index&gt;</span>,
 );
 </code></pre></div></td></tr></table></div>
+<p>It also has an <code>is http-basic-authenticate-with</code> trait form for the class header:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">DashboardController</span> <span class="k">is</span> <span class="n">MVC::Keayl::Controller</span>
+  <span class="k">is</span> <span class="n">http-basic-authenticate-with</span>(<span class="nb">name</span> =&gt; <span class="s">&#39;admin&#39;</span>, <span class="n">password</span> =&gt; <span class="s">&#39;secret&#39;</span>, <span class="n">except</span> =&gt; <span class="s">&lt;index&gt;</span>) { }
+</code></pre></div></td></tr></table></div>
 <h2 id="token">Token<a class="headerlink" href="#token" title="Permanent link">&para;</a></h2>
 <p><code>authenticate-with-http-token</code> parses an <code>Authorization: Token</code> or
 <code>Authorization: Bearer</code> header into the token and any additional <code>key="value"</code>
