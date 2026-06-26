@@ -54,5 +54,11 @@ self.flash.success('Saved');   # writes flash<success>
 self.flash.success;            # reads flash<success>
 ```
 
+It also has an `is add-flash-types` trait form for the class header:
+
+```perl6
+class ApplicationController is MVC::Keayl::Controller is add-flash-types('success', 'error') { }
+```
+
 A method call for a type that was never registered raises. Registration is
 global, so a type added on the base controller is available everywhere.

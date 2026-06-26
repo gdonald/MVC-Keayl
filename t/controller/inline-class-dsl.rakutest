@@ -1,0 +1,48 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Parameters;
+
+class X::Boom is Exception { method message(--> Str) { 'boom' } }
+
+class InlineDslController is MVC::Keayl::Controller {
+  $?CLASS.rescue-from(X::Boom, 'handle-boom');
+  $?CLASS.helper-method('current-user');
+  $?CLASS.filter-parameters('secret');
+  $?CLASS.add-flash-types('notice');
+  $?CLASS.wrap-parameters('widget');
+  $?CLASS.layout('admin');
+  $?CLASS.protect-from-forgery;
+  $?CLASS.rate-limit(to => 100, within => 60);
+
+  method handle-boom($error) { self.render(plain => 'rescued', status => 503) }
+  method current-user { 'gd' }
+  method explode { X::Boom.new.throw }
+}
+
+sub get(Str:D $path) {
+  MVC::Keayl::Request.new(:method<GET>, :$path)
+}
+
+{
+  my $response = InlineDslController.new(request => get('/explode')).dispatch('explode');
+
+  is $response.status, 503, 'rescue-from declared in-body with $?CLASS handles the exception';
+  is $response.body, 'rescued', 'the in-body rescue handler runs';
+}
+
+{
+  my $controller = InlineDslController.new(
+    params => MVC::Keayl::Parameters.new({ secret => 'hunter2', name => 'gd' }),
+  );
+
+  isnt $controller.filtered-params<secret>, 'hunter2',
+    'filter-parameters declared in-body redacts the configured key';
+  is $controller.filtered-params<name>, 'gd',
+    'an unfiltered parameter passes through';
+}
+
+done-testing;

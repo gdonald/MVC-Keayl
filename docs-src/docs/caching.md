@@ -106,6 +106,12 @@ limit:
 PostsController.rate-limit(to => 100, within => 60);
 ```
 
+It also has an `is rate-limit` trait form for the class header:
+
+```perl6
+class PostsController is MVC::Keayl::Controller is rate-limit(to => 100, within => 60) { }
+```
+
 By default the discriminator is the request's remote IP and an over-limit request
 gets `429 Too Many Requests` with a `Retry-After` header set to the window. `by`
 supplies a custom discriminator and `with` a custom over-limit handler; `store`

@@ -46,6 +46,13 @@ DashboardController.http-basic-authenticate-with(
 );
 ```
 
+It also has an `is http-basic-authenticate-with` trait form for the class header:
+
+```perl6
+class DashboardController is MVC::Keayl::Controller
+  is http-basic-authenticate-with(name => 'admin', password => 'secret', except => <index>) { }
+```
+
 ## Token
 
 `authenticate-with-http-token` parses an `Authorization: Token` or

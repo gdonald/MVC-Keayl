@@ -274,6 +274,53 @@ multi sub trait_mod:<is>(Method:D $method, :$around-action!) is export {
   register-method-callback(%around-actions, $method, $around-action);
 }
 
+multi sub trait_mod:<is>(Method:D $method, :$rescue-from!) is export {
+  my @types = $rescue-from ~~ Positional ?? $rescue-from.list !! ($rescue-from,);
+  (%rescues{$method.package} //= []).push: %( type => $_, handler => $method.name ) for @types;
+}
+
+multi sub trait_mod:<is>(Method:D $method, :$helper-method!) is export {
+  (%helper-methods{$method.package} //= []).append($method.name);
+}
+
+sub trait-call-args($value --> Capture) {
+  return \() if $value ~~ Bool;
+
+  my @items = $value ~~ Positional ?? $value.list !! ($value,);
+  Capture.new(
+    list => @items.grep({ $_ !~~ Pair }).List,
+    hash => %( @items.grep({ $_ ~~ Pair }).map({ .key => .value }) ),
+  )
+}
+
+multi sub trait_mod:<is>(::?CLASS:U $type, :$layout!) is export {
+  $type.layout(|trait-call-args($layout));
+}
+
+multi sub trait_mod:<is>(::?CLASS:U $type, :$protect-from-forgery!) is export {
+  $type.protect-from-forgery(|trait-call-args($protect-from-forgery));
+}
+
+multi sub trait_mod:<is>(::?CLASS:U $type, :$rate-limit!) is export {
+  $type.rate-limit(|trait-call-args($rate-limit));
+}
+
+multi sub trait_mod:<is>(::?CLASS:U $type, :$wrap-parameters!) is export {
+  $type.wrap-parameters(|trait-call-args($wrap-parameters));
+}
+
+multi sub trait_mod:<is>(::?CLASS:U $type, :$filter-parameters!) is export {
+  $type.filter-parameters(|trait-call-args($filter-parameters));
+}
+
+multi sub trait_mod:<is>(::?CLASS:U $type, :$add-flash-types!) is export {
+  $type.add-flash-types(|trait-call-args($add-flash-types));
+}
+
+multi sub trait_mod:<is>(::?CLASS:U $type, :$http-basic-authenticate-with!) is export {
+  $type.http-basic-authenticate-with(|trait-call-args($http-basic-authenticate-with));
+}
+
 method !collect(%registry --> List) {
   my @result;
   @result.append(|(%registry{$_} // [])) for self.^mro.reverse;

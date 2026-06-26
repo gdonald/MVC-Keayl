@@ -38,4 +38,10 @@ PaymentsController.filter-parameters('pin', 'cvv');
 self.filtered-params;   # safe to write to a log
 ```
 
+It also has an `is filter-parameters` trait form for the class header:
+
+```perl6
+class PaymentsController is MVC::Keayl::Controller is filter-parameters('pin', 'cvv') { }
+```
+
 Filtering copies the parameters, so the controller's `params` are untouched.

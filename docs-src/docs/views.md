@@ -80,6 +80,12 @@ AdminController.layout('admin');          # every action
 self.render('show', :layout(False));      # no layout
 ```
 
+The `layout` declaration also has an `is layout` trait form for the class header:
+
+```perl6
+class AdminController is MVC::Keayl::Controller is layout('admin') { }
+```
+
 An action-level `:layout` overrides a controller declaration, which overrides the
 `application` default.
 

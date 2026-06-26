@@ -9,6 +9,12 @@ class ApplicationController is MVC::Keayl::Controller { }
 ApplicationController.protect-from-forgery;
 ```
 
+It also has an `is protect-from-forgery` trait form for the class header:
+
+```perl6
+class ApplicationController is MVC::Keayl::Controller is protect-from-forgery { }
+```
+
 This registers a before-action that verifies the token on every unsafe verb
 (`POST`, `PUT`, `PATCH`, `DELETE`). Safe verbs (`GET`, `HEAD`, `OPTIONS`,
 `TRACE`) are not checked.

@@ -332,6 +332,12 @@ and choose attributes with `:include` or `:exclude`:
 UsersController.wrap-parameters('person', include => <name email>);
 ```
 
+Or declare it on the class with the `is wrap-parameters` trait:
+
+```perl6
+class UsersController is MVC::Keayl::Controller is wrap-parameters('person', include => <name email>) { }
+```
+
 Wrapping is skipped when the root key is already present in the params, so an
 explicitly nested body is left untouched.
 
@@ -365,6 +371,15 @@ class ArticlesController is MVC::Keayl::Controller {
 ArticlesController.rescue-from(X::MVC::Keayl::NotFound, 'not-found');
 ```
 
+Or attach the mapping to the handler method with the `is rescue-from` trait. The
+method is the handler, and the trait takes the exception type (or several):
+
+```perl6
+class ArticlesController is MVC::Keayl::Controller {
+  method not-found($error) is rescue-from(X::MVC::Keayl::NotFound) { self.head(404) }
+}
+```
+
 Lookup is inheritance-aware: when more than one registered type matches a raised
 exception, the most specific handler wins. A subclass inherits its parents'
 mappings and can override them.
@@ -384,6 +399,14 @@ class UsersController is MVC::Keayl::Controller {
 }
 
 UsersController.helper-method('current-user');
+```
+
+Or mark the method with the `is helper-method` trait:
+
+```perl6
+class UsersController is MVC::Keayl::Controller {
+  method current-user is helper-method { ... }
+}
 ```
 
 `assign` records a value for the template:
@@ -418,3 +441,22 @@ class UsersController is ApplicationController { ... }
 Callbacks, `rescue-from` mappings, and `helper-method` declarations all collect
 across the inheritance chain, and a subclass can add to or override what it
 inherits.
+
+Every class-level declaration shown here has an `is` trait form so it can be
+written in the class header instead of a call after the class. The ones that
+attach to a method (`before-action`, `after-action`, `around-action`,
+`rescue-from`, `helper-method`) go on the method declaration; the ones that
+configure the whole controller (`layout`, `filter-parameters`, `add-flash-types`,
+`protect-from-forgery`, `rate-limit`, `wrap-parameters`,
+`http-basic-authenticate-with`) go on the class:
+
+```perl6
+class UsersController is MVC::Keayl::Controller
+  is layout('admin')
+  is protect-from-forgery
+{
+  method authenticate is before-action(except => <index show>) { ... }
+  method not-found($error) is rescue-from(X::MVC::Keayl::NotFound) { self.head(404) }
+  method current-user is helper-method { ... }
+}
+```

@@ -1,0 +1,100 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Parameters;
+use MVC::Keayl::Params;
+
+class X::Boom is Exception { method message(--> Str) { 'boom' } }
+
+class DslTraitController is MVC::Keayl::Controller
+  is layout('admin')
+  is filter-parameters('secret')
+  is add-flash-types('notice')
+  is protect-from-forgery
+{
+  method handle-boom($error) is rescue-from(X::Boom) { self.render(plain => 'rescued', status => 503) }
+  method current-user is helper-method { 'gd' }
+
+  method explode { X::Boom.new.throw }
+}
+
+sub get(Str:D $path) {
+  MVC::Keayl::Request.new(:method<GET>, :$path)
+}
+
+# is rescue-from
+
+{
+  my $response = DslTraitController.new(request => get('/explode')).dispatch('explode');
+
+  is $response.status, 503, 'is rescue-from routes the exception to the handler method';
+  is $response.body, 'rescued', 'the is rescue-from handler runs';
+}
+
+# is filter-parameters
+
+{
+  my $controller = DslTraitController.new(
+    params => MVC::Keayl::Parameters.new({ secret => 'hunter2', name => 'gd' }),
+  );
+
+  isnt $controller.filtered-params<secret>, 'hunter2', 'is filter-parameters redacts the configured key';
+  is $controller.filtered-params<name>, 'gd', 'an unfiltered parameter passes through';
+}
+
+# is helper-method
+
+{
+  ok DslTraitController.^lookup('current-user').defined, 'the helper method stays callable on the controller';
+  is DslTraitController.new.current-user, 'gd', 'is helper-method leaves the method itself intact';
+}
+
+# is protect-from-forgery
+
+{
+  my $response = DslTraitController.new(request => MVC::Keayl::Request.new(:method<POST>, :path('/explode'), :headers({}))).dispatch('explode');
+
+  is $response.status, 422, 'is protect-from-forgery rejects an unsafe request without a token';
+}
+
+# is wrap-parameters (positional key plus named options)
+
+class WrapTraitController is MVC::Keayl::Controller is wrap-parameters('person', include => <name email>) {
+  method create { self.render(plain => self.params<person><name> // 'none') }
+}
+
+{
+  my $request  = MVC::Keayl::Request.new(:method<POST>, :headers({ 'Content-Type' => 'application/json' }), :body('{"name":"Ada","secret":"x"}'));
+  my $response = WrapTraitController.new(:request($request), :params(build-params({}, $request))).dispatch('create');
+
+  is $response.body, 'Ada', 'is wrap-parameters nests the json body under the key and keeps the included attributes';
+}
+
+# is rate-limit (named options only)
+
+class ThrottleTraitController is MVC::Keayl::Controller is rate-limit(to => 1, within => 60, name => 'dsl-trait', by => -> $controller { 'fixed' }) {
+  method ping { self.render(plain => 'ok') }
+}
+
+{
+  is ThrottleTraitController.new(request => get('/ping')).dispatch('ping').status, 200,
+    'is rate-limit allows a request under the limit';
+  is ThrottleTraitController.new(request => get('/ping')).dispatch('ping').status, 429,
+    'is rate-limit blocks a request past the limit';
+}
+
+# is http-basic-authenticate-with
+
+class BasicTraitController is MVC::Keayl::Controller is http-basic-authenticate-with(name => 'admin', password => 'secret') {
+  method dash { self.render(plain => 'dash') }
+}
+
+{
+  is BasicTraitController.new(request => get('/dash')).dispatch('dash').status, 401,
+    'is http-basic-authenticate-with challenges a request with no credentials';
+}
+
+done-testing;
