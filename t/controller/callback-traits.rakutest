@@ -1,0 +1,31 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+
+class TraitController is MVC::Keayl::Controller {
+  has @.trail;
+
+  method authenticate is before-action(except => <public>) { @!trail.push('auth') }
+  method timer($next) is around-action { @!trail.push('around-in'); $next(); @!trail.push('around-out') }
+  method audit is after-action { @!trail.push('audit') }
+
+  method show   { @!trail.push('show') }
+  method public { @!trail.push('public') }
+}
+
+sub run($action) {
+  my $controller = TraitController.new(request => MVC::Keayl::Request.new(:method<GET>, :path("/$action")));
+  $controller.dispatch($action);
+  $controller.trail.join(',')
+}
+
+is run('show'), 'auth,around-in,show,around-out,audit',
+  'is before-action, is around-action, and is after-action all register and run in order';
+
+is run('public'), 'around-in,public,around-out,audit',
+  'the except option on is before-action skips the excluded action';
+
+done-testing;

@@ -249,6 +249,31 @@ method skip-around-action($callback, :$only, :$except) {
   self
 }
 
+sub trait-callback-options($value --> Hash) {
+  return {} if $value ~~ Bool;
+
+  my @pairs = $value ~~ Pair ?? ($value,) !! $value.list;
+  %( @pairs.map({ .key => .value }) )
+}
+
+sub register-method-callback(%registry, Method:D $method, $value --> Nil) {
+  my %opts = trait-callback-options($value);
+  (%registry{$method.package} //= []).push:
+    callback-spec($method.name, %opts<only>, %opts<except>, %opts<if>, %opts<unless>);
+}
+
+multi sub trait_mod:<is>(Method:D $method, :$before-action!) is export {
+  register-method-callback(%before-actions, $method, $before-action);
+}
+
+multi sub trait_mod:<is>(Method:D $method, :$after-action!) is export {
+  register-method-callback(%after-actions, $method, $after-action);
+}
+
+multi sub trait_mod:<is>(Method:D $method, :$around-action!) is export {
+  register-method-callback(%around-actions, $method, $around-action);
+}
+
 method !collect(%registry --> List) {
   my @result;
   @result.append(|(%registry{$_} // [])) for self.^mro.reverse;

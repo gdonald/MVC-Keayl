@@ -1,0 +1,28 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+
+class InlineController is MVC::Keayl::Controller {
+  has @.trail;
+
+  $?CLASS.before-action('record-before');
+  $?CLASS.around-action('record-around');
+
+  method record-before { @!trail.push('before') }
+  method record-around($next) { @!trail.push('around-in'); $next(); @!trail.push('around-out') }
+
+  method show { @!trail.push('action') }
+}
+
+{
+  my $controller = InlineController.new(request => MVC::Keayl::Request.new(:method<GET>, :path('/show')));
+  $controller.dispatch('show');
+
+  is $controller.trail.join(','), 'before,around-in,action,around-out',
+    'callbacks declared inside the class body with $?CLASS run in order';
+}
+
+done-testing;

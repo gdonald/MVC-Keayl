@@ -196,7 +196,9 @@ work.
 
 `before-action`, `after-action`, and `around-action` register callbacks on the
 controller class. A callback is a method name or a block. Around callbacks
-receive a continuation they invoke to run the rest of the chain:
+receive a continuation they invoke to run the rest of the chain. The registration
+calls go after the class definition, because the class name is not yet bound to
+the composed type while the body is still being built:
 
 ```perl6
 class UsersController is MVC::Keayl::Controller {
@@ -218,6 +220,35 @@ gate it on a method or block:
 ```perl6
 UsersController.before-action('authenticate', except => <index show>);
 UsersController.before-action('require-admin', if => 'is-admin');
+```
+
+### Declaring callbacks inside the class
+
+To keep registration in the class body, call through `$?CLASS`, the handle to the
+class being defined:
+
+```perl6
+class UsersController is MVC::Keayl::Controller {
+  $?CLASS.before-action('authenticate', except => <index show>);
+  $?CLASS.around-action('timer');
+
+  method authenticate { ... }
+  method timer($next) { ...; $next(); ... }
+  method show { ... }
+}
+```
+
+Or attach a callback to its method with the `is before-action`, `is
+around-action`, and `is after-action` traits. The method is the callback, and the
+trait takes the same `only` / `except` / `if` / `unless` options:
+
+```perl6
+class UsersController is MVC::Keayl::Controller {
+  method authenticate is before-action(except => <index show>) { ... }
+  method timer($next)  is around-action { ...; $next(); ... }
+  method audit         is after-action  { ... }
+  method show { ... }
+}
 ```
 
 A subclass inherits its parents' callbacks and can drop one with
