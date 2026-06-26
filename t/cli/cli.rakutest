@@ -33,6 +33,10 @@ is program-name(), 'keayl', 'the program name is keayl';
   is version($dir), 'unknown', 'version is unknown when META6.json has no version';
 }
 
+{
+  like framework-version(), /^ \d+ '.' \d+ '.' \d+ $/, 'framework-version reports the installed distribution version';
+}
+
 # usage
 
 {

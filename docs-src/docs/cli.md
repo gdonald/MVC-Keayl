@@ -20,12 +20,42 @@ keayl new blog
 ```
 
 This writes a starter layout: `config/application.json`, `config/application.raku`
-(which loads the config and routes and returns an `MVC::Keayl::Application`),
-`config/routes.raku` with a `root` route, a `HomeController`, a HAML view for its
-`index` action, a `README.md`, and a `.gitignore`.
+(which loads the config and routes, wires static asset serving, and returns an
+`MVC::Keayl::Application`), `config/routes.raku` with a `root` route, a
+`HomeController`, an `application` layout, a HAML view for the `index` action,
+`bin/server`, `bin/dev`, and `bin/test` scripts, an `assets/` directory with a
+favicon and stylesheet, a browser spec for the home page, a `META6.json`, a
+`README.md`, and a `.gitignore`.
 
 `scaffold-app($name, :$into)` returns the list of files it created, relative to
-the new application directory. `:into` defaults to the current directory.
+the new application directory. `:into` defaults to the current directory. The
+`bin/` scripts are written executable.
+
+## Running a new app
+
+A scaffolded app ships its own runner scripts so it does not depend on `keayl`
+being on the PATH:
+
+```
+bin/dev
+```
+
+`bin/dev` sets the development environment and host/port, then execs `bin/server`,
+which loads `config/application.raku` and serves it with the Cro adapter. Both
+honor `KEAYL_HOST` and `KEAYL_PORT`; `bin/dev` defaults them to `127.0.0.1:3000`.
+
+```
+bin/test
+```
+
+`bin/test` runs the `specs/` with behave, filtering the benign socket-teardown
+noise that browser specs produce. Setting `SHOW_CHROME` runs the browser specs in
+a visible window, serially.
+
+The generated `META6.json` depends on `MVC::Keayl` and `ORM::ActiveRecord`, and
+test-depends on `BDD::Behave`, `BDD::Behave::Playwright`, `WWW::Playwright`, and
+`ORM::Factory`, so `zef install --deps-only .` provisions everything the app and
+its specs need.
 
 ## server
 
@@ -165,6 +195,10 @@ could not add the routes.
   (`MVC::Keayl::PWAController`).
 - Static exception pages `public/404.html`, `public/422.html`, and
   `public/500.html`.
+- An `application` layout under `app/views/layouts/` that the `HomeController`
+  renders through, linking the generated favicon and stylesheet.
+- `MVC::Keayl::Middleware::Static` prepended to the stack, serving the `assets/`
+  directory under `/assets`.
 
 The health and PWA controllers are registered in the generated
 `config/application.raku`, and the routes are wired in `config/routes.raku`.

@@ -8,6 +8,7 @@ use MVC::Keayl::PWAController;
 use MVC::Keayl::Dispatcher;
 use MVC::Keayl::Routing;
 use MVC::Keayl::Request;
+use MVC::Keayl::TestSupport;
 use JSON::Fast;
 use CLIFixtures;
 
@@ -149,6 +150,69 @@ sub silent { StringSink.new }
 
   like $dir.add('blog/config/routes.raku').slurp, /"get '/up'"/, 'new wires the health-check route';
   like $dir.add('blog/config/routes.raku').slurp, /'service-worker'/, 'new wires the service-worker route';
+}
+
+{
+  my $dir = temp-dir('new-runnable');
+  scaffold-app('blog', into => $dir);
+
+  ok $dir.add('blog/bin/server').e, 'new ships a server script';
+  ok $dir.add('blog/bin/dev').e, 'new ships a dev script';
+  ok $dir.add('blog/bin/test').e, 'new ships a test script';
+
+  ok $dir.add('blog/bin/server').mode.substr(*-3) eq '755', 'the server script is executable';
+  ok $dir.add('blog/bin/dev').mode.substr(*-3) eq '755', 'the dev script is executable';
+  ok $dir.add('blog/bin/test').mode.substr(*-3) eq '755', 'the test script is executable';
+}
+
+{
+  my $dir = temp-dir('new-assets');
+  scaffold-app('blog', into => $dir);
+
+  ok $dir.add('blog/app/views/layouts/application.html.haml').e, 'new ships an application layout';
+  ok $dir.add('blog/assets/favicon.svg').e, 'new ships a favicon';
+  ok $dir.add('blog/assets/css/style.css').e, 'new ships a stylesheet';
+  ok $dir.add('blog/tmp/.keep').e, 'new keeps the tmp directory';
+  ok $dir.add('blog/app/models/.keep').e, 'new keeps the models directory';
+
+  like $dir.add('blog/config/application.raku').slurp, /'MVC::Keayl::Middleware::Static'/, 'new wires static asset serving';
+}
+
+{
+  my $dir = temp-dir('new-meta');
+  scaffold-app('blog', into => $dir);
+
+  my $meta = $dir.add('blog/META6.json').slurp;
+
+  like $meta, /'"name": "Blog"'/, 'the app META names the camelized app';
+  like $meta, /'MVC::Keayl'/, 'the app META depends on the framework';
+  like $meta, /'ORM::ActiveRecord'/, 'the app META depends on the ORM';
+  like $meta, /'BDD::Behave::Playwright'/, 'the app META test-depends on the browser harness';
+}
+
+{
+  my $dir = temp-dir('new-spec');
+  scaffold-app('blog', into => $dir);
+
+  ok $dir.add('blog/specs/home-spec.raku').e, 'new ships a browser spec for the home page';
+  like $dir.add('blog/specs/home-spec.raku').slurp, /'playwright-page'/, 'the home spec drives a browser page';
+}
+
+{
+  my $dir = temp-dir('new-renders').resolve;
+  scaffold-app('blog', into => $dir);
+
+  my $cwd = $*CWD;
+  chdir $dir.add('blog');
+  LEAVE chdir $cwd;
+
+  my $session = IntegrationSession.new(app => load-application('config/application.raku').endpoint);
+  $session.get('/');
+
+  is $session.response.status, 200, 'the scaffolded home page responds 200';
+  like $session.response.body, /'<!DOCTYPE html>'/, 'the home page renders through the application layout';
+  like $session.response.body, /'Welcome to blog'/, 'the home page shows the welcome heading';
+  like $session.response.body, /'<title>blog</title>'/, 'the layout uses the assigned page title';
 }
 
 done-testing;

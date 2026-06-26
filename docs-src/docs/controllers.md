@@ -117,7 +117,26 @@ self.render('show', layout => False);  # no layout
 
 Template, inline, and layout rendering go through the controller's view renderer.
 When a renderer is configured, an action that does not render explicitly
-implicitly renders the template named after the action.
+implicitly renders the template named after the action. An `index` action with no
+`render` call renders the `index` template, so the explicit call is rarely needed.
+
+Implicit render follows the request format. The default is `html`, but when the
+request asks for another format (a path extension such as `/feed.atom`) and a
+template exists for it, that template is rendered with the matching content type.
+The format-specific template is `name.<format>.<handler>` (for example
+`index.xml.haml`); the html layout is skipped for non-html formats. When no
+template exists for the requested format, implicit render falls back to the html
+template. Pass `format` to choose one explicitly:
+
+```perl6
+self.render('index', format => 'xml');   # renders index.xml.haml, types it application/xml
+```
+
+The handler is the file's last extension, so the default HAML handler covers the
+markup formats it can emit (html, xml, atom, rss, svg). It does not produce JSON.
+For JSON, render data directly with `render(:json($data))` or
+[`respond-to`](content-negotiation.md), or register a handler for a JSON template
+language so `index.json.<handler>` resolves.
 
 Rendering twice raises a double-render error.
 

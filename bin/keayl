@@ -5,9 +5,7 @@ use MVC::Keayl::CLI;
 
 my $NAME = program-name();
 
-sub app-base(--> IO::Path) { $*PROGRAM.parent.parent }
-
-multi sub MAIN('version') { say version(app-base()); }
+multi sub MAIN('version') { say framework-version(); }
 multi sub MAIN('help')    { say usage(); }
 
 multi sub MAIN('new', $name) {
@@ -65,7 +63,7 @@ multi sub MAIN('assets-precompile') { exit assets-precompile(); }
 
 multi sub MAIN(Bool :$version) {
   if $version {
-    say version(app-base());
+    say framework-version();
   } else {
     say usage();
   }

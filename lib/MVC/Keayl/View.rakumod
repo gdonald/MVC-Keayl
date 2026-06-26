@@ -66,6 +66,23 @@ method resolve(Str:D $name, Str:D $format, :$variant --> IO::Path) {
   IO::Path
 }
 
+method has-template(Str:D $name, Str:D $format, :$variant, :$controller --> Bool) {
+  my $lookup = self!lookup-name($name, $controller);
+
+  for @!paths -> $path {
+    if $variant.defined {
+      for %!handlers.keys.sort -> $ext {
+        return True if $path.IO.add($lookup ~ '.' ~ $format ~ '+' ~ $variant ~ '.' ~ $ext).e;
+      }
+    }
+    for %!handlers.keys.sort -> $ext {
+      return True if $path.IO.add($lookup ~ '.' ~ $format ~ '.' ~ $ext).e;
+    }
+  }
+
+  False
+}
+
 method !lookup-name(Str:D $name, $controller --> Str) {
   return $name if $name.contains('/');
   return $name without $controller;

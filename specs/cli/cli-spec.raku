@@ -29,6 +29,12 @@ describe 'MVC::Keayl::CLI version', {
   }
 }
 
+describe 'MVC::Keayl::CLI framework-version', {
+  it 'reports the distribution version as a dotted release', {
+    expect(framework-version() ~~ /^ \d+ '.' \d+ '.' \d+ $/).to.be-truthy;
+  }
+}
+
 describe 'MVC::Keayl::CLI usage', {
   it 'shows the program invocation', {
     expect(usage().contains('Usage: keayl')).to.be-truthy;

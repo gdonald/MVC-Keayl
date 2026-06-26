@@ -22,6 +22,23 @@ sub version(IO() $base --> Str) is export {
   'unknown'
 }
 
+sub framework-version(--> Str) is export {
+  with try ($?DISTRIBUTION.meta<version> // $?DISTRIBUTION.meta<ver>) {
+    return .Str unless .Str eq '*';
+  }
+
+  my $dir = $?FILE.IO.parent;
+
+  loop {
+    return version($dir) if $dir.add('META6.json').e;
+
+    last if $dir.parent === $dir;
+    $dir = $dir.parent;
+  }
+
+  'unknown'
+}
+
 sub usage(--> Str) is export {
   qq:to/USAGE/.chomp;
     Usage: {NAME} <command> [options]
@@ -140,16 +157,28 @@ sub scaffold-app(Str:D $name, IO() :$into = '.'.IO --> List) is export {
   my $root = $into.add($name);
 
   my %files =
-    'config/application.json'             => application-json($name),
-    'config/application.raku'             => application-raku(),
-    'config/routes.raku'                  => routes-raku(),
-    'app/controllers/HomeController.rakumod' => home-controller(),
-    'app/views/home/index.haml'           => home-view($name),
-    'public/404.html'                     => exception-page('404', 'Not Found', 'The page you were looking for does not exist.'),
-    'public/422.html'                     => exception-page('422', 'Unprocessable Entity', 'The change you wanted was rejected.'),
-    'public/500.html'                     => exception-page('500', 'Internal Server Error', 'We are sorry, but something went wrong.'),
-    'README.md'                           => readme($name),
-    '.gitignore'                          => gitignore();
+    'META6.json'                             => app-meta($name),
+    'config/application.json'                => application-json($name),
+    'config/application.raku'                => application-raku(),
+    'config/routes.raku'                     => routes-raku(),
+    'app/controllers/HomeController.rakumod' => home-controller($name),
+    'app/models/.keep'                       => '',
+    'app/views/layouts/application.html.haml' => application-layout(),
+    'app/views/home/index.html.haml'         => home-view($name),
+    'assets/favicon.svg'                     => favicon-svg(),
+    'assets/css/style.css'                   => stylesheet(),
+    'public/404.html'                        => exception-page('404', 'Not Found', 'The page you were looking for does not exist.'),
+    'public/422.html'                        => exception-page('422', 'Unprocessable Entity', 'The change you wanted was rejected.'),
+    'public/500.html'                        => exception-page('500', 'Internal Server Error', 'We are sorry, but something went wrong.'),
+    'specs/home-spec.raku'                   => home-spec(),
+    'tmp/.keep'                              => '',
+    'README.md'                              => readme($name),
+    '.gitignore'                             => gitignore();
+
+  my %executables =
+    'bin/server' => server-script(),
+    'bin/dev'    => dev-script(),
+    'bin/test'   => test-script();
 
   my @created;
 
@@ -157,6 +186,14 @@ sub scaffold-app(Str:D $name, IO() :$into = '.'.IO --> List) is export {
     my $file = $root.add($relative);
     $file.parent.mkdir;
     $file.spurt: %files{$relative};
+    @created.push: $relative;
+  }
+
+  for %executables.keys.sort -> $relative {
+    my $file = $root.add($relative);
+    $file.parent.mkdir;
+    $file.spurt: %executables{$relative};
+    $file.chmod(0o755);
     @created.push: $relative;
   }
 
@@ -672,14 +709,21 @@ sub application-raku(--> Str) {
     use MVC::Keayl::Routing;
     use MVC::Keayl::HealthController;
     use MVC::Keayl::PWAController;
+    use MVC::Keayl::Middleware::Static;
     use lib 'app/controllers';
     use HomeController;
 
-    MVC::Keayl::Application.new(
+    my $app = MVC::Keayl::Application.new(
       config      => MVC::Keayl::Config.load('config/application.json'),
       router      => load-routes('config/routes.raku'),
       controllers => [HomeController, MVC::Keayl::HealthController, MVC::Keayl::PWAController],
     );
+
+    $app.middleware.prepend('static', MVC::Keayl::Middleware::Static,
+      root       => 'assets'.IO,
+      url-prefix => '/assets');
+
+    $app;
     RAKU
 }
 
@@ -714,23 +758,42 @@ sub routes-raku(--> Str) {
     RAKU
 }
 
-sub home-controller(--> Str) {
-  q:to/RAKU/;
+sub home-controller(Str:D $name --> Str) {
+  qq:to/RAKU/;
     use v6.d;
     use MVC::Keayl::Controller;
 
     unit class HomeController is MVC::Keayl::Controller;
 
-    method index {
-      self.render(:plain('Welcome to Keayl'));
+    method index \{
+      self.assign('page-title', '$name');
     }
     RAKU
 }
 
 sub home-view(Str:D $name --> Str) {
   qq:to/HAML/;
-    %h1 Welcome to $name
-    %p Edit app/views/home/index.haml to change this page.
+    %section.welcome
+      %h1 Welcome to $name
+      %p Edit app/views/home/index.html.haml to change this page.
+      %p
+        %a\{href: '/up'} Health check
+    HAML
+}
+
+sub application-layout(--> Str) {
+  q:to/HAML/;
+    !!! 5
+    %html{lang: 'en'}
+      %head
+        %meta{charset: 'utf-8'}
+        %meta{name: 'viewport', content: 'width=device-width, initial-scale=1'}
+        %title= $page-title
+        %link{rel: 'icon', type: 'image/svg+xml', href: '/assets/favicon.svg'}
+        %link{rel: 'stylesheet', href: '/assets/css/style.css'}
+      %body
+        %main
+          != $yield()
     HAML
 }
 
@@ -743,8 +806,20 @@ sub readme(Str:D $name --> Str) {
     ## Running
 
     ```
-    keayl server
+    bin/dev
     ```
+
+    `bin/dev` runs the app locally on http://127.0.0.1:3000. It is a thin wrapper
+    over `bin/server`, which boots the application with the Cro adapter.
+
+    ## Tests
+
+    ```
+    bin/test
+    ```
+
+    `bin/test` runs the specs in `specs/` with behave. Set `SHOW_CHROME` to run the
+    browser specs in a visible window.
 
     ## Routes
 
@@ -757,9 +832,167 @@ sub readme(Str:D $name --> Str) {
 sub gitignore(--> Str) {
   q:to/IGNORE/;
     /db/*.sqlite3
-    /.precomp
-    /tmp
+    .precomp/
+    /tmp/*
+    !/tmp/.keep
+    .behave-failures
+    .DS_Store
     /config/master.key
     /config/credentials/*.key
     IGNORE
+}
+
+sub app-meta(Str:D $name --> Str) {
+  q:to/JSON/.subst('__NAME__', camelize($name));
+    {
+      "name": "__NAME__",
+      "description": "A Keayl application",
+      "version": "0.0.1",
+      "api": "1",
+      "perl": "6.d",
+      "authors": [],
+      "license": "Artistic-2.0",
+      "depends": [
+        "MVC::Keayl:auth<zef:gdonald>",
+        "ORM::ActiveRecord:auth<zef:gdonald>"
+      ],
+      "test-depends": [
+        "BDD::Behave:auth<zef:gdonald>",
+        "BDD::Behave::Playwright:auth<zef:gdonald>",
+        "WWW::Playwright:auth<zef:gdonald>",
+        "ORM::Factory:auth<zef:gdonald>"
+      ],
+      "provides": {}
+    }
+    JSON
+}
+
+sub server-script(--> Str) {
+  q:to/RAKU/;
+    #!/usr/bin/env raku
+    use MVC::Keayl::CLI;
+
+    my Str $host = %*ENV<KEAYL_HOST> // '127.0.0.1';
+    my Int $port = (%*ENV<KEAYL_PORT> // '3000').Int;
+
+    my $app    = load-application('config/application.raku');
+    my $server = build-server($app, :$host, :$port);
+
+    $server.start;
+    say "listening on http://$host:$port ({$app.environment})";
+
+    react whenever signal(SIGINT, SIGTERM) {
+      $server.stop;
+      done;
+    }
+    RAKU
+}
+
+sub dev-script(--> Str) {
+  q:to/SH/;
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    cd "$(dirname "$0")/.."
+
+    export KEAYL_ENV="${KEAYL_ENV:-development}"
+    export KEAYL_HOST="${KEAYL_HOST:-127.0.0.1}"
+    export KEAYL_PORT="${KEAYL_PORT:-3000}"
+
+    exec raku bin/server
+    SH
+}
+
+sub test-script(--> Str) {
+  q:to/RAKU/;
+    #!/usr/bin/env raku
+    use v6.d;
+
+    chdir $*PROGRAM.absolute.IO.parent.parent;
+
+    %*ENV<KEAYL_ENV> //= 'test';
+
+    my $jobs = max(2, ($*KERNEL.cpu-cores // 2) - 2);
+
+    my @cmd = %*ENV<SHOW_CHROME>:exists
+      ?? <behave>
+      !! ('behave', '--parallel', $jobs.Str);
+
+    # Cro prints benign teardown noise when a browser drops a connection mid-write.
+    my @benign =
+      'Cannot write to a closed socket',
+      'connection reset by peer';
+
+    my $proc    = Proc::Async.new(|@cmd, :err);
+    my $drained = Promise.new;
+
+    $proc.stderr.lines.tap(
+      -> $line { $*ERR.say($line) unless @benign.first({ $line.contains($_) }) },
+      done => { $drained.keep },
+      quit => { $drained.keep },
+    );
+
+    my $exit = (await $proc.start).exitcode;
+    await $drained;
+
+    exit $exit;
+    RAKU
+}
+
+sub home-spec(--> Str) {
+  q:to/RAKU/;
+    use BDD::Behave;
+    use BDD::Behave::Playwright;
+    use MVC::Keayl::TestSupport;
+    use MVC::Keayl::CLI;
+
+    my $server = LiveServer.new(
+      app => load-application('config/application.raku').endpoint,
+    ).start;
+
+    END { $server.stop }
+
+    describe 'the home page in a browser', {
+      playwright-page(:artifacts<tmp>, base-url => { $server.base-url });
+
+      before-each { visit('/') }
+
+      it 'shows the welcome heading', -> $_ {
+        expect(.page.locator('h1')).to.be-visible;
+      }
+    }
+    RAKU
+}
+
+sub favicon-svg(--> Str) {
+  q:to/SVG/;
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="12" fill="#1f2933"/>
+      <text x="32" y="44" font-family="sans-serif" font-size="34" font-weight="700" fill="#ffffff" text-anchor="middle">K</text>
+    </svg>
+    SVG
+}
+
+sub stylesheet(--> Str) {
+  q:to/CSS/;
+    :root { color-scheme: light dark; }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 48rem;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+
+    h1 { font-size: 2rem; }
+
+    a { color: #2563eb; }
+    CSS
 }

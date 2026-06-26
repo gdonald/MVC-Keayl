@@ -1,0 +1,78 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+use MVC::Keayl::View;
+use ControllerFixtures;
+use CLIFixtures;
+
+sub request(Str:D $path) {
+  MVC::Keayl::Request.new(:method<GET>, :$path)
+}
+
+# implicit render with a stub renderer
+
+{
+  my $renderer = StubRenderer.new(formats => ['json']);
+  my $response = ImplicitController.new(request => request('/implicit.json'), view-renderer => $renderer).dispatch('index');
+
+  is $response.body, 'template:index.json', 'a json request implicitly renders the json template';
+  is $response.header('content-type'), 'application/json', 'the json format sets the json content type';
+}
+
+{
+  my $renderer = StubRenderer.new(formats => ['json']);
+  my $response = ImplicitController.new(request => request('/implicit'), view-renderer => $renderer).dispatch('index');
+
+  is $response.body, 'template:index', 'a request without a format implicitly renders html';
+  is $response.header('content-type'), 'text/html; charset=utf-8', 'the default format sets the html content type';
+}
+
+{
+  my $renderer = StubRenderer.new(formats => []);
+  my $response = ImplicitController.new(request => request('/implicit.json'), view-renderer => $renderer).dispatch('index');
+
+  is $response.body, 'template:index', 'a json request falls back to html when no json template exists';
+  is $response.header('content-type'), 'text/html; charset=utf-8', 'the html fallback keeps the html content type';
+}
+
+# explicit format option
+
+{
+  my $renderer = StubRenderer.new(formats => ['json']);
+  my $response = ImplicitController.new(view-renderer => $renderer).dispatch('as-json');
+
+  is $response.body, 'template:index.json', 'an explicit format option renders that format';
+  is $response.header('content-type'), 'application/json', 'an explicit format sets the matching content type';
+}
+
+# end to end through a real view
+
+my $views = ImplicitController.new.controller-path;
+
+{
+  my $dir = temp-dir('implicit-format-xml');
+  write-file($dir.add("$views/index.html.haml"), "%p html view\n");
+  write-file($dir.add("$views/index.xml.haml"), "%note xml view\n");
+
+  my $view     = MVC::Keayl::View.new(paths => [$dir.Str]);
+  my $response = ImplicitController.new(request => request('/implicit.xml'), view-renderer => $view).dispatch('index');
+
+  like $response.body, /'<note>xml view</note>'/, 'the xml template renders through a real view';
+  is $response.header('content-type'), 'application/xml', 'the rendered xml response is typed application/xml';
+}
+
+{
+  my $dir = temp-dir('implicit-format-html-only');
+  write-file($dir.add("$views/index.html.haml"), "%p html view\n");
+
+  my $view     = MVC::Keayl::View.new(paths => [$dir.Str]);
+  my $response = ImplicitController.new(request => request('/implicit.xml'), view-renderer => $view).dispatch('index');
+
+  like $response.body, /'html view'/, 'an xml request with only an html template renders html';
+  is $response.header('content-type'), 'text/html; charset=utf-8', 'the html fallback is typed text/html';
+}
+
+done-testing;

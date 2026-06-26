@@ -828,9 +828,9 @@ method !render-traced(Str:D $kind, Str:D $name, &block) {
   })
 }
 
-method render-template(Str:D $name, %locals --> Str) {
+method render-template(Str:D $name, %locals, Str :$format --> Str) {
   die 'no view renderer configured' without $!view-renderer;
-  self!render-traced('template', $name, { $!view-renderer.render-template($name, %locals, controller => self, variant => self.variant) })
+  self!render-traced('template', $name, { $!view-renderer.render-template($name, %locals, :$format, controller => self, variant => self.variant) })
 }
 
 method render-inline(Str:D $template, %locals --> Str) {
@@ -897,6 +897,7 @@ method render(*@positional, *%options --> MVC::Keayl::Response) {
 
   my $status      = %options<status>:delete;
   my $explicit-ct = %options<content-type>:delete;
+  my $format          = (%options<format>:delete) // Str;
   my $has-layout      = %options<layout>:exists;
   my $layout          = %options<layout>:delete;
   my %explicit-locals = (%options<locals>:delete) // {};
@@ -945,8 +946,12 @@ method render(*@positional, *%options --> MVC::Keayl::Response) {
     my $name = @positional[0] // %options<template> // %options<action>;
     with $name {
       my %locals = self!view-locals(%explicit-locals);
-      $default-ct = 'text/html; charset=utf-8';
-      $body = self!wrap(self.render-template(~$name, %locals), $effective-layout, %locals);
+      $default-ct = self!format-content-type($format);
+
+      my $non-html = $format.defined && $format ne 'html';
+      my $template-layout = ($non-html && !$has-layout) ?? False !! $effective-layout;
+
+      $body = self!wrap(self.render-template(~$name, %locals, :$format), $template-layout, %locals);
     }
   }
 
@@ -1049,11 +1054,29 @@ method sse(&block, *%defaults --> MVC::Keayl::Response) {
   })
 }
 
+method !format-content-type($format --> Str) {
+  return 'text/html; charset=utf-8' without $format;
+  return 'text/html; charset=utf-8' if $format eq 'html';
+
+  mime-type($format) // 'text/html; charset=utf-8'
+}
+
+method !implicit-format($action --> Str) {
+  my $format = self.request-format;
+
+  return Str without $format;
+  return Str if $format eq $!view-renderer.default-format;
+  return Str unless $!view-renderer.^can('has-template')
+    && $!view-renderer.has-template($action, $format, variant => self.variant, controller => self);
+
+  $format
+}
+
 method implicit-render(Str:D $action, $result --> Nil) {
   return if $!performed;
 
   if $!view-renderer.defined {
-    self.render($action);
+    self.render($action, format => self!implicit-format($action));
   } elsif $result ~~ Str:D && !$!response.body.chars {
     $!response.body($result);
   }

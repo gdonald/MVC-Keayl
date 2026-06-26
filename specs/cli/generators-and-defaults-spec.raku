@@ -6,6 +6,7 @@ use MVC::Keayl::PWAController;
 use MVC::Keayl::Dispatcher;
 use MVC::Keayl::Routing;
 use MVC::Keayl::Request;
+use MVC::Keayl::TestSupport;
 use JSON::Fast;
 use CLIFixtures;
 
@@ -141,5 +142,74 @@ describe 'a new application', {
   it 'wires the health-check and service-worker routes', {
     my $routes = root().add('blog/config/routes.raku').slurp;
     expect($routes.contains("get '/up'") && $routes.contains('service-worker')).to.be-truthy;
+  }
+
+  it 'ships executable server, dev, and test scripts', {
+    aggregate-failures {
+      expect(root().add('blog/bin/server').mode.substr(*-3)).to.be('755');
+      expect(root().add('blog/bin/dev').mode.substr(*-3)).to.be('755');
+      expect(root().add('blog/bin/test').mode.substr(*-3)).to.be('755');
+    }
+  }
+
+  it 'ships an application layout', {
+    expect(root().add('blog/app/views/layouts/application.html.haml').e).to.be-truthy;
+  }
+
+  it 'ships starter assets and keeps the tmp directory', {
+    expect(root().add('blog/assets/favicon.svg').e && root().add('blog/assets/css/style.css').e && root().add('blog/tmp/.keep').e).to.be-truthy;
+  }
+
+  it 'keeps the models directory', {
+    expect(root().add('blog/app/models/.keep').e).to.be-truthy;
+  }
+
+  it 'wires static asset serving into the application', {
+    expect(root().add('blog/config/application.raku').slurp.contains('MVC::Keayl::Middleware::Static')).to.be-truthy;
+  }
+
+  it 'names the camelized app in a META6 that depends on the framework', {
+    my $meta = root().add('blog/META6.json').slurp;
+    expect($meta.contains('"name": "Blog"') && $meta.contains('MVC::Keayl') && $meta.contains('ORM::ActiveRecord')).to.be-truthy;
+  }
+
+  it 'test-depends on the browser harness', {
+    expect(root().add('blog/META6.json').slurp.contains('BDD::Behave::Playwright')).to.be-truthy;
+  }
+
+  it 'ships a browser spec for the home page', {
+    expect(root().add('blog/specs/home-spec.raku').slurp.contains('playwright-page')).to.be-truthy;
+  }
+}
+
+describe 'a scaffolded home page rendered through the stack', {
+  let(:response, {
+    my $dir = temp-dir('spec-new-renders').resolve;
+    scaffold-app('blog', into => $dir);
+
+    my $cwd = $*CWD;
+    chdir $dir.add('blog');
+
+    my $session = IntegrationSession.new(app => load-application('config/application.raku').endpoint);
+    $session.get('/');
+
+    chdir $cwd;
+    $session.response
+  });
+
+  it 'responds with a 200', {
+    expect(response.status).to.be(200);
+  }
+
+  it 'renders through the application layout', {
+    expect(response.body.contains('<!DOCTYPE html>')).to.be-truthy;
+  }
+
+  it 'shows the welcome heading', {
+    expect(response.body.contains('Welcome to blog')).to.be-truthy;
+  }
+
+  it 'uses the assigned page title', {
+    expect(response.body.contains('<title>blog</title>')).to.be-truthy;
   }
 }

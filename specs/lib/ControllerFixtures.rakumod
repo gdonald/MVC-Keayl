@@ -52,9 +52,18 @@ class GreetController is MVC::Keayl::Controller is export {
 }
 
 class StubRenderer is export {
-  method render-template(Str $name, %locals, :$controller, :$variant) {
+  has Str $.default-format = 'html';
+  has @.formats;
+
+  method has-template(Str $name, Str $format, :$variant, :$controller) {
+    @!formats.first($format).defined
+  }
+
+  method render-template(Str $name, %locals, :$controller, :$variant, :$format) {
     my $locals = %locals ?? ' ' ~ %locals.sort(*.key).map({ .key ~ '=' ~ .value }).join(',') !! '';
-    'template:' ~ $name ~ $locals ~ ($variant.defined ?? '+' ~ $variant !! '')
+    'template:' ~ $name ~ $locals
+      ~ ($variant.defined ?? '+' ~ $variant !! '')
+      ~ ($format.defined ?? '.' ~ $format !! '')
   }
 
   method render-inline(Str $template, %locals, :$controller) {
@@ -103,6 +112,11 @@ class RenderController is MVC::Keayl::Controller is export {
     self.render(:plain('a'));
     self.render(:plain('b'));
   }
+}
+
+class ImplicitController is MVC::Keayl::Controller is export {
+  method index { }
+  method as-json { self.render('index', :format<json>) }
 }
 
 class FlowController is MVC::Keayl::Controller is export {
