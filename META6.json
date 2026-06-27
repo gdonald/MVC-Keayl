@@ -139,5 +139,5 @@
   },
   "license": "Artistic-2.0",
   "tags": ["MVC", "Web", "Framework", "Model", "Controller", "Routing", "View"],
-  "source-url": "git://github.com/gdonald/MVC-Keayl.git"
+  "source-url": "https://github.com/gdonald/MVC-Keayl.git"
 }
