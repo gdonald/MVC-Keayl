@@ -1,6 +1,6 @@
 # MVC::Keayl
 
-The latest version of this documentation lives at [https://gdonald.github.io/MVC-Keayl/](https://gdonald.github.io/MVC-Keayl/).
+The latest version of this documentation lives at [https://docs.keayl.dev/](https://docs.keayl.dev/).
 
 The homepage for MVC::Keayl is [https://github.com/gdonald/MVC-Keayl](https://github.com/gdonald/MVC-Keayl).
 

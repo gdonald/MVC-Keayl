@@ -33,7 +33,7 @@ a PWA manifest and service worker, and static exception pages.
 
 `bin/dev` serves the app over HTTP with the Cro adapter, defaulting to
 `127.0.0.1:3000`. Other commands include `keayl routes`, `keayl console`, and
-`keayl generate`. See the [CLI docs](https://gdonald.github.io/MVC-Keayl/cli/)
+`keayl generate`. See the [CLI docs](https://docs.keayl.dev/cli/)
 for the full command list.
 
 ## Features
@@ -89,7 +89,7 @@ for the full command list.
 ## Documentation
 
 Full documentation lives at
-[gdonald.github.io/MVC-Keayl](https://gdonald.github.io/MVC-Keayl/).
+[docs.keayl.dev](https://docs.keayl.dev/).
 
 ## License
 
