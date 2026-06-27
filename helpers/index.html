@@ -741,6 +741,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#helper-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helper modules
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1721,6 +1732,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#helper-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helper modules
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1743,8 +1765,9 @@
 
 <h1 id="view-helpers">View helpers<a class="headerlink" href="#view-helpers" title="Permanent link">&para;</a></h1>
 <p>View helpers build HTML. They return <code>SafeString</code> values, so their markup is not
-re-escaped when emitted with <code>!=</code>. In templates they are available as closure
-locals (<code>$link_to</code>, <code>$image_tag</code>, and so on).</p>
+re-escaped when emitted with <code>!=</code>. In templates they are called as bare functions
+through the view context (<code>link-to</code>, <code>image-tag</code>, and so on), with arguments and
+no sigil.</p>
 <h2 id="tag-building">Tag building<a class="headerlink" href="#tag-building" title="Permanent link">&para;</a></h2>
 <p><code>content-tag</code> builds an element with content; <code>tag</code> builds a self-closing
 element. Attribute values are escaped, a <code>True</code> value becomes a bare boolean
@@ -2061,6 +2084,40 @@ is the same measured against the current time (or an explicit reference):</p>
 <span class="n">distance-of-time-in-words</span>(<span class="nv">$from</span>, <span class="nv">$to</span>, <span class="n">include-seconds</span> =&gt; <span class="nb">True</span>);   <span class="c1"># less than 5 seconds</span>
 <span class="n">time-ago-in-words</span>(<span class="nv">$posted-at</span>);
 </code></pre></div></td></tr></table></div>
+<h2 id="helper-modules">Helper modules<a class="headerlink" href="#helper-modules" title="Permanent link">&para;</a></h2>
+<p>Beyond the built-in helpers, an application defines its own helpers as <code>our sub</code>s
+in modules under <code>app/helpers/</code>. Each sub becomes a bare template call.</p>
+<p><code>ApplicationHelper</code> is global, available in every view:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1"># app/helpers/ApplicationHelper.rakumod</span>
+<span class="k">unit</span> <span class="k">module</span> <span class="n">ApplicationHelper</span>;
+
+<span class="k">our</span> <span class="k">sub</span> <span class="n">nav-link</span>(<span class="nv">$label</span>, <span class="nv">$href</span>) {
+  <span class="s">qq{&lt;a href=&quot;$href&quot;&gt;$label&lt;/a&gt;}</span>
+}
+</code></pre></div></td></tr></table></div>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%nav</span>
+<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="n">nav</span><span class="o">-</span><span class="n">link</span><span class="p">(</span><span class="s1">&#39;Home&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p>A per-controller helper named after the controller (<code>UsersController</code> →
+<code>app/helpers/UsersHelper.rakumod</code>) is available only in that controller's views,
+and the chain follows controller inheritance: a controller sees its own helper,
+its ancestors' helpers, and <code>ApplicationHelper</code>.</p>
+<p>A helper is a plain function. For request state, read <code>$*KEAYL-CONTROLLER</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">our</span> <span class="k">sub</span> <span class="n">current-user-name</span> {
+  <span class="vg">$*KEAYL-CONTROLLER</span>.<span class="n">current-user</span>.<span class="nb">name</span>
+}
+</code></pre></div></td></tr></table></div>
+<p>Helper modules reload on change in development (gated by the view's <code>reload</code>
+flag), the same as templates. The <code>controller</code> and <code>scaffold</code> generators write a
+matching helper module, and <code>keayl new</code> writes <code>ApplicationHelper</code>.</p>
 
 
 

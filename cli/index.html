@@ -1729,7 +1729,10 @@ type is given.</p>
 <h3 id="helper">helper<a class="headerlink" href="#helper" title="Permanent link">&para;</a></h3>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>keayl generate helper posts
 </code></pre></div></td></tr></table></div>
-<p>Writes a helper module (<code>app/helpers/PostsHelper.rakumod</code>).</p>
+<p>Writes a helper module (<code>app/helpers/PostsHelper.rakumod</code>). The <code>controller</code> and
+<code>scaffold</code> generators also write a matching helper module, and <code>keayl new</code> writes
+a global <code>ApplicationHelper</code>. See <a href="../helpers/">view helpers</a> for how helper module
+subs become bare template calls.</p>
 <h3 id="route-insertion">Route insertion<a class="headerlink" href="#route-insertion" title="Permanent link">&para;</a></h3>
 <p>A generator inserts its route stubs just inside the <code>routes</code> (or <code>draw</code>) block of
 <code>config/routes.raku</code>, skipping any stub already present. If the file has no

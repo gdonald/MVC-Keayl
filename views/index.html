@@ -1586,12 +1586,12 @@ Setting <code>cache =&gt; False</code> disables caching so every render recompil
 <p>When an action renders a template, the rendered body is wrapped in a layout from
 <code>layouts/</code>. With no layout chosen, the <code>application</code> layout is used if it exists;
 otherwise the template renders on its own. Inside the layout, the wrapped body is
-available as the <code>content</code> local and through <code>yield</code>:</p>
+available through the <code>yield</code> helper:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%html</span>
 <span class="w">  </span><span class="nt">%body</span>
-<span class="w">    </span><span class="p">!=</span><span class="w"> </span><span class="vg">$yield</span><span class="p">()</span>
+<span class="w">    </span><span class="p">!=</span><span class="w"> </span><span class="k">yield</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
 <p>Choose a layout per action with the <code>:layout</code> option, or for every action of a
 controller with the class-level <code>layout</code> declaration:</p>
@@ -1613,7 +1613,7 @@ controller with the class-level <code>layout</code> declaration:</p>
 <p>An action-level <code>:layout</code> overrides a controller declaration, which overrides the
 <code>application</code> default.</p>
 <h2 id="content-for-and-yield">content-for and yield<a class="headerlink" href="#content-for-and-yield" title="Permanent link">&para;</a></h2>
-<p>A template captures named content with <code>content_for</code>, and the layout places it
+<p>A template captures named content with <code>content-for</code>, and the layout places it
 with <code>yield</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -1622,15 +1622,15 @@ with <code>yield</code>:</p>
 <span class="normal">5</span>
 <span class="normal">6</span>
 <span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">-# in the template</span>
-<span class="p">=</span><span class="w"> </span><span class="vg">$content_for</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Dashboard&#39;</span><span class="p">)</span>
+<span class="p">=</span><span class="w"> </span><span class="n">content</span><span class="o">-</span><span class="k">for</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Dashboard&#39;</span><span class="p">)</span>
 
 <span class="cp">-# in the layout</span>
-<span class="nt">%title</span><span class="p">=</span><span class="w"> </span><span class="vg">$yield</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">)</span>
+<span class="nt">%title</span><span class="p">=</span><span class="w"> </span><span class="k">yield</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">)</span>
 <span class="nt">%body</span>
-<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="vg">$yield</span><span class="p">()</span>
+<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="k">yield</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
-<p><code>$yield()</code> returns the main body; <code>$yield(name)</code> returns the matching
-<code>content_for</code> capture, or an empty string when none was set.</p>
+<p><code>yield()</code> returns the main body; <code>yield(name)</code> returns the matching
+<code>content-for</code> capture, or an empty string when none was set.</p>
 <h2 id="partials">Partials<a class="headerlink" href="#partials" title="Permanent link">&para;</a></h2>
 <p>A partial is a template whose file name begins with an underscore. It is referred
 to without the underscore. <code>render-partial</code> renders one with locals:</p>
@@ -1643,7 +1643,7 @@ with a <code>/</code> resolves from the views root, so <code>shared/menu</code> 
 not escaped:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%ul</span>
-<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="vg">$partial</span><span class="p">(</span><span class="s1">&#39;users/row&#39;</span><span class="p">,</span><span class="w"> </span><span class="sx">%( user =&gt; $user )</span><span class="p">)</span>
+<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="n">partial</span><span class="p">(</span><span class="s1">&#39;users/row&#39;</span><span class="p">,</span><span class="w"> </span><span class="sx">%( user =&gt; $user )</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <h3 id="object-partials">Object partials<a class="headerlink" href="#object-partials" title="Permanent link">&para;</a></h3>
 <p><code>render-object</code> derives the partial from an object. By default the partial name
@@ -1657,7 +1657,7 @@ path with a <code>to-partial-path</code> method:</p>
   <span class="k">method</span> <span class="n">to-partial-path</span> { <span class="s">&#39;posts/post&#39;</span> }   <span class="c1"># renders posts/_post, local `post`</span>
 }
 
-<span class="nv">$view</span>.<span class="n">render-object</span>(<span class="nv">$post</span>);                  <span class="c1"># in a template: != $partial_for($post)</span>
+<span class="nv">$view</span>.<span class="n">render-object</span>(<span class="nv">$post</span>);                  <span class="c1"># in a template: != partial-for($post)</span>
 </code></pre></div></td></tr></table></div>
 <p>A controller renders an object directly with <code>render($post)</code>.</p>
 <h3 id="collection-partials">Collection partials<a class="headerlink" href="#collection-partials" title="Permanent link">&para;</a></h3>
@@ -1667,7 +1667,7 @@ item under the partial's local name and a zero-based <code>{local}_counter</code
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">-# greetings/_line.html.haml</span>
 <span class="nt">%p</span><span class="p">=</span><span class="w"> </span><span class="vg">$line</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="s1">&#39; #&#39;</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="vg">$line_counter</span>
 </code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">!=</span><span class="w"> </span><span class="vg">$partial_each</span><span class="p">(</span><span class="s1">&#39;greetings/line&#39;</span><span class="p">,</span><span class="w"> </span><span class="vg">$lines</span><span class="p">)</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">!=</span><span class="w"> </span><span class="n">partial</span><span class="o">-</span><span class="n">each</span><span class="p">(</span><span class="s1">&#39;greetings/line&#39;</span><span class="p">,</span><span class="w"> </span><span class="vg">$lines</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <p>A <code>spacer</code> partial renders between items:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$view</span>.<span class="n">render-collection</span>(<span class="s">&#39;greetings/line&#39;</span>, <span class="nv">@lines</span>, <span class="n">spacer</span> =&gt; <span class="s">&#39;greetings/divider&#39;</span>);
