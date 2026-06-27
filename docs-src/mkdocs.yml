@@ -1,5 +1,5 @@
 site_name: MVC::Keayl
-site_url: https://gdonald.github.io/MVC-Keayl/
+site_url: https://docs.keayl.dev/
 repo_url: https://github.com/gdonald/MVC-Keayl
 nav:
   - Home: index.md
