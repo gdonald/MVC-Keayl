@@ -57,6 +57,23 @@ describe 'the helper generator', {
   }
 }
 
+describe 'the controller generator', {
+  it 'writes a matching helper module', {
+    my $dir = temp-dir('spec-gen-controller-helper');
+    generate-controller('posts', ['index'], root => $dir, out => silent, err => silent);
+    expect($dir.add('app/helpers/PostsHelper.rakumod').e).to.be-truthy;
+  }
+}
+
+describe 'the scaffold generator', {
+  it 'writes a matching helper module', {
+    my $dir = temp-dir('spec-gen-scaffold-helper');
+    base-routes-file($dir);
+    generate-scaffold('post', root => $dir, out => silent, err => silent);
+    expect($dir.add('app/helpers/PostsHelper.rakumod').e).to.be-truthy;
+  }
+}
+
 describe 'the model generator', {
   let(:root, {
     my $dir = temp-dir('spec-gen-model');
@@ -162,6 +179,10 @@ describe 'a new application', {
 
   it 'keeps the models directory', {
     expect(root().add('blog/app/models/.keep').e).to.be-truthy;
+  }
+
+  it 'ships a global ApplicationHelper with an example helper', {
+    expect(root().add('blog/app/helpers/ApplicationHelper.rakumod').slurp.contains('our sub nav-link')).to.be-truthy;
   }
 
   it 'wires static asset serving into the application', {

@@ -179,6 +179,27 @@ sub silent { StringSink.new }
 }
 
 {
+  my $dir = temp-dir('new-helper');
+  scaffold-app('blog', into => $dir);
+
+  ok $dir.add('blog/app/helpers/ApplicationHelper.rakumod').e, 'new ships a global ApplicationHelper';
+  like $dir.add('blog/app/helpers/ApplicationHelper.rakumod').slurp, /'our sub nav-link'/, 'ApplicationHelper has an example helper sub';
+}
+
+{
+  my $dir = temp-dir('gen-controller-helper');
+  generate-controller('posts', ['index'], root => $dir, out => StringSink.new, err => StringSink.new);
+  ok $dir.add('app/helpers/PostsHelper.rakumod').e, 'the controller generator writes a matching helper module';
+}
+
+{
+  my $dir = temp-dir('gen-scaffold-helper');
+  base-routes-file($dir);
+  generate-scaffold('post', root => $dir, out => StringSink.new, err => StringSink.new);
+  ok $dir.add('app/helpers/PostsHelper.rakumod').e, 'the scaffold generator writes a matching helper module';
+}
+
+{
   my $dir = temp-dir('new-meta');
   scaffold-app('blog', into => $dir);
 

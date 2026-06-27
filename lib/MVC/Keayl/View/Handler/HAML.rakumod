@@ -8,6 +8,8 @@ method compile(Str:D $source) {
   $source
 }
 
-method render($source, %locals --> Str) {
-  HAML.render(:src($source), :locals(%locals))
+method render($source, %locals, :$context --> Str) {
+  $context.defined
+    ?? HAML.render(:src($source), :locals(%locals), :$context)
+    !! HAML.render(:src($source), :locals(%locals))
 }

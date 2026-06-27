@@ -1,0 +1,45 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::View;
+use MVC::Keayl::Controller;
+use CLIFixtures;
+
+class ReloadController is MVC::Keayl::Controller { }
+
+my $root    = temp-dir('helper-hot-reload');
+my $helpers = $root.add('helpers');
+my $views   = $root.add('views');
+my $file    = $helpers.add('ReloadHelper.rakumod');
+
+write-file($views.add('reload/show.html.haml'), "%p= label('x')\n");
+
+sub write-helper(Str $version, Str $stamp) {
+  write-file($file, "unit module ReloadHelper;\nour sub label(\$s) \{ \"$version:\$s\" }\n");
+  run 'touch', '-m', '-t', $stamp, $file.Str;
+}
+
+sub render($view) { $view.render-template('reload/show', {}, controller => ReloadController.new) }
+
+{
+  write-helper('v1', '202001010000');
+  my $view = MVC::Keayl::View.new(paths => [$views.Str], helper-paths => [$helpers.Str], reload => True);
+
+  like render($view), /'v1:x'/, 'the helper loads from disk';
+
+  write-helper('v2', '202501010000');
+  like render($view), /'v2:x'/, 'a changed helper module reloads when reload is on';
+}
+
+{
+  write-helper('v3', '202001010000');
+  my $view = MVC::Keayl::View.new(paths => [$views.Str], helper-paths => [$helpers.Str], reload => False);
+
+  like render($view), /'v3:x'/, 'the helper loads on first render';
+
+  write-helper('v4', '203012312359');
+  like render($view), /'v3:x'/, 'a reload-off view keeps the cached helper';
+}
+
+done-testing;

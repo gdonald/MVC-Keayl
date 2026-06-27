@@ -1,8 +1,9 @@
 # View helpers
 
 View helpers build HTML. They return `SafeString` values, so their markup is not
-re-escaped when emitted with `!=`. In templates they are available as closure
-locals (`$link_to`, `$image_tag`, and so on).
+re-escaped when emitted with `!=`. In templates they are called as bare functions
+through the view context (`link-to`, `image-tag`, and so on), with arguments and
+no sigil.
 
 ## Tag building
 
@@ -346,3 +347,41 @@ distance-of-time-in-words($from, $to);                 # about 5 hours
 distance-of-time-in-words($from, $to, include-seconds => True);   # less than 5 seconds
 time-ago-in-words($posted-at);
 ```
+
+## Helper modules
+
+Beyond the built-in helpers, an application defines its own helpers as `our sub`s
+in modules under `app/helpers/`. Each sub becomes a bare template call.
+
+`ApplicationHelper` is global, available in every view:
+
+```perl6
+# app/helpers/ApplicationHelper.rakumod
+unit module ApplicationHelper;
+
+our sub nav-link($label, $href) {
+  qq{<a href="$href">$label</a>}
+}
+```
+
+```haml
+%nav
+  != nav-link('Home', '/')
+```
+
+A per-controller helper named after the controller (`UsersController` →
+`app/helpers/UsersHelper.rakumod`) is available only in that controller's views,
+and the chain follows controller inheritance: a controller sees its own helper,
+its ancestors' helpers, and `ApplicationHelper`.
+
+A helper is a plain function. For request state, read `$*KEAYL-CONTROLLER`:
+
+```perl6
+our sub current-user-name {
+  $*KEAYL-CONTROLLER.current-user.name
+}
+```
+
+Helper modules reload on change in development (gated by the view's `reload`
+flag), the same as templates. The `controller` and `scaffold` generators write a
+matching helper module, and `keayl new` writes `ApplicationHelper`.

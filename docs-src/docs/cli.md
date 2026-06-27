@@ -176,7 +176,10 @@ type is given.
 keayl generate helper posts
 ```
 
-Writes a helper module (`app/helpers/PostsHelper.rakumod`).
+Writes a helper module (`app/helpers/PostsHelper.rakumod`). The `controller` and
+`scaffold` generators also write a matching helper module, and `keayl new` writes
+a global `ApplicationHelper`. See [view helpers](helpers.md) for how helper module
+subs become bare template calls.
 
 ### Route insertion
 

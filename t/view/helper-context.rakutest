@@ -1,0 +1,33 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::View;
+use MVC::Keayl::View::Context;
+use CLIFixtures;
+
+my $dir = temp-dir('helper-context');
+write-file($dir.add('pages/show.html.haml'), "%p\n  != link-to('Home', '/')\n");
+write-file($dir.add('pages/dashed.html.haml'), "%span\n  = truncate('hello world', length => 5)\n");
+
+my $view = MVC::Keayl::View.new(paths => [$dir.Str]);
+
+like $view.render-template('pages/show', {}), /'<a href="/">Home</a>'/,
+  'a built-in helper is callable bare with arguments via the view context';
+
+like $view.render-template('pages/dashed', {}), /'he...'/,
+  'a dashed helper name with named arguments resolves bare';
+
+{
+  my %helpers = greet => -> $name { "hi $name" };
+  my $context = MVC::Keayl::View::Context.new(:%helpers);
+  is $context.greet('gd'), 'hi gd', 'the context delegates a dashed method to its helper closure';
+}
+
+{
+  my %helpers = 'link-to' => -> {}, 'number-to-currency' => -> {};
+  my $context = MVC::Keayl::View::Context.new(:%helpers);
+  ok $context.haml-helper-names.first('link-to').defined, 'the context reports its helper names for discovery';
+}
+
+done-testing;

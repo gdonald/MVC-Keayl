@@ -1,5 +1,7 @@
 use v6.d;
+use MONKEY-SEE-NO-EVAL;
 use MVC::Keayl::View::Handler::HAML;
+use MVC::Keayl::View::Context;
 use MVC::Keayl::SafeString;
 use MVC::Keayl::Helpers::Tag;
 use MVC::Keayl::Helpers::Url;
@@ -21,7 +23,10 @@ has Bool $.cache  = True;
 has Bool $.reload = True;
 has      &.asset-resolver = &default-asset-path;
 has      $.cache-store = MVC::Keayl::Cache::MemoryStore.new;
+has      @.helper-paths = ['app/helpers'];
+has      &.helper-loader;
 has      %!store;
+has      %!helper-module-cache;
 
 submethod TWEAK {
   %!handlers{'haml'} //= MVC::Keayl::View::Handler::HAML.new;
@@ -110,21 +115,24 @@ method render-template(Str:D $name, %locals, Str :$format, :$variant, :$controll
 
   die 'template not found: ' ~ $lookup ~ '.' ~ $fmt unless $file.defined && $file.e;
 
+  my $*KEAYL-CONTROLLER = $controller;
   my ($compiled, $handler) = self!compiled-for($file);
-  $handler.render($compiled, self!template-locals(%locals, :$controller))
+  $handler.render($compiled, %locals, context => self.build-context(:$controller))
 }
 
 method render-inline(Str:D $template, %locals, :$controller --> Str) {
+  my $*KEAYL-CONTROLLER = $controller;
   my $handler = %!handlers{$!default-handler} // die "no view handler '$!default-handler'";
-  $handler.render($handler.compile($template), self!template-locals(%locals, :$controller))
+  $handler.render($handler.compile($template), %locals, context => self.build-context(:$controller))
 }
 
 method render-layout(Str:D $layout, Str:D $content, %locals, :$controller --> Str) {
   my $file = self.resolve('layouts/' ~ $layout, $!default-format);
   return $content unless $file.defined && $file.e;
 
+  my $*KEAYL-CONTROLLER = $controller;
   my ($compiled, $handler) = self!compiled-for($file);
-  $handler.render($compiled, self!layout-locals(%locals, $content, :$controller))
+  $handler.render($compiled, %locals, context => self.build-context(:$controller, extra => self!layout-helpers($content)))
 }
 
 method layout-exists(Str:D $name --> Bool) {
@@ -142,8 +150,9 @@ method render-partial(Str:D $name, %locals = {}, :$controller --> Str) {
 
   die 'partial not found: ' ~ $name unless $file.defined && $file.e;
 
+  my $*KEAYL-CONTROLLER = $controller;
   my ($compiled, $handler) = self!compiled-for($file);
-  $handler.render($compiled, self!template-locals(%locals, :$controller))
+  $handler.render($compiled, %locals, context => self.build-context(:$controller))
 }
 
 method render-object($object, %locals = {}, :$controller --> Str) {
@@ -171,21 +180,97 @@ method !partial-path-for($object --> Str) {
   underscore($object.^name.subst(/^ .* '::' /, ''))
 }
 
-method !template-locals(%locals, :$controller --> Hash) {
-  self!view-helpers(%locals, :$controller)
+method build-context(:$controller, :%extra --> MVC::Keayl::View::Context) {
+  my %helpers;
+  for self!helper-closures(:$controller).kv -> $name, $closure {
+    %helpers{$name.subst('_', '-', :g)} = $closure;
+  }
+
+  if $controller.defined {
+    for self!controller-helper-modules($controller) -> $module {
+      for self!helper-module-subs($module).kv -> $name, $sub {
+        %helpers{$name.subst('_', '-', :g)} = $sub;
+      }
+    }
+  }
+
+  for %extra.kv -> $name, $closure {
+    %helpers{$name.subst('_', '-', :g)} = $closure;
+  }
+
+  MVC::Keayl::View::Context.new(:%helpers)
 }
 
-method !layout-locals(%locals, Str:D $content, :$controller --> Hash) {
+method !layout-helpers(Str:D $content --> Hash) {
   %(
-    self!view-helpers(%locals, :$controller),
-    content => $content,
     yield   => -> $name? { $name.defined ?? ($*KEAYL-CONTENT{$name} // '') !! $content },
+    content => -> { $content },
   )
 }
 
-method !view-helpers(%locals, :$controller --> Hash) {
+my $helper-eval-counter = 0;
+
+# Helper modules are loaded by evaluating their source under a fresh package name
+# each time, rather than `require`, so a changed file reloads in development and
+# loading works the same in every harness.
+sub eval-helper-subs(IO::Path:D $file --> Hash) {
+  my $body = $file.slurp.subst(/^^ \h* 'unit' \h+ 'module' \h+ <[\w:]>+ \h* ';' \h* $$/, '');
+  my $sym  = '__KeaylHelper_' ~ ($helper-eval-counter++);
+  my $code = "module $sym \{\n$body\n}\n"
+    ~ $sym ~ '::.pairs.grep({ .key.starts-with("&") }).map({ .key.substr(1) => .value }).hash';
+
+  my $loaded = try EVAL $code;
+  ($loaded ~~ Associative) ?? $loaded.hash !! %()
+}
+
+method !helper-module-subs(Str:D $module --> Hash) {
+  return ((&!helper-loader)($module) // %()) if &!helper-loader.defined;
+
+  self!load-helper-module($module)
+}
+
+method !helper-module-file(Str:D $module --> IO::Path) {
+  my $relative = $module.subst('::', '/', :g) ~ '.rakumod';
+
+  for @!helper-paths -> $path {
+    my $file = $path.IO.add($relative);
+    return $file if $file.e;
+  }
+
+  IO::Path
+}
+
+method !load-helper-module(Str:D $module --> Hash) {
+  my $file = self!helper-module-file($module);
+  return %() unless $file.defined && $file.e;
+
+  with %!helper-module-cache{$module} -> $entry {
+    return $entry<subs> if !$!reload || $entry<mtime> == $file.modified.Num;
+  }
+
+  my %subs = eval-helper-subs($file);
+  %!helper-module-cache{$module} = { mtime => $file.modified.Num, :%subs };
+
+  %subs
+}
+
+method !controller-helper-modules($controller --> List) {
+  my @modules = 'ApplicationHelper';
+
+  for $controller.^mro.reverse -> $class {
+    my $name = $class.^name.subst(/^ 'GLOBAL::' /, '');
+    next unless $name.ends-with('Controller');
+    next if $name eq 'MVC::Keayl::Controller';
+
+    my $helper = $name.subst(/'Controller' $/, 'Helper');
+    @modules.push: $helper unless @modules.first({ $_ eq $helper }).defined;
+  }
+
+  @modules.List
+}
+
+method !helper-closures(:$controller --> Hash) {
   %(
-    %locals,
     content_for  => -> $name, $value     { $*KEAYL-CONTENT{$name} = $value; '' },
     partial      => -> $name, %opts?     { self.render-partial($name, (%opts // {}), :$controller) },
     partial_for  => -> $object, %opts?   { self.render-object($object, (%opts // {}), :$controller) },

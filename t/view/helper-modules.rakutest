@@ -1,0 +1,38 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::View;
+use MVC::Keayl::Controller;
+use CLIFixtures;
+
+class AdminController is MVC::Keayl::Controller { }
+class GadgetsController is AdminController {
+  method widget-count { 42 }
+}
+
+my %modules =
+  ApplicationHelper => %( shout => -> $s { $s.uc } ),
+  AdminHelper       => %( badge => -> $n { "[$n]" } ),
+  GadgetsHelper     => %(
+    gizmo       => -> $x { "g:$x" },
+    'count-label' => -> { 'count:' ~ $*KEAYL-CONTROLLER.widget-count },
+  );
+
+my $views = temp-dir('helper-modules');
+write-file($views.add('gadgets/show.html.haml'),
+  "%ul\n  %li= shout('hi')\n  %li= badge(7)\n  %li= gizmo('z')\n  %li= count-label\n");
+
+my $view = MVC::Keayl::View.new(
+  paths         => [$views.Str],
+  helper-loader => -> $module { %modules{$module} // %() },
+);
+
+my $out = $view.render-template('gadgets/show', {}, controller => GadgetsController.new);
+
+like $out, /'<li>HI</li>'/, 'a global ApplicationHelper sub is callable bare';
+like $out, /'<li>[7]</li>'/, 'an inherited parent-controller helper is callable bare';
+like $out, /'<li>g:z</li>'/, "the controller's own helper is callable bare";
+like $out, /'<li>count:42</li>'/, 'a helper reaches controller state through $*KEAYL-CONTROLLER';
+
+done-testing;

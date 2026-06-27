@@ -162,6 +162,7 @@ sub scaffold-app(Str:D $name, IO() :$into = '.'.IO --> List) is export {
     'config/application.raku'                => application-raku(),
     'config/routes.raku'                     => routes-raku(),
     'app/controllers/HomeController.rakumod' => home-controller($name),
+    'app/helpers/ApplicationHelper.rakumod'  => application-helper(),
     'app/models/.keep'                       => '',
     'app/views/layouts/application.html.haml' => application-layout(),
     'app/views/home/index.html.haml'         => home-view($name),
@@ -328,6 +329,9 @@ sub generate-controller(Str:D $name, @actions, IO() :$root = '.'.IO, :$out = $*O
   my $path  = $name.lc;
 
   emit-file($root.add("app/controllers/$class.rakumod"), controller-source($class, @actions), :$out);
+
+  my $helper = helper-module-name($name);
+  emit-file($root.add("app/helpers/$helper.rakumod"), helper-source($helper, $name), :$out);
 
   for @actions -> $action {
     emit-file($root.add("app/views/$path/$action.html.haml"), controller-view($path, $action), :$out);
@@ -517,6 +521,28 @@ sub helper-source(Str:D $module, Str:D $name --> Str) {
     use v6.d;
 
     unit module __MODULE__;
+
+    # View helpers for this controller, callable bare in its templates. Each
+    # `our sub` becomes a helper:
+    #
+    #   our sub badge($text) { qq{<span class="badge">$text</span>} }
+    #
+    # In a template:  != badge('new')
+    RAKU
+}
+
+sub application-helper(--> Str) {
+  q:to/RAKU/;
+    use v6.d;
+
+    unit module ApplicationHelper;
+
+    # Global view helpers, callable bare in every template with arguments and no
+    # sigil. A helper may read request state through $*KEAYL-CONTROLLER.
+
+    our sub nav-link($label, $href) {
+      qq{<a href="$href">$label</a>}
+    }
     RAKU
 }
 
@@ -548,6 +574,9 @@ sub generate-scaffold(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT, :$err = 
 
   emit-file($root.add("app/models/$model.rakumod"), model-source($model), :$out);
   emit-file($root.add("app/controllers/$class.rakumod"), scaffold-controller-source($class, $model, $singular, $plural), :$out);
+
+  my $helper = helper-module-name($plural);
+  emit-file($root.add("app/helpers/$helper.rakumod"), helper-source($helper, $plural), :$out);
 
   emit-file($root.add("app/views/$plural/index.html.haml"), scaffold-index-view($singular, $plural), :$out);
   emit-file($root.add("app/views/$plural/show.html.haml"),  scaffold-show-view($singular, $plural), :$out);
@@ -666,7 +695,7 @@ sub scaffold-new-view(Str:D $singular, Str:D $plural --> Str) {
   fill(q:to/HAML/, %( '__SINGULARTITLE__' => $singular.tc, '__SINGULAR__' => $singular, '__PLURAL__' => $plural ));
     %h1 New __SINGULARTITLE__
 
-    != $partial("__PLURAL__/form", %( __SINGULAR__ => $__SINGULAR__ ))
+    != partial("__PLURAL__/form", %( __SINGULAR__ => $__SINGULAR__ ))
 
     %a(href="/__PLURAL__") Back
     HAML
@@ -676,7 +705,7 @@ sub scaffold-edit-view(Str:D $singular, Str:D $plural --> Str) {
   fill(q:to/HAML/, %( '__SINGULARTITLE__' => $singular.tc, '__SINGULAR__' => $singular, '__PLURAL__' => $plural ));
     %h1 Edit __SINGULARTITLE__
 
-    != $partial("__PLURAL__/form", %( __SINGULAR__ => $__SINGULAR__ ))
+    != partial("__PLURAL__/form", %( __SINGULAR__ => $__SINGULAR__ ))
 
     %a(href="/__PLURAL__") Back
     HAML
@@ -793,7 +822,7 @@ sub application-layout(--> Str) {
         %link{rel: 'stylesheet', href: '/assets/css/style.css'}
       %body
         %main
-          != $yield()
+          != yield()
     HAML
 }
 

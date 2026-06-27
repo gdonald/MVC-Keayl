@@ -60,12 +60,12 @@ my $view = MVC::Keayl::View.new(:paths(['app/views']), :!reload);   # trust the 
 When an action renders a template, the rendered body is wrapped in a layout from
 `layouts/`. With no layout chosen, the `application` layout is used if it exists;
 otherwise the template renders on its own. Inside the layout, the wrapped body is
-available as the `content` local and through `yield`:
+available through the `yield` helper:
 
 ```haml
 %html
   %body
-    != $yield()
+    != yield()
 ```
 
 Choose a layout per action with the `:layout` option, or for every action of a
@@ -91,21 +91,21 @@ An action-level `:layout` overrides a controller declaration, which overrides th
 
 ## content-for and yield
 
-A template captures named content with `content_for`, and the layout places it
+A template captures named content with `content-for`, and the layout places it
 with `yield`:
 
 ```haml
 -# in the template
-= $content_for('title', 'Dashboard')
+= content-for('title', 'Dashboard')
 
 -# in the layout
-%title= $yield('title')
+%title= yield('title')
 %body
-  != $yield()
+  != yield()
 ```
 
-`$yield()` returns the main body; `$yield(name)` returns the matching
-`content_for` capture, or an empty string when none was set.
+`yield()` returns the main body; `yield(name)` returns the matching
+`content-for` capture, or an empty string when none was set.
 
 ## Partials
 
@@ -125,7 +125,7 @@ not escaped:
 
 ```haml
 %ul
-  != $partial('users/row', %( user => $user ))
+  != partial('users/row', %( user => $user ))
 ```
 
 ### Object partials
@@ -139,7 +139,7 @@ class Post {
   method to-partial-path { 'posts/post' }   # renders posts/_post, local `post`
 }
 
-$view.render-object($post);                  # in a template: != $partial_for($post)
+$view.render-object($post);                  # in a template: != partial-for($post)
 ```
 
 A controller renders an object directly with `render($post)`.
@@ -155,7 +155,7 @@ item under the partial's local name and a zero-based `{local}_counter`:
 ```
 
 ```haml
-!= $partial_each('greetings/line', $lines)
+!= partial-each('greetings/line', $lines)
 ```
 
 A `spacer` partial renders between items:
