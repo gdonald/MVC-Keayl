@@ -3,13 +3,20 @@
 use v6.d;
 use MVC::Keayl::CLI;
 
+# Accept named options in any position, so `keayl new app --database=postgres`
+# works, not only `keayl --database=postgres new app`.
+PROCESS::<%SUB-MAIN-OPTS> = :named-anywhere;
+
 my $NAME = program-name();
 
 multi sub MAIN('version') { say framework-version(); }
 multi sub MAIN('help')    { say usage(); }
 
-multi sub MAIN('new', $name) {
-  my @created = scaffold-app($name);
+multi sub MAIN('new', $name, Str :$database = 'sqlite') {
+  my @created = do {
+    CATCH { default { note .message; exit 2 } }
+    scaffold-app($name, :$database)
+  };
   say "created $name/$_" for @created;
   exit 0;
 }

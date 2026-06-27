@@ -5,6 +5,7 @@ use Test;
 use MVC::Keayl::CLI;
 use MVC::Keayl::Application;
 use MVC::Keayl::Routing;
+use JSON::Fast;
 use CLIFixtures;
 
 # program-name
@@ -204,5 +205,48 @@ is program-name(), 'keayl', 'the program name is keayl';
 
   is @table.first(*<name> eq 'root')<target>, 'home#index', 'the scaffolded routes file is loadable and defines a root';
 }
+
+# normalize-database
+
+is normalize-database('sqlite'), 'sqlite', 'normalize-database keeps sqlite';
+is normalize-database('postgres'), 'pg', 'normalize-database maps postgres onto pg';
+is normalize-database('postgresql'), 'pg', 'normalize-database maps postgresql onto pg';
+is normalize-database('mariadb'), 'mysql', 'normalize-database maps mariadb onto mysql';
+is normalize-database('Postgres'), 'pg', 'normalize-database is case-insensitive';
+dies-ok { normalize-database('mongo') }, 'normalize-database dies on an unsupported database';
+
+# scaffold-app --database
+
+{
+  my $dir = temp-dir('scaffold-db-sqlite');
+  scaffold-app('blog', into => $dir, database => 'sqlite');
+  my %config = from-json($dir.add('blog/config/application.json').slurp);
+
+  is %config<development><primary><adapter>, 'sqlite', 'sqlite is the default development adapter';
+  is %config<development><primary><name>, 'db/development.sqlite3', 'sqlite uses a file database name';
+  is %config<test><parallel>, 16, 'the test environment declares a parallel worker count';
+}
+
+{
+  my $dir = temp-dir('scaffold-db-postgres');
+  scaffold-app('blog', into => $dir, database => 'postgres');
+  my %config = from-json($dir.add('blog/config/application.json').slurp);
+
+  is %config<development><primary><adapter>, 'pg', 'postgres scaffolds a pg adapter';
+  is %config<development><primary><name>, 'blog_development', 'postgres names the development database';
+  is %config<test><primary><name>, 'blog_test', 'postgres names the test database';
+  is %config<production><primary><name>, 'blog_production', 'postgres names the production database';
+}
+
+{
+  my $dir = temp-dir('scaffold-db-mysql');
+  scaffold-app('blog', into => $dir, database => 'mysql');
+  my %config = from-json($dir.add('blog/config/application.json').slurp);
+
+  is %config<production><primary><adapter>, 'mysql', 'mysql scaffolds a mysql adapter';
+}
+
+dies-ok { scaffold-app('blog', into => temp-dir('scaffold-db-bad'), database => 'mongo') },
+  'scaffold-app refuses an unsupported database';
 
 done-testing;

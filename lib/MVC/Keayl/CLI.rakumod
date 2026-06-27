@@ -45,6 +45,7 @@ sub usage(--> Str) is export {
 
     Commands:
       new <name>              create a new application skeleton
+                              (--database=sqlite|postgres|mysql, default sqlite)
       server                  boot the application (alias: s)
       routes                  print the route table
       console                 open a REPL with the app loaded (alias: c)
@@ -153,12 +154,14 @@ sub console(
   0
 }
 
-sub scaffold-app(Str:D $name, IO() :$into = '.'.IO --> List) is export {
+sub scaffold-app(Str:D $name, IO() :$into = '.'.IO, Str:D :$database = 'sqlite' --> List) is export {
+  normalize-database($database); # validate before writing any files
+
   my $root = $into.add($name);
 
   my %files =
     'META6.json'                             => app-meta($name),
-    'config/application.json'                => application-json($name),
+    'config/application.json'                => application-json($name, :$database),
     'config/application.raku'                => application-raku(),
     'config/routes.raku'                     => routes-raku(),
     'app/controllers/HomeController.rakumod' => home-controller($name),
@@ -720,13 +723,43 @@ sub scaffold-form-view(Str:D $singular, Str:D $plural --> Str) {
     HAML
 }
 
-sub application-json(Str:D $name --> Str) {
+# Map a user-facing --database value onto the adapter token ORM::ActiveRecord
+# reads from config (its DB.adapter-class-for accepts these), or die on an
+# unsupported value so `keayl new --database=foo` fails loudly.
+sub normalize-database(Str:D $database --> Str) is export {
+  given $database.lc {
+    when 'sqlite' | 'sqlite3'                     { 'sqlite' }
+    when 'pg' | 'postgres' | 'postgresql'         { 'pg' }
+    when 'mysql' | 'mysql2' | 'mariadb'           { 'mysql' }
+    default {
+      die "keayl new: unsupported --database '$database' (sqlite, postgres, mysql)";
+    }
+  }
+}
+
+# The per-environment database name for a given adapter. SQLite is a file under
+# db/; the server adapters get a conventional <app>_<env> database name.
+sub database-name(Str:D $adapter, Str:D $app, Str:D $env --> Str) {
+  return "db/$env.sqlite3" if $adapter eq 'sqlite';
+  my $slug = $app.lc.subst(/<-[a..z0..9]>+/, '_', :g).subst(/^_+ | _+$/, '', :g);
+  "{$slug}_$env";
+}
+
+# Emit a config that ORM::ActiveRecord's `ar`/`DB.shared` can read: each
+# environment carries a `primary` connection block, and `test` declares the
+# parallel worker count for behave isolated mode.
+sub application-json(Str:D $name, Str:D :$database = 'sqlite' --> Str) {
+  my $adapter = normalize-database($database);
+  my $dev     = database-name($adapter, $name, 'development');
+  my $test    = database-name($adapter, $name, 'test');
+  my $prod    = database-name($adapter, $name, 'production');
+
   qq:to/JSON/;
     \{
       "shared":      \{ "app-name": "$name" },
-      "development": \{ "database": \{ "adapter": "sqlite", "database": "db/development.sqlite3" } },
-      "test":        \{ "database": \{ "adapter": "sqlite", "database": "db/test.sqlite3" } },
-      "production":  \{ "log-level": "error" }
+      "development": \{ "primary": \{ "adapter": "$adapter", "name": "$dev" } },
+      "test":        \{ "parallel": 16, "primary": \{ "adapter": "$adapter", "name": "$test" } },
+      "production":  \{ "log-level": "error", "primary": \{ "adapter": "$adapter", "name": "$prod" } }
     }
     JSON
 }

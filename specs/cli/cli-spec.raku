@@ -3,6 +3,7 @@ use BDD::Behave;
 use MVC::Keayl::CLI;
 use MVC::Keayl::Application;
 use MVC::Keayl::Routing;
+use JSON::Fast;
 use CLIFixtures;
 
 describe 'MVC::Keayl::CLI program-name', {
@@ -222,5 +223,65 @@ describe 'MVC::Keayl::CLI scaffold-app', {
     scaffold-app('shop', into => $root);
     my @table = load-routes($root.add('shop/config/routes.raku')).route-table;
     expect(@table.first(*<name> eq 'root')<target>).to.be('home#index');
+  }
+}
+
+describe 'MVC::Keayl::CLI normalize-database', {
+  it 'keeps sqlite', {
+    expect(normalize-database('sqlite')).to.be('sqlite');
+  }
+
+  it 'maps postgres and postgresql onto pg', {
+    expect(normalize-database('postgres')).to.be('pg');
+    expect(normalize-database('postgresql')).to.be('pg');
+  }
+
+  it 'maps mariadb onto mysql', {
+    expect(normalize-database('mariadb')).to.be('mysql');
+  }
+
+  it 'is case-insensitive', {
+    expect(normalize-database('Postgres')).to.be('pg');
+  }
+
+  it 'dies on an unsupported database', {
+    expect({ normalize-database('mongo') }).to.raise-error(Exception, /mongo/);
+  }
+}
+
+describe 'MVC::Keayl::CLI scaffold-app database option', {
+  sub config-for(Str:D $database) {
+    my $root = temp-dir('spec-scaffold-db');
+    scaffold-app('blog', into => $root, :$database);
+    from-json($root.add('blog/config/application.json').slurp);
+  }
+
+  it 'defaults to a sqlite primary connection under each environment', {
+    my %config = config-for('sqlite');
+    expect(%config<development><primary><adapter>).to.be('sqlite');
+    expect(%config<development><primary><name>).to.be('db/development.sqlite3');
+  }
+
+  it 'declares the test parallel worker count for behave isolated mode', {
+    my %config = config-for('sqlite');
+    expect(%config<test><parallel>).to.be(16);
+  }
+
+  it 'writes a postgres primary with conventional per-environment database names', {
+    my %config = config-for('postgres');
+    expect(%config<development><primary><adapter>).to.be('pg');
+    expect(%config<development><primary><name>).to.be('blog_development');
+    expect(%config<test><primary><name>).to.be('blog_test');
+    expect(%config<production><primary><name>).to.be('blog_production');
+  }
+
+  it 'writes a mysql primary when asked for mysql', {
+    my %config = config-for('mysql');
+    expect(%config<production><primary><adapter>).to.be('mysql');
+  }
+
+  it 'refuses to scaffold for an unsupported database', {
+    expect({ scaffold-app('blog', into => temp-dir('spec-scaffold-bad'), database => 'mongo') })
+      .to.raise-error(Exception, /mongo/);
   }
 }
