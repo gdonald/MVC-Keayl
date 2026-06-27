@@ -1,46 +1,18 @@
-# MVC::Keayl
+# Changelog
 
-A Model-View-Controller web framework for Raku.
+All notable changes to MVC::Keayl are recorded here. The format groups entries
+under Added, Changed, Fixed, and Removed.
 
-MVC::Keayl is the web layer. The model layer is delegated to
-[ORM::ActiveRecord](https://github.com/gdonald/ORM-ActiveRecord) and default view
-rendering to [Template::HAML](https://github.com/gdonald/Template-HAML); both are
-pluggable. The HTTP server is reached through an abstract adapter, with the
-default adapter built on [Cro](https://cro.raku.org/).
+## v0.9.0 (2026-06-25)
 
-## Installation
+First public release. MVC::Keayl is the web layer of a Rails-style stack for
+Raku, pairing with ORM::ActiveRecord for models and Template::HAML for views.
 
-```
-zef install MVC::Keayl
-```
+### Added
 
-## Getting started
-
-Scaffold a new application, then boot it:
-
-```
-keayl new blog
-cd blog
-bin/dev
-```
-
-`keayl new` writes a starter layout: `config/application.json`,
-`config/application.raku`, `config/routes.raku` with a `root` route, a
-`HomeController` rendering through an `application` layout, an `assets/` directory
-served by the static middleware, `bin/server`/`bin/dev`/`bin/test` scripts, a
-browser spec for the home page, a `META6.json`, a health-check endpoint at `/up`,
-a PWA manifest and service worker, and static exception pages.
-
-`bin/dev` serves the app over HTTP with the Cro adapter, defaulting to
-`127.0.0.1:3000`. Other commands include `keayl routes`, `keayl console`, and
-`keayl generate`. See the [CLI docs](https://gdonald.github.io/MVC-Keayl/cli/)
-for the full command list.
-
-## Features
-
-- Request and Response wrappers over the HTTP server.
+- Request and Response wrappers over the underlying HTTP server.
 - Rack-like middleware stack and endpoint protocol, with built-in middleware for
-  static files, host authorization, request logging, request IDs, SSL
+  static file serving, host authorization, request logging, request IDs, SSL
   redirection, and secure headers.
 - Abstract server adapter contract, with a Cro-based default adapter and an
   in-memory test adapter.
@@ -85,12 +57,3 @@ for the full command list.
 - Health check and PWA controllers.
 - Mountable engines.
 - CLI with code generators and test support utilities.
-
-## Documentation
-
-Full documentation lives at
-[gdonald.github.io/MVC-Keayl](https://gdonald.github.io/MVC-Keayl/).
-
-## License
-
-Artistic-2.0. See [LICENSE](LICENSE).
