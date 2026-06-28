@@ -1449,10 +1449,12 @@ environment is chosen from <code>KEAYL_ENV</code>, then <code>RAKU_ENV</code>, d
 own with <code>initializer</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$app</span>.<span class="n">initializer</span>(<span class="s">&#39;mailer&#39;</span>, -&gt; <span class="nv">$app</span> { ... });
 </code></pre></div></td></tr></table></div>
-<p>Every application starts with two default initializers: <code>active-record</code>, which
-calls the application's <code>database-connector</code> when the config has a <code>database</code>
-section, and <code>template-haml</code>, which wires a <code>Template::HAML</code>-backed view renderer
-(reloading templates outside production).</p>
+<p>Every application starts with default initializers, including <code>active-record</code>,
+which calls the application's <code>database-connector</code> when the config has a
+<code>database</code> section, <code>template-haml</code>, which wires a <code>Template::HAML</code>-backed view
+renderer (reloading templates outside production), and <code>assets</code>, which loads a
+precompiled <code>public/assets/manifest.json</code> so the view helpers fingerprint asset
+URLs. See the asset pipeline page for the manifest details.</p>
 <h2 id="dispatch">Dispatch<a class="headerlink" href="#dispatch" title="Permanent link">&para;</a></h2>
 <p>The endpoint recognizes a request against the router and invokes the matching
 controller action, with route parameters merged into the controller's params. A

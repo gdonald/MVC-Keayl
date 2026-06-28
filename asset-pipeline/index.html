@@ -574,6 +574,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#loading-the-manifest-at-boot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading the manifest at boot
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#serving" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1365,6 +1376,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#loading-the-manifest-at-boot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading the manifest at boot
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#serving" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1455,6 +1477,30 @@ threading the manifest through each call:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">set-asset-manifest</span>(<span class="nv">$manifest</span>);
 <span class="n">image-tag</span>(<span class="s">&#39;logo.png&#39;</span>, <span class="n">resolver</span> =&gt; <span class="nv">&amp;digested-resolver</span>);
+</code></pre></div></td></tr></table></div>
+<p>A view defaults to <code>digested-resolver</code>, so once a manifest is registered the
+helpers emit fingerprinted URLs with no per-call configuration. When no manifest
+is registered the same resolver emits the plain <code>/assets/&lt;path&gt;</code> URL, which keeps
+development output unfingerprinted until you precompile.</p>
+<h2 id="loading-the-manifest-at-boot">Loading the manifest at boot<a class="headerlink" href="#loading-the-manifest-at-boot" title="Permanent link">&para;</a></h2>
+<p>An application loads the precompiled manifest during boot. The <code>assets</code>
+initializer reads <code>public/assets/manifest.json</code> when it exists, registers it with
+<code>set-asset-manifest</code>, and points the asset root at <code>public/assets</code>. After a
+<code>keayl assets-precompile</code> run the view helpers fingerprint URLs in production with
+no extra configuration, and a deploy with new asset content serves new URLs that
+defeat the browser cache.</p>
+<p>Both paths come from the <code>assets</code> config, defaulting to <code>public/assets</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;assets&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;public-root&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;public/assets&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;manifest&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;public/assets/manifest.json&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 <h2 id="serving">Serving<a class="headerlink" href="#serving" title="Permanent link">&para;</a></h2>
 <p><code>MVC::Keayl::Assets::Serving::AssetsController</code> serves digested files from the
