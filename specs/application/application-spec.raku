@@ -8,6 +8,8 @@ use MVC::Keayl::Controller;
 use MVC::Keayl::Request;
 use MVC::Keayl::Response;
 use MVC::Keayl::Routing;
+use MVC::Keayl::Assets;
+use CLIFixtures;
 
 class WidgetsController is MVC::Keayl::Controller {
   method index { self.render(:plain('all widgets')) }
@@ -110,6 +112,32 @@ describe 'MVC::Keayl::Application environment behavior', {
     my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(environment => 'development'));
     $app.boot;
     expect($app.controller-options<view-renderer>.reload).to.be-truthy;
+  }
+}
+
+describe 'MVC::Keayl::Application assets initializer', {
+  before-each({ reset-asset-manifest });
+
+  it 'loads the asset manifest at boot when one is present', {
+    my $root = temp-dir('app-assets');
+    $root.add('public/assets').mkdir;
+    $root.add('public/assets/manifest.json').spurt('{"assets":{"app.css":"app-abc.css"}}');
+
+    MVC::Keayl::Application.new(
+      config => MVC::Keayl::Config.new(settings => %( assets => %( public-root => $root.add('public/assets').Str ) )),
+    ).boot;
+
+    expect(asset-manifest.lookup('app.css')).to.be('app-abc.css');
+
+    reset-asset-manifest;
+  }
+
+  it 'leaves the manifest unset without a precompiled manifest', {
+    MVC::Keayl::Application.new(
+      config => MVC::Keayl::Config.new(settings => %( assets => %( public-root => temp-dir('app-assets-empty').Str ) )),
+    ).boot;
+
+    expect(asset-manifest.defined).to.be-falsy;
   }
 }
 

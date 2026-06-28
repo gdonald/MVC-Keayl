@@ -51,10 +51,12 @@ own with `initializer`:
 $app.initializer('mailer', -> $app { ... });
 ```
 
-Every application starts with two default initializers: `active-record`, which
-calls the application's `database-connector` when the config has a `database`
-section, and `template-haml`, which wires a `Template::HAML`-backed view renderer
-(reloading templates outside production).
+Every application starts with default initializers, including `active-record`,
+which calls the application's `database-connector` when the config has a
+`database` section, `template-haml`, which wires a `Template::HAML`-backed view
+renderer (reloading templates outside production), and `assets`, which loads a
+precompiled `public/assets/manifest.json` so the view helpers fingerprint asset
+URLs. See the asset pipeline page for the manifest details.
 
 ## Dispatch
 

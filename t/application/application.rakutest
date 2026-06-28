@@ -8,6 +8,7 @@ use MVC::Keayl::Router;
 use MVC::Keayl::Controller;
 use MVC::Keayl::Request;
 use MVC::Keayl::Routing;
+use MVC::Keayl::Assets;
 
 class WidgetsController is MVC::Keayl::Controller {
   method index { self.render(:plain('all widgets')) }
@@ -171,6 +172,37 @@ sub request($method, $path, *%args) {
   $app.boot;
 
   is $called, 0, 'the active-record initializer is a no-op without a database config';
+}
+
+# application: the assets initializer loads a precompiled manifest at boot
+
+{
+  reset-asset-manifest;
+
+  my $root = $*TMPDIR.add('keayl-app-assets-' ~ $*PID);
+  $root.add('public/assets').mkdir;
+  $root.add('public/assets/manifest.json').spurt('{"assets":{"app.css":"app-abc.css"}}');
+
+  MVC::Keayl::Application.new(
+    config => MVC::Keayl::Config.new(settings => %( assets => %( public-root => $root.add('public/assets').Str ) )),
+  ).boot;
+
+  is asset-manifest.lookup('app.css'), 'app-abc.css', 'the assets initializer loads the manifest at boot when one is present';
+
+  reset-asset-manifest;
+}
+
+{
+  reset-asset-manifest;
+
+  my $root = $*TMPDIR.add('keayl-app-assets-empty-' ~ $*PID);
+  $root.mkdir;
+
+  MVC::Keayl::Application.new(
+    config => MVC::Keayl::Config.new(settings => %( assets => %( public-root => $root.Str ) )),
+  ).boot;
+
+  nok asset-manifest.defined, 'the assets initializer leaves the manifest unset without a precompiled manifest';
 }
 
 done-testing;

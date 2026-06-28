@@ -44,6 +44,31 @@ set-asset-manifest($manifest);
 image-tag('logo.png', resolver => &digested-resolver);
 ```
 
+A view defaults to `digested-resolver`, so once a manifest is registered the
+helpers emit fingerprinted URLs with no per-call configuration. When no manifest
+is registered the same resolver emits the plain `/assets/<path>` URL, which keeps
+development output unfingerprinted until you precompile.
+
+## Loading the manifest at boot
+
+An application loads the precompiled manifest during boot. The `assets`
+initializer reads `public/assets/manifest.json` when it exists, registers it with
+`set-asset-manifest`, and points the asset root at `public/assets`. After a
+`keayl assets-precompile` run the view helpers fingerprint URLs in production with
+no extra configuration, and a deploy with new asset content serves new URLs that
+defeat the browser cache.
+
+Both paths come from the `assets` config, defaulting to `public/assets`:
+
+```json
+{
+  "assets": {
+    "public-root": "public/assets",
+    "manifest": "public/assets/manifest.json"
+  }
+}
+```
+
 ## Serving
 
 `MVC::Keayl::Assets::Serving::AssetsController` serves digested files from the

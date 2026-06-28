@@ -5,6 +5,7 @@ use MVC::Keayl::Assets;
 use MVC::Keayl::Assets::Serving;
 use MVC::Keayl::Parameters;
 use MVC::Keayl::Helpers::Asset;
+use MVC::Keayl::View;
 use MVC::Keayl::CLI;
 
 my $temp-counter = 0;
@@ -95,6 +96,25 @@ sub params(%data) {
   is digested-resolver('application', 'css'), '/assets/application-xyz.css', 'the digested-resolver consults the configured manifest';
 
   reset-asset-manifest;
+}
+
+# the default view resolver fingerprints when a manifest is loaded
+
+{
+  reset-asset-manifest;
+  set-asset-manifest(MVC::Keayl::Assets::Manifest.new(assets => %( 'app.css' => 'app-abc.css' )));
+
+  is MVC::Keayl::View.new.asset-resolver.('app', 'css'), '/assets/app-abc.css', 'the default view resolver fingerprints an asset url when a manifest is loaded';
+
+  reset-asset-manifest;
+}
+
+# the default view resolver emits a plain url without a manifest
+
+{
+  reset-asset-manifest;
+
+  is MVC::Keayl::View.new.asset-resolver.('app', 'css'), '/assets/app.css', 'the default view resolver emits a plain asset url when no manifest is loaded';
 }
 
 # import maps

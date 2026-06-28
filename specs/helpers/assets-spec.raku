@@ -4,6 +4,7 @@ use MVC::Keayl::Assets;
 use MVC::Keayl::Assets::Serving;
 use MVC::Keayl::Parameters;
 use MVC::Keayl::Helpers::Asset;
+use MVC::Keayl::View;
 use MVC::Keayl::CLI;
 use CLIFixtures;
 
@@ -97,6 +98,21 @@ describe 'the configured digested-resolver', {
   it 'consults the configured manifest', {
     expect(digested-resolver('application', 'css')).to.be('/assets/application-xyz.css');
     reset-asset-manifest;
+  }
+}
+
+describe 'the default view resolver', {
+  before-each({ reset-asset-manifest });
+
+  it 'fingerprints an asset url when a manifest is loaded', {
+    set-asset-manifest(MVC::Keayl::Assets::Manifest.new(assets => %( 'app.css' => 'app-abc.css' )));
+    expect(MVC::Keayl::View.new.asset-resolver.('app', 'css')).to.be('/assets/app-abc.css');
+
+    reset-asset-manifest;
+  }
+
+  it 'emits a plain asset url when no manifest is loaded', {
+    expect(MVC::Keayl::View.new.asset-resolver.('app', 'css')).to.be('/assets/app.css');
   }
 }
 

@@ -5,6 +5,8 @@ use MVC::Keayl::Config;
 use MVC::Keayl::Dispatcher;
 use MVC::Keayl::Endpoint;
 use MVC::Keayl::View;
+use MVC::Keayl::Assets;
+use MVC::Keayl::Assets::Serving;
 use MVC::Keayl::Routing;
 use MVC::Keayl::Logger;
 use MVC::Keayl::Middleware::Logger;
@@ -36,6 +38,18 @@ submethod TWEAK {
       paths  => ($app.config<view-paths> // ['app/views']).Array,
       reload => !$app.is-production,
     );
+  });
+
+  self.initializer('assets', -> $app {
+    my %assets        = $app.config<assets> // %();
+    my $public-root   = (%assets<public-root> // 'public/assets').IO;
+    my $manifest-path = (%assets<manifest> // $public-root.add('manifest.json')).IO;
+
+    set-asset-root($public-root) if $public-root.d;
+
+    if $manifest-path.e {
+      set-asset-manifest(MVC::Keayl::Assets::Manifest.from-json($manifest-path.slurp));
+    }
   });
 
   self.initializer('i18n', -> $app {
