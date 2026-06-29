@@ -1,0 +1,38 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Dispatcher;
+use MVC::Keayl::Request;
+use MVC::Keayl::Routing;
+use MVC::Keayl::Controller;
+
+# A RESTful controller may expose a `new` action (GET /resource/new renders the
+# blank form). The action method named `new` shadows the `.new` constructor, so
+# the dispatcher must instantiate the controller without going through `.new`.
+
+class SprocketsController is MVC::Keayl::Controller {
+  method new   { self.render(plain => 'new sprocket form') }
+  method index { self.render(plain => 'all sprockets') }
+}
+
+sub dispatch(Str:D $method, Str:D $path) {
+  my $router = routes {
+    get '/sprockets',     to => 'sprockets#index';
+    get '/sprockets/new', to => 'sprockets#new';
+  };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [SprocketsController]);
+  $dispatcher.call(MVC::Keayl::Request.new(:$method, :$path));
+}
+
+{
+  my $response = dispatch('GET', '/sprockets/new');
+  is $response.status, 200, 'a controller with a new action constructs and dispatches without a 500';
+  is $response.body, 'new sprocket form', 'the new action runs and renders';
+}
+
+{
+  my $response = dispatch('GET', '/sprockets');
+  is $response.body, 'all sprockets', 'other actions on the same controller still dispatch';
+}
+
+done-testing;

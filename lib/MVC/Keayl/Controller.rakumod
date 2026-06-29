@@ -409,8 +409,16 @@ method is-performed(--> Bool) {
 }
 
 method !is-action(Str:D $name --> Bool) {
-  state $reserved = MVC::Keayl::Controller.^methods(:all).map(*.name).Set;
-  self.^can($name).so && !$reserved{$name}
+  # An action is a public method introduced by a controller subclass. A name
+  # resolving to the framework base (or to Mu/Any) is framework surface, not an
+  # action -- unless a subclass deliberately overrides it, as a RESTful `new` or
+  # `edit` action does when it shadows a built-in name. In that case the resolved
+  # method is owned by the subclass, so it is a valid action.
+  with self.^can($name).first -> $method {
+    return $method.package !=== MVC::Keayl::Controller
+        && $method.package ~~ MVC::Keayl::Controller;
+  }
+  False
 }
 
 method !collect-rescues(--> List) {

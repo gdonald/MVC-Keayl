@@ -66,7 +66,10 @@ method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
 method !invoke($class, $match, MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
   my %context = self!error-context($match, $request);
 
-  my $controller = $class.new(
+  # Construct with `.bless`, not `.new`: a RESTful controller may define a `new`
+  # action (GET /resource/new), which would otherwise shadow the `.new`
+  # constructor and be invoked on the type object during instantiation.
+  my $controller = $class.bless(
     request => $request,
     params  => build-params($match.params, $request),
     |%!controller-options,
