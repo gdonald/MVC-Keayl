@@ -4,6 +4,7 @@ use lib 'specs/lib';
 use Test;
 use MVC::Keayl::View;
 use MVC::Keayl::Controller;
+use MVC::Keayl::CLI;
 use CLIFixtures;
 
 class ReloadController is MVC::Keayl::Controller { }
@@ -40,6 +41,35 @@ sub render($view) { $view.render-template('reload/show', {}, controller => Reloa
 
   write-helper('v4', '203012312359');
   like render($view), /'v3:x'/, 'a reload-off view keeps the cached helper';
+}
+
+# A helper file may begin with a `use v6` language pragma (the generator emits
+# one); stripping it must still expose the helper subs rather than silently
+# loading nothing.
+{
+  write-file($helpers.add('ApplicationHelper.rakumod'),
+    "use v6.d;\nunit module ApplicationHelper;\nour sub shout(\$s) \{ \$s.uc }\n");
+  write-file($views.add('reload/pragma.html.haml'), "%p= shout('hi')\n");
+
+  my $view = MVC::Keayl::View.new(paths => [$views.Str], helper-paths => [$helpers.Str]);
+
+  like $view.render-template('reload/pragma', {}, controller => ReloadController.new), /'<p>HI</p>'/,
+    'a helper file beginning with a use v6 pragma still exposes its subs';
+}
+
+# The ApplicationHelper that `keayl new` scaffolds begins with a `use v6` pragma,
+# carries comments, then a real `our sub`; loading it verbatim must expose the sub.
+{
+  my $approot = temp-dir('helper-scaffold');
+  scaffold-app('helperapp', into => $approot);
+
+  my $apphelpers = $approot.add('helperapp/app/helpers');
+  write-file($views.add('reload/nav.html.haml'), "%p!= nav-link('Home', '/')\n");
+
+  my $view = MVC::Keayl::View.new(paths => [$views.Str], helper-paths => [$apphelpers.Str]);
+
+  ok $view.render-template('reload/nav', {}, controller => ReloadController.new).contains('<a href="/">Home</a>'),
+    'a scaffolded ApplicationHelper loads its subs through the helper eval path';
 }
 
 done-testing;

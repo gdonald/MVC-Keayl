@@ -215,7 +215,12 @@ my $helper-eval-counter = 0;
 # each time, rather than `require`, so a changed file reloads in development and
 # loading works the same in every harness.
 sub eval-helper-subs(IO::Path:D $file --> Hash) {
-  my $body = $file.slurp.subst(/^^ \h* 'unit' \h+ 'module' \h+ <[\w:]>+ \h* ';' \h* $$/, '');
+  # Drop the `unit module ...;` declaration and any `use v6...;` language pragma:
+  # the body is re-wrapped in a `module { ... }` block, and a version pragma is
+  # only legal as the first statement of a compilation unit, so it must go.
+  my $body = $file.slurp
+    .subst(/^^ \h* 'use' \h+ 'v6' <[.\w]>* \h* ';' \h* $$/, '', :g)
+    .subst(/^^ \h* 'unit' \h+ 'module' \h+ <[\w:]>+ \h* ';' \h* $$/, '');
   my $sym  = '__KeaylHelper_' ~ ($helper-eval-counter++);
   my $code = "module $sym \{\n$body\n}\n"
     ~ $sym ~ '::.pairs.grep({ .key.starts-with("&") }).map({ .key.substr(1) => .value }).hash';

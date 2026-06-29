@@ -528,7 +528,7 @@ sub helper-source(Str:D $module, Str:D $name --> Str) {
     # View helpers for this controller, callable bare in its templates. Each
     # `our sub` becomes a helper:
     #
-    #   our sub badge($text) { qq{<span class="badge">$text</span>} }
+    #   our sub badge($text) { qq[<span class="badge">{$text}</span>] }
     #
     # In a template:  != badge('new')
     RAKU
@@ -544,7 +544,7 @@ sub application-helper(--> Str) {
     # sigil. A helper may read request state through $*KEAYL-CONTROLLER.
 
     our sub nav-link($label, $href) {
-      qq{<a href="$href">$label</a>}
+      qq[<a href="$href">{$label}</a>]
     }
     RAKU
 }

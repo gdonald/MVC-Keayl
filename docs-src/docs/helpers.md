@@ -360,7 +360,7 @@ in modules under `app/helpers/`. Each sub becomes a bare template call.
 unit module ApplicationHelper;
 
 our sub nav-link($label, $href) {
-  qq{<a href="$href">$label</a>}
+  qq[<a href="$href">{$label}</a>]
 }
 ```
 
