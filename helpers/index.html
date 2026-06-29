@@ -2097,7 +2097,7 @@ in modules under <code>app/helpers/</code>. Each sub becomes a bare template cal
 <span class="k">unit</span> <span class="k">module</span> <span class="n">ApplicationHelper</span>;
 
 <span class="k">our</span> <span class="k">sub</span> <span class="n">nav-link</span>(<span class="nv">$label</span>, <span class="nv">$href</span>) {
-  <span class="s">qq{&lt;a href=&quot;$href&quot;&gt;$label&lt;/a&gt;}</span>
+  <span class="s">qq[&lt;a href=&quot;$href&quot;&gt;{$label}&lt;/a&gt;]</span>
 }
 </code></pre></div></td></tr></table></div>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
