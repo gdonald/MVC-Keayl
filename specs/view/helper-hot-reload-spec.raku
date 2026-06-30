@@ -70,4 +70,15 @@ describe 'helper module hot reload', {
 
     expect($view.render-template('reload/nav', {}, controller => ReloadController.new).contains('<a href="/">Home</a>')).to.be-truthy;
   }
+
+  it 'resolves a core type referenced by a helper after the pragma is stripped', {
+    my ($helpers, $views, $file) = setup('spec-helper-core-type');
+    write-file($helpers.add('ApplicationHelper.rakumod'),
+      "use v6.d;\nunit module ApplicationHelper;\nour sub a-year \{ Date.new(2026, 6, 30).year }\n");
+    write-file($views.add('reload/year.html.haml'), "%p= a-year()\n");
+
+    my $view = MVC::Keayl::View.new(paths => [$views.Str], helper-paths => [$helpers.Str]);
+
+    expect($view.render-template('reload/year', {}, controller => ReloadController.new).contains('<p>2026</p>')).to.be-truthy;
+  }
 }

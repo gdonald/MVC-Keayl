@@ -72,4 +72,18 @@ sub render($view) { $view.render-template('reload/show', {}, controller => Reloa
     'a scaffolded ApplicationHelper loads its subs through the helper eval path';
 }
 
+# Stripping the `use v6` pragma must not drop the language: a helper body that
+# references a core type (here Date) has to resolve it, so the eval'd wrapper
+# re-emits the pragma as its first statement.
+{
+  write-file($helpers.add('ApplicationHelper.rakumod'),
+    "use v6.d;\nunit module ApplicationHelper;\nour sub a-year \{ Date.new(2026, 6, 30).year }\n");
+  write-file($views.add('reload/year.html.haml'), "%p= a-year()\n");
+
+  my $view = MVC::Keayl::View.new(paths => [$views.Str], helper-paths => [$helpers.Str]);
+
+  like $view.render-template('reload/year', {}, controller => ReloadController.new), /'<p>2026</p>'/,
+    'a helper that references a core type still resolves it after the pragma is stripped';
+}
+
 done-testing;
