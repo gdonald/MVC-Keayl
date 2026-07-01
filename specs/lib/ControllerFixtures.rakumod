@@ -328,4 +328,21 @@ class StreamController is MVC::Keayl::Controller is export {
   }
 }
 
+class X::CallbackBaseBoom is Exception is export { method message(--> Str) { 'callback base boom' } }
+
+# A base controller carrying callback, around, rescue-from, and helper-method
+# traits. Living in this separately compiled fixture module, it exercises the
+# precompilation path: the trait declarations must survive into a subclass
+# defined elsewhere.
+class CallbackBaseController is MVC::Keayl::Controller is export {
+  has @.trail;
+
+  method base-before is before-action { @!trail.push('base-before') }
+  method base-around($next) is around-action { @!trail.push('base-around-in'); $next(); @!trail.push('base-around-out') }
+  method base-after is after-action { @!trail.push('base-after') }
+  method base-label is helper-method { 'from-base' }
+
+  method base-rescue($error) is rescue-from(X::CallbackBaseBoom) { self.render(plain => 'rescued by base', status => 503) }
+}
+
 

@@ -117,6 +117,25 @@ my %param-filters{Mu};
 my %wrap-config{Mu};
 my %renderers;
 
+# Method-level callback declarations (`is before-action`, `is helper-method`,
+# `is rescue-from`, ...) are marked on the method through a parametric role
+# rather than recorded in a class-keyed registry. A `my %` registry is mutated
+# at class-composition time and is empty once the controller loads from its
+# precompiled form, so an inherited callback declared on a separately compiled
+# base controller would silently never run. A role mixed into a method is
+# serialized with the class and recovered by introspection, so it survives
+# precompilation.
+role ActionCallbackTrait[Str $kind, %options] {
+  method callback-kind(--> Str)     { $kind }
+  method callback-options(--> Hash) { %options }
+}
+
+role RescueFromTrait[$types] {
+  method rescue-types(--> List) { $types.list }
+}
+
+role HelperMethodTrait { }
+
 method helper-method(*@names --> ::?CLASS) {
   (%helper-methods{self} //= []).append(@names.map(*.Str));
   self
@@ -186,7 +205,10 @@ method default-url-options(--> Hash) {
 
 method !helper-method-names(--> List) {
   my @names;
-  @names.append(|(%helper-methods{$_} // [])) for self.^mro.reverse;
+  for self.^mro.reverse -> $class {
+    @names.append(|(%helper-methods{$class} // []));
+    @names.append($class.^methods(:local).grep({ $_ ~~ HelperMethodTrait }).map(*.name));
+  }
   @names.unique.List
 }
 
@@ -256,31 +278,25 @@ sub trait-callback-options($value --> Hash) {
   %( @pairs.map({ .key => .value }) )
 }
 
-sub register-method-callback(%registry, Method:D $method, $value --> Nil) {
-  my %opts = trait-callback-options($value);
-  (%registry{$method.package} //= []).push:
-    callback-spec($method.name, %opts<only>, %opts<except>, %opts<if>, %opts<unless>);
-}
-
 multi sub trait_mod:<is>(Method:D $method, :$before-action!) is export {
-  register-method-callback(%before-actions, $method, $before-action);
+  $method does ActionCallbackTrait['before-action', trait-callback-options($before-action)];
 }
 
 multi sub trait_mod:<is>(Method:D $method, :$after-action!) is export {
-  register-method-callback(%after-actions, $method, $after-action);
+  $method does ActionCallbackTrait['after-action', trait-callback-options($after-action)];
 }
 
 multi sub trait_mod:<is>(Method:D $method, :$around-action!) is export {
-  register-method-callback(%around-actions, $method, $around-action);
+  $method does ActionCallbackTrait['around-action', trait-callback-options($around-action)];
 }
 
 multi sub trait_mod:<is>(Method:D $method, :$rescue-from!) is export {
   my @types = $rescue-from ~~ Positional ?? $rescue-from.list !! ($rescue-from,);
-  (%rescues{$method.package} //= []).push: %( type => $_, handler => $method.name ) for @types;
+  $method does RescueFromTrait[@types.List];
 }
 
 multi sub trait_mod:<is>(Method:D $method, :$helper-method!) is export {
-  (%helper-methods{$method.package} //= []).append($method.name);
+  $method does HelperMethodTrait;
 }
 
 sub trait-call-args($value --> Capture) {
@@ -327,6 +343,20 @@ method !collect(%registry --> List) {
   @result
 }
 
+# Callbacks declared with the `is before-action`/`after`/`around` traits, read
+# back from the role mixed into each method. Base-to-derived so an inherited
+# callback runs before the subclass's.
+method !method-trait-callbacks(Str:D $kind --> List) {
+  my @result;
+  for self.^mro.reverse -> $class {
+    for $class.^methods(:local).grep({ $_ ~~ ActionCallbackTrait && .callback-kind eq $kind }) -> $method {
+      my %options = $method.callback-options;
+      @result.push: callback-spec($method.name, %options<only>, %options<except>, %options<if>, %options<unless>);
+    }
+  }
+  @result
+}
+
 method !applies-to($spec, $action --> Bool) {
   with $spec<only>   { return False unless $_{$action} }
   with $spec<except> { return False if $_{$action} }
@@ -354,10 +384,10 @@ method !eval-condition($condition) {
   $condition ~~ Callable ?? ?$condition(self) !! ?self."$condition"()
 }
 
-method !active-callbacks(%registry, %skip-registry, $action --> List) {
+method !active-callbacks(%registry, %skip-registry, $action, Str:D $kind --> List) {
   my @skips = self!collect(%skip-registry);
 
-  self!collect(%registry).grep({
+  (|self!collect(%registry), |self!method-trait-callbacks($kind)).grep({
     self!applies-to($_, $action) && !self!is-skipped($_, @skips, $action) && self!condition-passes($_)
   }).List
 }
@@ -373,7 +403,7 @@ method !invoke-around($spec, $next) {
 }
 
 method !run-with-callbacks(Str:D $action) {
-  for self!active-callbacks(%before-actions, %skip-before, $action) -> $callback {
+  for self!active-callbacks(%before-actions, %skip-before, $action, 'before-action') -> $callback {
     self!invoke-callback($callback);
     return if $!performed;
   }
@@ -385,13 +415,13 @@ method !run-with-callbacks(Str:D $action) {
   };
 
   my $chain = $core;
-  for self!active-callbacks(%around-actions, %skip-around, $action).reverse -> $callback {
+  for self!active-callbacks(%around-actions, %skip-around, $action, 'around-action').reverse -> $callback {
     my $next = $chain;
     $chain = sub { self!invoke-around($callback, $next) };
   }
   $chain();
 
-  for self!active-callbacks(%after-actions, %skip-after, $action).reverse -> $callback {
+  for self!active-callbacks(%after-actions, %skip-after, $action, 'after-action').reverse -> $callback {
     self!invoke-callback($callback);
   }
 }
@@ -427,6 +457,9 @@ method !collect-rescues(--> List) {
 
   for self.^mro.reverse -> $class {
     @entries.push($_) for (%rescues{$class} // []).list;
+    for $class.^methods(:local).grep({ $_ ~~ RescueFromTrait }) -> $method {
+      @entries.push(%( type => $_, handler => $method.name )) for $method.rescue-types;
+    }
   }
 
   @entries

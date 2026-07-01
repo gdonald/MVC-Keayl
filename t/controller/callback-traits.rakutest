@@ -4,6 +4,7 @@ use lib 'specs/lib';
 use Test;
 use MVC::Keayl::Request;
 use MVC::Keayl::Controller;
+use ControllerFixtures;
 
 class TraitController is MVC::Keayl::Controller {
   has @.trail;
@@ -27,5 +28,32 @@ is run('show'), 'auth,around-in,show,around-out,audit',
 
 is run('public'), 'around-in,public,around-out,audit',
   'the except option on is before-action skips the excluded action';
+
+# Callback and helper-method traits declared on a base controller that lives in
+# a separately compiled (precompiled) module must still take effect in a
+# subclass. A class-keyed registry would be empty here; the traits are recovered
+# from the methods themselves.
+{
+  my class InheritsCallbacks is CallbackBaseController {
+    method show { self.trail.push('show ' ~ self.base-label) }
+  }
+
+  my $controller = InheritsCallbacks.new(request => MVC::Keayl::Request.new(:method<GET>, :path</show>));
+  $controller.dispatch('show');
+
+  is $controller.trail.join(','), 'base-before,base-around-in,show from-base,base-around-out,base-after',
+    'before-action, around-action, after-action, and helper-method traits on a precompiled base controller run in a subclass';
+}
+
+{
+  my class InheritsRescue is CallbackBaseController {
+    method boom { X::CallbackBaseBoom.new.throw }
+  }
+
+  my $response = InheritsRescue.new(request => MVC::Keayl::Request.new(:method<GET>, :path</boom>)).dispatch('boom');
+
+  is $response.status, 503,
+    'a rescue-from trait on a precompiled base controller routes an exception in a subclass';
+}
 
 done-testing;
