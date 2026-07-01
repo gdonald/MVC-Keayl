@@ -1593,6 +1593,15 @@ available through the <code>yield</code> helper:</p>
 <span class="w">  </span><span class="nt">%body</span>
 <span class="w">    </span><span class="p">!=</span><span class="w"> </span><span class="k">yield</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
+<p>The body is also exposed as a <code>content</code> local, so <code>$content</code> works in place of
+<code>yield()</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%html</span>
+<span class="w">  </span><span class="nt">%body</span>
+<span class="w">    </span><span class="p">!=</span><span class="w"> </span><span class="vg">$content</span>
+</code></pre></div></td></tr></table></div>
+<p>Passing an explicit <code>content</code> local when rendering overrides the wrapped body.</p>
 <p>Choose a layout per action with the <code>:layout</code> option, or for every action of a
 controller with the class-level <code>layout</code> declaration:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
