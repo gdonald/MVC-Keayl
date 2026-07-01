@@ -9,6 +9,8 @@ class LayoutController is MVC::Keayl::Controller {
   method no-layout      { self.assign('name', 'Ada'); self.render('greetings/show', :layout(False)) }
   method action-layout  { self.assign('name', 'Ada'); self.render('greetings/show', :layout('special')) }
   method yielded        { self.render('greetings/with_content', :layout('yielding')) }
+  method content-local  { self.render('greetings/with_content', :layout('content-local')) }
+  method content-explicit { self.render('greetings/with_content', :layout('content-local'), locals => { content => 'Explicit content' }) }
 }
 
 class DeclaredLayoutController is MVC::Keayl::Controller {
@@ -57,5 +59,17 @@ describe 'MVC::Keayl::Controller content for and yield', {
 
   it 'yields the main content into the layout', {
     expect(body(LayoutController, 'yielded').contains('Body content')).to.be-truthy;
+  }
+
+  it 'renders the body from a $content local in the layout', {
+    expect(body(LayoutController, 'content-local').contains('Body content')).to.be-truthy;
+  }
+
+  it 'lets an explicit content local override the rendered body', {
+    expect(body(LayoutController, 'content-explicit').contains('Explicit content')).to.be-truthy;
+  }
+
+  it 'omits the rendered body when an explicit content local is given', {
+    expect(body(LayoutController, 'content-explicit').contains('Body content')).to.be-falsy;
   }
 }

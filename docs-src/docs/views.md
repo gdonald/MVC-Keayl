@@ -68,6 +68,17 @@ available through the `yield` helper:
     != yield()
 ```
 
+The body is also exposed as a `content` local, so `$content` works in place of
+`yield()`:
+
+```haml
+%html
+  %body
+    != $content
+```
+
+Passing an explicit `content` local when rendering overrides the wrapped body.
+
 Choose a layout per action with the `:layout` option, or for every action of a
 controller with the class-level `layout` declaration:
 

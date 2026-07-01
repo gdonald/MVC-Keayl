@@ -133,7 +133,10 @@ method render-layout(Str:D $layout, Str:D $content, %locals, :$controller --> St
 
   my $*KEAYL-CONTROLLER = $controller;
   my ($compiled, $handler) = self!compiled-for($file);
-  $handler.render($compiled, %locals, context => self.build-context(:$controller, extra => self!layout-helpers($content)))
+  # Expose the rendered body as a `content` local (so a layout can use `$content`)
+  # in addition to the `content()`/`yield()` helpers. An explicit local wins.
+  my %layout-locals = content => $content, |%locals;
+  $handler.render($compiled, %layout-locals, context => self.build-context(:$controller, extra => self!layout-helpers($content)))
 }
 
 method layout-exists(Str:D $name --> Bool) {
