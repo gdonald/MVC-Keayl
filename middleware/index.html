@@ -445,6 +445,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#per-request-database-connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-request database connections
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1453,6 +1464,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#per-request-database-connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-request database connections
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1599,6 +1621,27 @@ lookup. With the settings below, <code>GET /assets/css/app.css</code> serves
   <span class="n">url-prefix</span> =&gt; <span class="s">&#39;/assets&#39;</span>);
 </code></pre></div></td></tr></table></div>
 <p>Prepending keeps it outermost, so a matched file short-circuits before routing.</p>
+<h2 id="per-request-database-connections">Per-request database connections<a class="headerlink" href="#per-request-database-connections" title="Permanent link">&para;</a></h2>
+<p><code>MVC::Keayl::Middleware::Database</code> gives each request its own pooled connection
+per database it touches. When a database is configured, the application prepends
+it automatically through the <code>active-record-connection</code> initializer, so you do
+not wire it by hand.</p>
+<p>It binds a request-scoped connection registry for the duration of the request.
+The first model query on a connection checks one out of that connection's pool
+and caches it; every later query on the same connection reuses it, so the whole
+request sees a consistent connection and transaction. The connections return to
+their pools when the request ends, including when the request raises.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">MVC::Keayl::Middleware::Database</span>;
+
+<span class="nv">$stack</span>.<span class="nb">prepend</span>(<span class="s">&#39;db-connection&#39;</span>, <span class="n">MVC::Keayl::Middleware::Database</span>);
+</code></pre></div></td></tr></table></div>
+<p>The registry is keyed by connection name, so an app with a read replica or
+several databases routes each model to its own pooled connection rather than
+forcing everything onto one. The pool verifies a connection on checkout and
+reconnects a dropped one, so a socket that died between requests heals on the
+next request instead of failing every query until the server restarts.</p>
 
 
 
