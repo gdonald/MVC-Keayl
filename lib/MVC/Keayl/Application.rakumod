@@ -11,6 +11,8 @@ use MVC::Keayl::Routing;
 use MVC::Keayl::Logger;
 use MVC::Keayl::Middleware::Logger;
 use MVC::Keayl::Middleware::RequestId;
+use MVC::Keayl::Middleware::Database;
+use ORM::ActiveRecord::DB;
 use MVC::Keayl::ErrorReporting;
 use MVC::Keayl::ErrorReporter;
 use MVC::Keayl::I18n;
@@ -31,6 +33,15 @@ has Bool $.booted = False;
 submethod TWEAK {
   self.initializer('active-record', -> $app {
     with $app.config<database> -> %db { $app.database-connector.(%db) }
+  });
+
+  # Give each request its own pooled connection per database it touches, checked
+  # out on first use and returned when the request ends. Wired whenever a
+  # database is configured; the registry is keyed by connection name, so it is
+  # correct for a single database, a replica, or several databases alike.
+  self.initializer('active-record-connection', -> $app {
+    my $has-db = ? try { DB.read-config.elems.so };
+    $app.middleware.prepend('db-connection', MVC::Keayl::Middleware::Database) if $has-db;
   });
 
   self.initializer('template-haml', -> $app {

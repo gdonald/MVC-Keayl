@@ -159,3 +159,20 @@ describe 'MVC::Keayl::Application active-record initializer', {
     expect($called).to.be(0);
   }
 }
+
+describe 'MVC::Keayl::Application per-request connection checkout', {
+  use ORM::ActiveRecord::DB;
+
+  it 'wires the connection middleware when a database is configured', {
+    temp %*ENV<DATABASE_URL> = 'sqlite::memory:';
+    my $app = MVC::Keayl::Application.new;
+    $app.boot;
+    expect($app.middleware.contains('db-connection')).to.be-truthy;
+  }
+
+  it 'leaves the connection middleware off without a configured database', {
+    my $app = MVC::Keayl::Application.new;
+    $app.boot;
+    expect($app.middleware.contains('db-connection')).to.be-falsy;
+  }
+}

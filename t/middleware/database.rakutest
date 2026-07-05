@@ -1,0 +1,86 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use DBIish;
+use MVC::Keayl::Endpoint;
+use MVC::Keayl::Request;
+use MVC::Keayl::Response;
+use MVC::Keayl::Middleware::Database;
+use ORM::ActiveRecord::DB;
+
+%*ENV<DISABLE-SQL-LOG> = True;
+
+my $has-sqlite = try {
+  my $probe = DBIish.connect('SQLite', :database(':memory:')); $probe.dispose; True;
+} // False;
+
+unless $has-sqlite {
+  plan 1;
+  skip 'no sqlite driver available';
+  exit 0;
+}
+
+plan 9;
+
+# A file-backed sqlite DB so every pooled connection sees the same data.
+my $dbfile = $*TMPDIR.add("keayl-db-mw-{$*PID}-{(now * 1e6).Int}.sqlite3").Str;
+LEAVE { $dbfile.IO.unlink if $dbfile.IO.e }
+
+temp %*ENV<DATABASE_URL> = "sqlite:$dbfile";
+DB.set-shared(Nil);
+DB.shared.exec('CREATE TABLE widgets (id INTEGER PRIMARY KEY, name TEXT)');
+
+# A stub app that records whether a request-scoped registry was bound and writes a
+# row through the registry's connection, the same path a model query takes.
+class ProbeApp does MVC::Keayl::Endpoint {
+  has Bool $.registry-bound is rw = False;
+  method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
+    $!registry-bound = $*AR-CONNECTION-REGISTRY.defined;
+    my $db = $*AR-CONNECTION-REGISTRY ?? $*AR-CONNECTION-REGISTRY.db-for(DB.shared.name) !! DB.shared;
+    $db.exec('INSERT INTO widgets (name) VALUES (?)', $request.path);
+    my $response = MVC::Keayl::Response.new;
+    $response.status = 200;
+    $response.body('ok');
+    $response
+  }
+}
+
+# Checks a connection out of the registry, then throws before returning, standing
+# in for a model query that raises partway through a request.
+class ThrowingProbe does MVC::Keayl::Endpoint {
+  method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
+    $*AR-CONNECTION-REGISTRY.db-for(DB.shared.name);
+    die 'boom';
+  }
+}
+
+sub request(Str:D $path) { MVC::Keayl::Request.new(method => 'GET', :$path) }
+
+my $probe = ProbeApp.new;
+my $mw    = MVC::Keayl::Middleware::Database.new(app => $probe);
+
+nok $*AR-CONNECTION-REGISTRY.defined, 'no connection registry is bound outside a request';
+
+my $response = $mw.call(request('/one'));
+
+is $response.status, 200, 'the request passes through to the app';
+ok $probe.registry-bound, 'a connection registry is bound during the request';
+nok $*AR-CONNECTION-REGISTRY.defined, 'the registry is unbound again after the request';
+is DB.shared.pool.stats<in-use>, 0, 'the connection is returned to the pool after the request';
+is DB.shared.exec('SELECT count(*) FROM widgets')[0][0], 1, 'the write ran on the pooled connection';
+
+# A dropped connection heals on the next request: the pool verifies and
+# reconnects on checkout, so the server does not stay broken until a restart.
+DB.shared.pool.disconnect-all;
+$mw.call(request('/two'));
+is DB.shared.exec('SELECT count(*) FROM widgets')[0][0], 2,
+  'a request after every pooled connection is dropped reconnects and succeeds';
+
+# A request that throws partway through still returns its checked-out connection
+# to the pool: the LEAVE in the middleware runs on the exception path too.
+my $boom = MVC::Keayl::Middleware::Database.new(app => ThrowingProbe.new);
+
+dies-ok { $boom.call(request('/boom')) }, 'the middleware propagates a request exception';
+
+is DB.shared.pool.stats<in-use>, 0,
+  'a throwing request still returns its connection to the pool';

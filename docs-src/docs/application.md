@@ -53,10 +53,12 @@ $app.initializer('mailer', -> $app { ... });
 
 Every application starts with default initializers, including `active-record`,
 which calls the application's `database-connector` when the config has a
-`database` section, `template-haml`, which wires a `Template::HAML`-backed view
-renderer (reloading templates outside production), and `assets`, which loads a
-precompiled `public/assets/manifest.json` so the view helpers fingerprint asset
-URLs. See the asset pipeline page for the manifest details.
+`database` section, `active-record-connection`, which prepends the per-request
+connection middleware when a database is configured (see the middleware page),
+`template-haml`, which wires a `Template::HAML`-backed view renderer (reloading
+templates outside production), and `assets`, which loads a precompiled
+`public/assets/manifest.json` so the view helpers fingerprint asset URLs. See the
+asset pipeline page for the manifest details.
 
 ## Dispatch
 

@@ -22,6 +22,8 @@ jobs:
         run: raku --version
       - name: Install git-only dependencies
         run: |
+          zef install --/test https://github.com/gdonald/Template::HAML.git
+          zef install --/test https://github.com/gdonald/BDD::Behave.git
           zef install --/test https://github.com/gdonald/ORM-ActiveRecord.git
           zef install --/test https://github.com/gdonald/ORM-Factory.git
       - name: Install Dependencies

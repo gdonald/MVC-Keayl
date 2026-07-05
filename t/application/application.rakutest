@@ -174,6 +174,25 @@ sub request($method, $path, *%args) {
   is $called, 0, 'the active-record initializer is a no-op without a database config';
 }
 
+# application: per-request connection checkout is wired when a database is
+# configured, and left off otherwise.
+{
+  use ORM::ActiveRecord::DB;
+
+  temp %*ENV<DATABASE_URL> = 'sqlite::memory:';
+  my $app = MVC::Keayl::Application.new;
+  $app.boot;
+  ok $app.middleware.contains('db-connection'),
+    'a configured database wires the per-request connection middleware';
+}
+
+{
+  my $app = MVC::Keayl::Application.new;
+  $app.boot;
+  nok $app.middleware.contains('db-connection'),
+    'no configured database leaves the per-request connection middleware off';
+}
+
 # application: the assets initializer loads a precompiled manifest at boot
 
 {

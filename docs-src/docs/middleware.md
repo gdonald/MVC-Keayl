@@ -132,3 +132,28 @@ $stack.prepend('static', MVC::Keayl::Middleware::Static,
 ```
 
 Prepending keeps it outermost, so a matched file short-circuits before routing.
+
+## Per-request database connections
+
+`MVC::Keayl::Middleware::Database` gives each request its own pooled connection
+per database it touches. When a database is configured, the application prepends
+it automatically through the `active-record-connection` initializer, so you do
+not wire it by hand.
+
+It binds a request-scoped connection registry for the duration of the request.
+The first model query on a connection checks one out of that connection's pool
+and caches it; every later query on the same connection reuses it, so the whole
+request sees a consistent connection and transaction. The connections return to
+their pools when the request ends, including when the request raises.
+
+```perl6
+use MVC::Keayl::Middleware::Database;
+
+$stack.prepend('db-connection', MVC::Keayl::Middleware::Database);
+```
+
+The registry is keyed by connection name, so an app with a read replica or
+several databases routes each model to its own pooled connection rather than
+forcing everything onto one. The pool verifies a connection on checkout and
+reconnects a dropped one, so a socket that died between requests heals on the
+next request instead of failing every query until the server restarts.

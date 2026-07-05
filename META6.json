@@ -15,7 +15,7 @@
     "MIME::Base64",
     "YAMLish",
     "ORM::ActiveRecord:auth<zef:gdonald>",
-    "Template::HAML:ver<0.9.4+>:auth<zef:gdonald>"
+    "Template::HAML:auth<zef:gdonald>"
   ],
   "build-depends": [],
   "test-depends": [
@@ -95,6 +95,7 @@
     "MVC::Keayl::Mime": "lib/MVC/Keayl/Mime.rakumod",
     "MVC::Keayl::Notifications": "lib/MVC/Keayl/Notifications.rakumod",
     "MVC::Keayl::Middleware": "lib/MVC/Keayl/Middleware.rakumod",
+    "MVC::Keayl::Middleware::Database": "lib/MVC/Keayl/Middleware/Database.rakumod",
     "MVC::Keayl::Middleware::HostAuthorization": "lib/MVC/Keayl/Middleware/HostAuthorization.rakumod",
     "MVC::Keayl::Middleware::Logger": "lib/MVC/Keayl/Middleware/Logger.rakumod",
     "MVC::Keayl::Middleware::RequestId": "lib/MVC/Keayl/Middleware/RequestId.rakumod",
