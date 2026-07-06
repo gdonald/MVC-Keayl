@@ -53,7 +53,8 @@ The body is parsed by its `Content-Type`:
 - `application/x-www-form-urlencoded` parses like a query string.
 - `application/json` parses the JSON object into params.
 - `multipart/form-data` parses text fields, and file fields into a
-  `{ filename, content, type }` hash.
+  `{ filename, content, type }` hash. The file `content` is a `Blob` of the
+  raw uploaded bytes, so binary uploads (images, PDFs) survive byte-for-byte.
 
 `build-params(%path-params, $request)` produces the merged `Parameters` for a
 request, which the dispatcher passes to the controller.

@@ -201,6 +201,47 @@ use MVC::Keayl::Request;
   is $calls, 1, 'subsequent body access is memoized';
 }
 
+# body-blob returns the raw bytes undecoded, so binary uploads survive.
+
+{
+  my $bytes = Buf.new(0xFF, 0xD8, 0xFF, 0x00, 0x89, 0x50);
+  my $req   = MVC::Keayl::Request.new(:body($bytes));
+
+  isa-ok $req.body-blob, Blob, 'body-blob returns bytes';
+  is-deeply $req.body-blob.list, $bytes.list, 'body-blob returns the raw body bytes undecoded';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:body('héllo'));
+
+  is-deeply $req.body-blob.list, 'héllo'.encode('utf-8').list, 'body-blob encodes a string body as utf-8 bytes';
+}
+
+{
+  my $req = MVC::Keayl::Request.new;
+
+  is $req.body-blob.elems, 0, 'body-blob returns an empty buffer for a missing body';
+}
+
+{
+  my $req = MVC::Keayl::Request.new(:body(-> { 'lazy' }));
+
+  is $req.body-blob.decode('utf-8'), 'lazy', 'body-blob invokes a callable source';
+}
+
+# rebase carries the body through as raw bytes. Decoding a binary multipart body
+# as UTF-8 here (as mounting a sub-app would) corrupts it and can crash the VM.
+
+{
+  my $bytes = Buf.new(0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10);
+  my $req   = MVC::Keayl::Request.new(:method<POST>, :target('/admin/imgs'), :body($bytes));
+
+  my $rebased = $req.rebase('/imgs');
+
+  is $rebased.path, '/imgs', 'rebase sets the new path';
+  is-deeply $rebased.body-blob.list, $bytes.list, 'rebase preserves the raw body bytes';
+}
+
 # variant
 
 {

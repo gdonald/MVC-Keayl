@@ -56,12 +56,45 @@ describe 'MVC::Keayl params multipart', {
     expect(parse-multipart($body, 'X')<file><filename>).to.be('a.txt');
   }
 
-  it 'parses a file content', {
-    expect(parse-multipart($body, 'X')<file><content>).to.be('file body');
+  it 'parses a file content as bytes', {
+    expect(parse-multipart($body, 'X')<file><content>.decode('latin-1')).to.eq('file body');
   }
 
   it 'parses a file content type', {
     expect(parse-multipart($body, 'X')<file><type>).to.be('text/plain');
+  }
+
+  context 'a binary upload', {
+    # Bytes that are not valid UTF-8, as a real image upload carries. They must
+    # come back byte-for-byte, never decoded as UTF-8 (which corrupts them).
+    let(:file-bytes, { Buf.new(0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x89, 0x50, 0x4E, 0x47) });
+    let(:binary-body, {
+      my $head = "--B\r\nContent-Disposition: form-data; name=\"img\"; filename=\"x.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n".encode('latin-1');
+      my $tail = "\r\n--B--\r\n".encode('latin-1');
+      Buf.new(|$head, |file-bytes, |$tail)
+    });
+
+    it 'returns the file part as a byte buffer', {
+      expect(parse-multipart(binary-body, 'B')<img><content> ~~ Blob).to.be-truthy;
+    }
+
+    it 'preserves the binary content byte-for-byte', {
+      expect(parse-multipart(binary-body, 'B')<img><content>.list).to.eq(file-bytes.list);
+    }
+  }
+
+  context 'a text field whose bytes are not valid utf-8', {
+    # A lone 0xFF byte is not a valid UTF-8 sequence. The value falls back to its
+    # latin-1 reading rather than throwing.
+    let(:latin1-body, {
+      my $head = "--B\r\nContent-Disposition: form-data; name=\"t\"\r\n\r\n".encode('latin-1');
+      my $tail = "\r\n--B--\r\n".encode('latin-1');
+      Buf.new(|$head, 0xFF, |$tail)
+    });
+
+    it 'falls back to the latin-1 reading of the value', {
+      expect(parse-multipart(latin1-body, 'B')<t>).to.eq(Buf.new(0xFF).decode('latin-1'));
+    }
   }
 }
 

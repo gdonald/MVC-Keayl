@@ -1,0 +1,63 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::TestSupport;
+use MVC::Keayl::Dispatcher;
+use MVC::Keayl::Routing;
+use MVC::Keayl::Controller;
+
+# End-to-end regression for a binary file upload through a mounted sub-application.
+# A real app mounts the admin engine at /admin; posting an image there rebases the
+# request into the sub-app and parses the multipart body. Binary file bytes are
+# not valid UTF-8, so decoding them anywhere in that chain (the old rebase, the
+# old string-based multipart parse) corrupted them and crashed the VM. This drives
+# the whole chain and asserts the bytes arrive intact.
+
+# The mounted controller reports the uploaded part's kind (bytes vs string) and
+# its exact byte values, so the test can prove byte-for-byte fidelity.
+class UploadController is MVC::Keayl::Controller {
+  method create {
+    my $content = self.params<image><content>;
+    my $kind    = $content ~~ Blob ?? 'blob' !! 'str';
+    self.render(plain => "$kind:" ~ $content.list.join(','));
+  }
+}
+
+sub upload-app(--> MVC::Keayl::Dispatcher) {
+  my $router = routes { post '/imgs', to => 'upload#create'; };
+  MVC::Keayl::Dispatcher.new(
+    :$router,
+    controllers        => [UploadController],
+    controller-options => %( secret => 'upload-secret' ),
+  )
+}
+
+sub session(--> IntegrationSession) {
+  my $router = routes { mount upload-app, at => '/admin'; };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(
+    :$router,
+    controllers        => [],
+    controller-options => %( secret => 'outer-secret' ),
+  );
+  IntegrationSession.new(app => $dispatcher)
+}
+
+# Bytes that are not valid UTF-8 (0xFF 0xD8 is a JPEG start-of-image marker).
+my $file-bytes = Buf.new(0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x00);
+
+my $head = "--B\r\nContent-Disposition: form-data; name=\"image\"; filename=\"x.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n".encode('latin-1');
+my $tail = "\r\n--B--\r\n".encode('latin-1');
+my $body = Buf.new(|$head, |$file-bytes, |$tail);
+
+my $session  = session;
+my $response = $session.post('/admin/imgs',
+  headers => { 'Content-Type' => 'multipart/form-data; boundary=B' },
+  body    => $body);
+
+is $response.status, 200, 'a binary upload through a mounted app dispatches without crashing';
+
+my ($kind, $csv) = $response.body.split(':', 2);
+is $kind, 'blob', 'the mounted controller receives the file content as bytes';
+is $csv, $file-bytes.list.join(','), 'the binary upload survives mount and multipart parse byte-for-byte';
+
+done-testing;

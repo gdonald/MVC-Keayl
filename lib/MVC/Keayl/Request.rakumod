@@ -201,6 +201,19 @@ method body(--> Str) {
   $!body-cache
 }
 
+# The raw request body as bytes, undecoded. Multipart uploads carry binary file
+# data that is not valid UTF-8, so parsing them must start from the bytes rather
+# than from `body`, whose UTF-8 decode corrupts (and can hang on) that data.
+method body-blob(--> Blob) {
+  my $raw = $!body-source ~~ Callable ?? $!body-source.() !! $!body-source;
+
+  given $raw {
+    when Blob { $_ }
+    when Str  { .encode('utf-8') }
+    default   { Buf.new }
+  }
+}
+
 method query-params(--> Hash) {
   unless $!query-parsed {
     %!query-params = parse-query($!query-string);
@@ -211,12 +224,15 @@ method query-params(--> Hash) {
 }
 
 method rebase(Str:D $path --> ::?CLASS) {
+  # Carry the body through as raw bytes. Mounting a sub-application rebases the
+  # request, and decoding a binary multipart upload as UTF-8 here (via `body`)
+  # corrupts it and can crash the process before the body is ever parsed.
   self.WHAT.new(
     method         => $!method,
     :$path,
     query-string   => $!query-string,
     headers        => %!headers,
-    body           => self.body,
+    body           => self.body-blob,
     scheme         => self.scheme,
     remote-address => self.remote-ip,
   )

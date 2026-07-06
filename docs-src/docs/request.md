@@ -120,6 +120,14 @@ $request.body;   # '{"name":"Ada"}'
 Reading the raw body never consumes or parses it. Structured parameter parsing
 (form bodies, JSON, multipart) is layered on top by the controller.
 
+`body-blob` returns the raw body as an undecoded `Blob`. Multipart uploads carry
+binary file data that is not valid UTF-8, so parsing them starts from these bytes
+rather than from `body`:
+
+```perl6
+$request.body-blob;   # Blob of the raw request bytes
+```
+
 ## Variant
 
 A variant marks a device-specific view selection. It is undefined until set, and

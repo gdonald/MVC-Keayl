@@ -59,8 +59,38 @@ use MVC::Keayl::Request;
 
   is %p<title>, 'Hello', 'a multipart text field parses its value';
   is %p<file><filename>, 'a.txt', 'a multipart file field carries its filename';
-  is %p<file><content>, 'file body', 'a multipart file field carries its content';
+  isa-ok %p<file><content>, Blob, 'a multipart file field carries its content as bytes';
+  is %p<file><content>.decode('latin-1'), 'file body', 'a multipart file field carries its content';
   is %p<file><type>, 'text/plain', 'a multipart file field carries its content type';
+}
+
+# Binary file content survives byte-for-byte. Parsing a multipart body that
+# holds bytes which are not valid UTF-8 (as an image upload does) must not decode
+# them as UTF-8; the file part comes back as the exact uploaded bytes.
+{
+  my $boundary = 'B';
+  my $file-bytes = Buf.new(0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x89, 0x50, 0x4E, 0x47);
+
+  my $head = "--B\r\nContent-Disposition: form-data; name=\"img\"; filename=\"x.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n".encode('latin-1');
+  my $tail = "\r\n--B--\r\n".encode('latin-1');
+  my $body = Buf.new(|$head, |$file-bytes, |$tail);
+
+  my %p = parse-multipart($body, $boundary);
+
+  isa-ok %p<img><content>, Blob, 'a binary upload part is bytes';
+  is-deeply %p<img><content>.list, $file-bytes.list, 'binary file content survives byte-for-byte';
+}
+
+# A text field whose bytes are not valid UTF-8 (a lone 0xFF) falls back to its
+# latin-1 reading rather than throwing.
+{
+  my $head = "--B\r\nContent-Disposition: form-data; name=\"t\"\r\n\r\n".encode('latin-1');
+  my $tail = "\r\n--B--\r\n".encode('latin-1');
+  my $body = Buf.new(|$head, 0xFF, |$tail);
+
+  my %p = parse-multipart($body, 'B');
+
+  is %p<t>, Buf.new(0xFF).decode('latin-1'), 'an invalid-utf-8 text field falls back to its latin-1 reading';
 }
 
 # merged, indifferent access

@@ -217,6 +217,43 @@ describe 'MVC::Keayl::Request body', {
     my $req = MVC::Keayl::Request.new;
     expect($req.body).to.be('');
   }
+
+  it 'returns the raw body bytes undecoded from body-blob', {
+    my $bytes = Buf.new(0xFF, 0xD8, 0xFF, 0x00, 0x89, 0x50);
+    my $req   = MVC::Keayl::Request.new(:body($bytes));
+    expect($req.body-blob.list).to.eq($bytes.list);
+  }
+
+  it 'encodes a string body as utf-8 bytes from body-blob', {
+    my $req = MVC::Keayl::Request.new(:body('héllo'));
+    expect($req.body-blob.list).to.eq('héllo'.encode('utf-8').list);
+  }
+
+  it 'returns an empty buffer from body-blob for a missing body', {
+    my $req = MVC::Keayl::Request.new;
+    expect($req.body-blob.elems).to.eq(0);
+  }
+
+  it 'invokes a callable source from body-blob', {
+    my $req = MVC::Keayl::Request.new(:body(-> { 'lazy' }));
+    expect($req.body-blob.decode('utf-8')).to.eq('lazy');
+  }
+}
+
+describe 'MVC::Keayl::Request rebase', {
+  # Mounting a sub-application rebases the request. A binary multipart upload
+  # must pass through as raw bytes, never UTF-8-decoded (which corrupts it and
+  # can crash the VM before the body is parsed).
+  it 'preserves the raw body bytes across a rebase', {
+    my $bytes   = Buf.new(0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10);
+    my $req     = MVC::Keayl::Request.new(:method<POST>, :target('/admin/imgs'), :body($bytes));
+    my $rebased = $req.rebase('/imgs');
+
+    aggregate-failures {
+      expect($rebased.path).to.eq('/imgs');
+      expect($rebased.body-blob.list).to.eq($bytes.list);
+    }
+  }
 }
 
 describe 'MVC::Keayl::Request lazy body', {
