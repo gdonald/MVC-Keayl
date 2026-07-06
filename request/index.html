@@ -1624,6 +1624,11 @@ missing body reads as the empty string:</p>
 </code></pre></div></td></tr></table></div>
 <p>Reading the raw body never consumes or parses it. Structured parameter parsing
 (form bodies, JSON, multipart) is layered on top by the controller.</p>
+<p><code>body-blob</code> returns the raw body as an undecoded <code>Blob</code>. Multipart uploads carry
+binary file data that is not valid UTF-8, so parsing them starts from these bytes
+rather than from <code>body</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$request</span>.<span class="n">body-blob</span>;   <span class="c1"># Blob of the raw request bytes</span>
+</code></pre></div></td></tr></table></div>
 <h2 id="variant">Variant<a class="headerlink" href="#variant" title="Permanent link">&para;</a></h2>
 <p>A variant marks a device-specific view selection. It is undefined until set, and
 <code>set-variant</code> assigns it:</p>

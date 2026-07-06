@@ -1717,7 +1717,8 @@ users[][name]=A&amp;users[][age]=1       # params&lt;users&gt;[0] is { name =&gt
 <li><code>application/x-www-form-urlencoded</code> parses like a query string.</li>
 <li><code>application/json</code> parses the JSON object into params.</li>
 <li><code>multipart/form-data</code> parses text fields, and file fields into a
-  <code>{ filename, content, type }</code> hash.</li>
+  <code>{ filename, content, type }</code> hash. The file <code>content</code> is a <code>Blob</code> of the
+  raw uploaded bytes, so binary uploads (images, PDFs) survive byte-for-byte.</li>
 </ul>
 <p><code>build-params(%path-params, $request)</code> produces the merged <code>Parameters</code> for a
 request, which the dispatcher passes to the controller.</p>
