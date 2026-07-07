@@ -328,6 +328,54 @@ class StreamController is MVC::Keayl::Controller is export {
   }
 }
 
+# Controllers declaring class-level configuration traits from within this
+# separately compiled module. A `my %{Mu}` registry keyed by the class is
+# populated in the precompiling process and is empty once the controller loads
+# from its precompiled form, so each declaration must ride along on the class
+# itself to survive precompilation.
+class PrecompLayoutController is MVC::Keayl::Controller is layout('special') is export {
+  method show { self.assign('name', 'Ada'); self.render('greetings/show') }
+}
+
+class PrecompLayoutChildController is PrecompLayoutController is export {
+  method show { self.assign('name', 'Ada'); self.render('greetings/show') }
+}
+
+class PrecompLayoutOverrideController is PrecompLayoutController is layout('main') is export {
+  method show { self.assign('name', 'Ada'); self.render('greetings/show') }
+}
+
+class PrecompFilterController is MVC::Keayl::Controller is filter-parameters('secret') is export {
+  method create {
+    self.render(plain => (self.filtered-params<secret> // 'gone') ~ ':' ~ (self.filtered-params<name> // 'none'));
+  }
+}
+
+class PrecompFilterChildController is PrecompFilterController is filter-parameters('token') is export {
+  method create {
+    my %filtered = self.filtered-params;
+    self.render(plain => (%filtered<secret> // 'gone') ~ ':' ~ (%filtered<token> // 'gone') ~ ':' ~ (%filtered<name> // 'none'));
+  }
+}
+
+class PrecompForgeryController is MVC::Keayl::Controller is protect-from-forgery(with => 'null-session') is export {
+  method create { self.render(plain => 'created') }
+}
+
+class PrecompWrapController is MVC::Keayl::Controller is wrap-parameters('widget', include => <name>) is export {
+  method create { self.render(plain => self.params<widget><name> // 'none') }
+}
+
+class PrecompHelperController is MVC::Keayl::Controller is export {
+  method site-name { 'Keayl' }
+
+  method show {
+    self.assign('title', 'Hello');
+    self.render('page');
+  }
+}
+PrecompHelperController.helper-method('site-name');
+
 class X::CallbackBaseBoom is Exception is export { method message(--> Str) { 'callback base boom' } }
 
 # A base controller carrying callback, around, rescue-from, and helper-method

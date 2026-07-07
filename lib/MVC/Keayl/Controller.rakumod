@@ -110,12 +110,35 @@ my %skip-before{Mu};
 my %skip-after{Mu};
 my %skip-around{Mu};
 my %rescues{Mu};
-my %helper-methods{Mu};
-my %controller-layouts{Mu};
-my %forgery-strategy{Mu};
-my %param-filters{Mu};
-my %wrap-config{Mu};
 my %renderers;
+
+# Per-class configuration declared through an `is` trait or a class-method call
+# (`is layout`, `.protect-from-forgery`, `.filter-parameters`, ...). A `my %{Mu}`
+# registry keyed by the class is populated in the precompiling process and is
+# empty once the controller loads from its precompiled form, so a declaration on
+# a separately compiled controller would silently be lost. Storing the value in
+# a method added to the class serializes it with the class instead, mirroring how
+# method-level callback traits ride along on the method.
+sub config-cell(Mu:U $class, Str $slot --> Array) {
+  my $name = '!keayl-config-' ~ $slot;
+
+  unless $class.^method_table{$name}:exists {
+    my @cell;
+
+    $class.^add_method($name, method (--> Array) { @cell });
+    $class.^invalidate_method_caches;
+  }
+
+  $class.^method_table{$name}.($class)
+}
+
+sub config-cell-local(Mu:U $class, Str $slot --> Array) {
+  my $name = '!keayl-config-' ~ $slot;
+
+  $class.^method_table{$name}:exists
+    ?? $class.^method_table{$name}.($class)
+    !! []
+}
 
 # Method-level callback declarations (`is before-action`, `is helper-method`,
 # `is rescue-from`, ...) are marked on the method through a parametric role
@@ -137,7 +160,7 @@ role RescueFromTrait[$types] {
 role HelperMethodTrait { }
 
 method helper-method(*@names --> ::?CLASS) {
-  (%helper-methods{self} //= []).append(@names.map(*.Str));
+  config-cell(self, 'helper-methods').append(@names.map(*.Str));
   self
 }
 
@@ -206,7 +229,7 @@ method default-url-options(--> Hash) {
 method !helper-method-names(--> List) {
   my @names;
   for self.^mro.reverse -> $class {
-    @names.append(|(%helper-methods{$class} // []));
+    @names.append(|config-cell-local($class, 'helper-methods'));
     @names.append($class.^methods(:local).grep({ $_ ~~ HelperMethodTrait }).map(*.name));
   }
   @names.unique.List
@@ -559,7 +582,7 @@ method !commit-session {
 }
 
 method protect-from-forgery(:$with = 'exception' --> ::?CLASS) {
-  %forgery-strategy{self} = $with;
+  config-cell(self, 'forgery-strategy')[0] = $with;
   self.before-action('verify-authenticity-token');
   self
 }
@@ -594,7 +617,8 @@ method rate-limit(Int :$to!, :$within!, :$by, :$with, :$store, Str :$name = 'def
 
 method !forgery-strategy(--> Str) {
   for self.^mro -> $class {
-    return %forgery-strategy{$class} if %forgery-strategy{$class}:exists;
+    my @cell = config-cell-local($class, 'forgery-strategy');
+    return @cell[0] if @cell;
   }
 
   'exception'
@@ -720,7 +744,7 @@ method authenticate-or-request-with-http-digest(Str:D $realm, &password-block) {
 }
 
 method wrap-parameters($key?, :$format, :$include, :$exclude --> ::?CLASS) {
-  %wrap-config{self} = {
+  config-cell(self, 'wrap-config')[0] = {
     key     => ($key.defined ?? $key.Str !! Str),
     formats => action-set($format // <json>),
     include => ($include.defined ?? $include.list.map(*.Str).List !! Nil),
@@ -731,7 +755,8 @@ method wrap-parameters($key?, :$format, :$include, :$exclude --> ::?CLASS) {
 
 method !wrap-config {
   for self.^mro -> $class {
-    return %wrap-config{$class} if %wrap-config{$class}:exists;
+    my @cell = config-cell-local($class, 'wrap-config');
+    return @cell[0] if @cell;
   }
 
   Nil
@@ -787,13 +812,13 @@ method !apply-parameter-wrapping {
 }
 
 method filter-parameters(*@names --> ::?CLASS) {
-  (%param-filters{self} //= []).append(@names);
+  config-cell(self, 'param-filters').append(@names);
   self
 }
 
 method !configured-param-filters(--> List) {
   my @filters;
-  @filters.append(|(%param-filters{$_} // [])) for self.^mro.reverse;
+  @filters.append(|config-cell-local($_, 'param-filters')) for self.^mro.reverse;
   @filters.List
 }
 
@@ -972,13 +997,14 @@ method render-layout(Str:D $layout, Str:D $content, %locals --> Str) {
 }
 
 method layout($name --> ::?CLASS) {
-  %controller-layouts{self} = $name;
+  config-cell(self, 'layout')[0] = $name;
   self
 }
 
 method !controller-layout {
   for self.^mro -> $class {
-    return %controller-layouts{$class} if %controller-layouts{$class}:exists;
+    my @cell = config-cell-local($class, 'layout');
+    return @cell[0] if @cell;
   }
 
   Nil

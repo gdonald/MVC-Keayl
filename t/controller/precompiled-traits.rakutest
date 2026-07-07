@@ -1,0 +1,86 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Request;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Parameters;
+use MVC::Keayl::Params;
+use MVC::Keayl::View;
+use ControllerFixtures;
+
+sub layout-body($controller) {
+  $controller.new(:view-renderer(MVC::Keayl::View.new(:paths(['specs/lib/views'])))).dispatch('show').body
+}
+
+# is layout
+
+{
+  like layout-body(PrecompLayoutController), /"class='special'"/,
+    'is layout on a precompiled controller selects the declared layout';
+}
+
+{
+  like layout-body(PrecompLayoutChildController), /"class='special'"/,
+    'a subclass inherits the layout declared on a precompiled base controller';
+}
+
+{
+  like layout-body(PrecompLayoutOverrideController), /'<body'/,
+    'a subclass layout declaration overrides the one on a precompiled base controller';
+}
+
+# is filter-parameters
+
+{
+  my $controller = PrecompFilterController.new(
+    params => MVC::Keayl::Parameters.new({ secret => 'hunter2', name => 'gd' }),
+  );
+
+  isnt $controller.filtered-params<secret>, 'hunter2',
+    'is filter-parameters on a precompiled controller redacts the configured key';
+  is $controller.filtered-params<name>, 'gd',
+    'an unfiltered parameter passes through';
+}
+
+{
+  my $controller = PrecompFilterChildController.new(
+    params => MVC::Keayl::Parameters.new({ secret => 'hunter2', token => 'abc123', name => 'gd' }),
+  );
+
+  isnt $controller.filtered-params<secret>, 'hunter2',
+    'a subclass still redacts the key filtered by a precompiled base controller';
+  isnt $controller.filtered-params<token>, 'abc123',
+    'a subclass redacts its own filtered key on top of the base controller';
+}
+
+# is protect-from-forgery with a non-default strategy
+
+{
+  my $request  = MVC::Keayl::Request.new(:method<POST>, :path('/create'), :headers({}));
+  my $response = PrecompForgeryController.new(:$request).dispatch('create');
+
+  is $response.status, 200,
+    'is protect-from-forgery with a non-default strategy survives precompilation and skips the exception path';
+}
+
+# is wrap-parameters
+
+{
+  my $request  = MVC::Keayl::Request.new(:method<POST>, :headers({ 'Content-Type' => 'application/json' }), :body('{"name":"Ada","color":"blue"}'));
+  my $response = PrecompWrapController.new(:$request, :params(build-params({}, $request))).dispatch('create');
+
+  is $response.body, 'Ada',
+    'is wrap-parameters on a precompiled controller nests the body under the declared key';
+}
+
+# class-level helper-method declaration
+
+{
+  my $body = PrecompHelperController.new(:view-renderer(StubRenderer.new)).dispatch('show').body;
+
+  like $body, /'site-name=Keayl'/,
+    'a class-level helper-method declaration on a precompiled controller is exposed to the template';
+}
+
+done-testing;
