@@ -1401,13 +1401,15 @@ status, total duration, action and view timings, and the request parameters with
 the <a href="../parameter-filtering/">parameter filter</a> applied.</p>
 <h2 id="enabling-it">Enabling it<a class="headerlink" href="#enabling-it" title="Permanent link">&para;</a></h2>
 <p>Logging is wired by an application initializer and driven by the <code>log-level</code>
-config key. With no <code>log-level</code> set, the logger is <code>silent</code> and writes nothing,
-so logging is opt-in: set a level in <code>config/application.json</code> to turn it on.</p>
+config key. Development defaults to <code>debug</code>, so request logging is on out of the
+box while you work locally. Every other environment defaults to <code>silent</code> and
+writes nothing, so logging elsewhere is opt-in. Set a level in
+<code>config/application.json</code> to override the default for any environment.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;development&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;log-level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;debug&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;development&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;log-level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;info&quot;</span><span class="w"> </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">&quot;production&quot;</span><span class="p">:</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;log-level&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;info&quot;</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
@@ -1433,8 +1435,9 @@ method, path, status, and duration without an action name or timings.</p>
 <h2 id="mvckeayllogger">MVC::Keayl::Logger<a class="headerlink" href="#mvckeayllogger" title="Permanent link">&para;</a></h2>
 <p><code>MVC::Keayl::Logger</code> is the sink. It holds a <code>level</code> threshold and an <code>out</code>
 handle (standard error by default), and exposes <code>debug</code>, <code>info</code>, <code>warn</code>, and
-<code>error</code>. <code>Application</code> builds one from <code>log-level</code> and exposes it as <code>app.logger</code>;
-pass your own to write elsewhere.</p>
+<code>error</code>. <code>Application</code> builds one from <code>log-level</code> (falling back to the
+per-environment default) and exposes it as <code>app.logger</code>; pass your own to write
+elsewhere.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$logger</span> = <span class="n">MVC::Keayl::Logger</span>.<span class="nb">new</span>(<span class="nb">level</span> =&gt; <span class="s">&#39;info&#39;</span>, <span class="n">out</span> =&gt; <span class="vg">$*OUT</span>);
 <span class="nv">$logger</span>.<span class="n">info</span>(<span class="s">&#39;booting&#39;</span>);
@@ -1445,6 +1448,9 @@ request. It times the request with an injectable clock, installs a per-request
 <code>MVC::Keayl::LogEvent</code> that the controller records timings and parameters into,
 and writes the formatted line through the logger once the response is ready. When
 the logger is disabled it serves the request without recording anything.</p>
+<p>Because the line is written after the response is ready, any logging produced
+while the request runs, such as the SQL that the ORM logs, appears above the
+request line rather than after it.</p>
 
 
 
