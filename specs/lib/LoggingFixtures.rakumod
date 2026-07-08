@@ -21,3 +21,17 @@ class StatusEndpoint does MVC::Keayl::Endpoint is export {
     MVC::Keayl::Response.new(status => $!status, body => 'ok')
   }
 }
+
+# An endpoint that logs a marker line while the request runs, standing in for any
+# in-request logging (such as SQL from the ORM), so a test can assert the request
+# summary line is written after it.
+class LoggingEndpoint does MVC::Keayl::Endpoint is export {
+  has     $.logger;
+  has Str $.marker = 'during-request';
+  has Int $.status = 200;
+
+  method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
+    $!logger.info($!marker);
+    MVC::Keayl::Response.new(status => $!status, body => 'ok')
+  }
+}

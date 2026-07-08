@@ -6,6 +6,11 @@ $*OUT.out-buffer = False;
 
 %*ENV<AUTHOR_TESTING> = 1;
 
+# Run the suite in the test environment so apps booted through the config loader
+# default to the silent log level and their request logging stays out of the
+# test output.
+%*ENV<KEAYL_ENV> = 'test';
+
 chdir $*PROGRAM.parent;
 
 my $jobs = max(2, ($*KERNEL.cpu-cores // 2) - 2);

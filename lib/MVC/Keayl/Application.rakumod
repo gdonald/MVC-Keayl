@@ -83,7 +83,8 @@ submethod TWEAK {
   });
 
   self.initializer('request-logging', -> $app {
-    $app.logger //= MVC::Keayl::Logger.new(level => $app.config<log-level> // 'silent');
+    my $default-level = $app.is-development ?? 'debug' !! 'silent';
+    $app.logger //= MVC::Keayl::Logger.new(level => $app.config<log-level> // $default-level);
 
     $app.middleware.prepend('request-logger', MVC::Keayl::Middleware::Logger, logger => $app.logger);
   });

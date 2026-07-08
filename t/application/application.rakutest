@@ -1,5 +1,6 @@
 use v6.d;
 use lib 'lib';
+use lib 'specs/lib';
 use Test;
 use MVC::Keayl::Application;
 use MVC::Keayl::Config;
@@ -9,6 +10,8 @@ use MVC::Keayl::Controller;
 use MVC::Keayl::Request;
 use MVC::Keayl::Routing;
 use MVC::Keayl::Assets;
+use MVC::Keayl::Logger;
+use CLIFixtures;
 
 class WidgetsController is MVC::Keayl::Controller {
   method index { self.render(:plain('all widgets')) }
@@ -95,7 +98,10 @@ sub request($method, $path, *%args) {
 # application: owns router, middleware, config
 
 {
-  my $app = MVC::Keayl::Application.new(controllers => [WidgetsController]);
+  my $app = MVC::Keayl::Application.new(
+    controllers => [WidgetsController],
+    config      => MVC::Keayl::Config.new(environment => 'test'),
+  );
   $app.draw-routes({ get '/widgets', to => 'widgets#index' });
 
   is $app.endpoint.call(request('GET', '/widgets')).body, 'all widgets', 'the application endpoint dispatches requests';
@@ -151,6 +157,41 @@ sub request($method, $path, *%args) {
   $app.boot;
 
   ok $app.controller-options<view-renderer>.reload, 'templates are reloaded in development';
+}
+
+{
+  my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(environment => 'development'));
+  $app.boot;
+
+  ok $app.logger.enabled('info'), 'development defaults to a log level that shows request logging';
+}
+
+{
+  my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(environment => 'test'));
+  $app.boot;
+
+  nok $app.logger.enabled('info'), 'non-development environments stay silent by default';
+}
+
+{
+  my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(settings => %( 'log-level' => 'warn' ), environment => 'development'));
+  $app.boot;
+
+  is $app.logger.level, 'warn', 'a configured log level overrides the development default';
+}
+
+{
+  my $sink = StringSink.new;
+  my $app  = MVC::Keayl::Application.new(
+    controllers => [WidgetsController],
+    config      => MVC::Keayl::Config.new(environment => 'development'),
+    logger      => MVC::Keayl::Logger.new(level => 'debug', out => $sink),
+  );
+  $app.draw-routes({ get '/widgets', to => 'widgets#index' });
+
+  $app.endpoint.call(request('GET', '/widgets'));
+
+  like $sink.text, / 'GET /widgets' /, 'a development application logs the request through the built endpoint';
 }
 
 # application: active-record initializer connects when a database is configured

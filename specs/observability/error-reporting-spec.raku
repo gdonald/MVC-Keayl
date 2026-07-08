@@ -4,6 +4,7 @@ use MVC::Keayl::ErrorReporter;
 use MVC::Keayl::ErrorReporting;
 use MVC::Keayl::ExceptionPage;
 use MVC::Keayl::Application;
+use MVC::Keayl::Config;
 use MVC::Keayl::Dispatcher;
 use MVC::Keayl::Router;
 use MVC::Keayl::Controller;
@@ -153,7 +154,10 @@ describe 'MVC::Keayl::Dispatcher error handling', {
 describe 'error reporting application wiring', {
   it 'reports errors through a registered reporter', {
     my $reporter = RecordingReporter.new;
-    my $app = MVC::Keayl::Application.new(controllers => [FailController]);
+    my $app = MVC::Keayl::Application.new(
+      controllers => [FailController],
+      config      => MVC::Keayl::Config.new(environment => 'test'),
+    );
     $app.draw-routes({ get '/boom', to => 'fail#boom' });
     $app.report-errors-with($reporter);
     $app.endpoint.call(request('GET', '/boom'));

@@ -109,6 +109,21 @@ sub request($method, $path, *%args) {
   is $sink.text, '',        'a disabled logger writes no request line';
 }
 
+# the request summary line is written after any logging produced during the request
+
+{
+  my $sink   = StringSink.new;
+  my $logger = MVC::Keayl::Logger.new(level => 'info', out => $sink);
+  my $stack  = MVC::Keayl::Middleware::Logger.new(app => LoggingEndpoint.new(:$logger), :$logger, clock => step-clock());
+
+  $stack.call(request('GET', '/widgets'));
+
+  my @lines = $sink.text.lines;
+
+  is @lines[0], 'during-request',   'logging emitted while the request runs comes first';
+  like @lines[1], /'GET /widgets'/, 'the request summary line is written last';
+}
+
 # controller timing and parameter filtering through the middleware
 
 class LogWidgetsController is MVC::Keayl::Controller {

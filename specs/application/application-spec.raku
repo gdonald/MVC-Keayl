@@ -9,6 +9,7 @@ use MVC::Keayl::Request;
 use MVC::Keayl::Response;
 use MVC::Keayl::Routing;
 use MVC::Keayl::Assets;
+use MVC::Keayl::Logger;
 use CLIFixtures;
 
 class WidgetsController is MVC::Keayl::Controller {
@@ -71,7 +72,10 @@ describe 'MVC::Keayl::Dispatcher error handling', {
 
 describe 'MVC::Keayl::Application', {
   it 'dispatches requests through its endpoint', {
-    my $app = MVC::Keayl::Application.new(controllers => [WidgetsController]);
+    my $app = MVC::Keayl::Application.new(
+      controllers => [WidgetsController],
+      config      => MVC::Keayl::Config.new(environment => 'test'),
+    );
     $app.draw-routes({ get '/widgets', to => 'widgets#index' });
     expect($app.endpoint.call(request('GET', '/widgets')).body).to.be('all widgets');
   }
@@ -112,6 +116,38 @@ describe 'MVC::Keayl::Application environment behavior', {
     my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(environment => 'development'));
     $app.boot;
     expect($app.controller-options<view-renderer>.reload).to.be-truthy;
+  }
+
+  it 'defaults development to a log level that shows request logging', {
+    my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(environment => 'development'));
+    $app.boot;
+    expect($app.logger.enabled('info')).to.be-truthy;
+  }
+
+  it 'keeps non-development environments silent by default', {
+    my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(environment => 'test'));
+    $app.boot;
+    expect($app.logger.enabled('info')).to.be-falsy;
+  }
+
+  it 'lets a configured log level override the development default', {
+    my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(settings => %( 'log-level' => 'warn' ), environment => 'development'));
+    $app.boot;
+    expect($app.logger.level).to.be('warn');
+  }
+
+  it 'logs the request through the built endpoint in development', {
+    my $sink = StringSink.new;
+    my $app  = MVC::Keayl::Application.new(
+      controllers => [WidgetsController],
+      config      => MVC::Keayl::Config.new(environment => 'development'),
+      logger      => MVC::Keayl::Logger.new(level => 'debug', out => $sink),
+    );
+    $app.draw-routes({ get '/widgets', to => 'widgets#index' });
+
+    $app.endpoint.call(request('GET', '/widgets'));
+
+    expect($sink.text).to.match(/ 'GET /widgets' /);
   }
 }
 

@@ -7,6 +7,7 @@ use MVC::Keayl::Middleware::RequestId;
 use MVC::Keayl::Middleware::Logger;
 use MVC::Keayl::Logger;
 use MVC::Keayl::Application;
+use MVC::Keayl::Config;
 use MVC::Keayl::Dispatcher;
 use MVC::Keayl::Router;
 use MVC::Keayl::Controller;
@@ -214,7 +215,10 @@ sub dispatcher(:$view-renderer) {
 # application wiring
 
 {
-  my $app = MVC::Keayl::Application.new(controllers => [InstrController]);
+  my $app = MVC::Keayl::Application.new(
+    controllers => [InstrController],
+    config      => MVC::Keayl::Config.new(environment => 'test'),
+  );
   $app.draw-routes({ get '/show', to => 'instr#show' });
 
   my $response = $app.endpoint.call(request('GET', '/show'));

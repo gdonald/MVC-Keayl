@@ -7,12 +7,14 @@ the [parameter filter](parameter-filtering.md) applied.
 ## Enabling it
 
 Logging is wired by an application initializer and driven by the `log-level`
-config key. With no `log-level` set, the logger is `silent` and writes nothing,
-so logging is opt-in: set a level in `config/application.json` to turn it on.
+config key. Development defaults to `debug`, so request logging is on out of the
+box while you work locally. Every other environment defaults to `silent` and
+writes nothing, so logging elsewhere is opt-in. Set a level in
+`config/application.json` to override the default for any environment.
 
 ```json
 {
-  "development": { "log-level": "debug" },
+  "development": { "log-level": "info" },
   "production":  { "log-level": "info" }
 }
 ```
@@ -45,8 +47,9 @@ method, path, status, and duration without an action name or timings.
 
 `MVC::Keayl::Logger` is the sink. It holds a `level` threshold and an `out`
 handle (standard error by default), and exposes `debug`, `info`, `warn`, and
-`error`. `Application` builds one from `log-level` and exposes it as `app.logger`;
-pass your own to write elsewhere.
+`error`. `Application` builds one from `log-level` (falling back to the
+per-environment default) and exposes it as `app.logger`; pass your own to write
+elsewhere.
 
 ```perl6
 my $logger = MVC::Keayl::Logger.new(level => 'info', out => $*OUT);
@@ -60,3 +63,7 @@ request. It times the request with an injectable clock, installs a per-request
 `MVC::Keayl::LogEvent` that the controller records timings and parameters into,
 and writes the formatted line through the logger once the response is ready. When
 the logger is disabled it serves the request without recording anything.
+
+Because the line is written after the response is ready, any logging produced
+while the request runs, such as the SQL that the ORM logs, appears above the
+request line rather than after it.

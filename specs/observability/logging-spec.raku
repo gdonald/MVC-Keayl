@@ -133,6 +133,24 @@ describe 'MVC::Keayl::Middleware::Logger', {
       expect(sink.text).to.be('');
     }
   }
+
+  context 'when logging is produced while the request runs', {
+    let(:sink, { StringSink.new });
+    let(:lines, {
+      my $logger = MVC::Keayl::Logger.new(level => 'info', out => sink);
+      my $stack  = MVC::Keayl::Middleware::Logger.new(app => LoggingEndpoint.new(:$logger), :$logger, clock => step-clock());
+      $stack.call(request('GET', '/widgets'));
+      sink.text.lines
+    });
+
+    it 'emits the in-request logging first', {
+      expect(lines[0]).to.be('during-request');
+    }
+
+    it 'writes the request summary line last', {
+      expect(lines[1]).to.match(/'GET /widgets'/);
+    }
+  }
 }
 
 describe 'request logging through a controller', {

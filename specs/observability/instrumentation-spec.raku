@@ -2,6 +2,7 @@ use lib 'specs/lib';
 use BDD::Behave;
 use MVC::Keayl::Notifications;
 use MVC::Keayl::Application;
+use MVC::Keayl::Config;
 use MVC::Keayl::Middleware::RequestId;
 use MVC::Keayl::Middleware::Logger;
 use MVC::Keayl::Logger;
@@ -198,7 +199,10 @@ describe 'MVC::Keayl::Middleware::RequestId', {
 
 describe 'observability application wiring', {
   it 'sets a request id on the response', {
-    my $app = MVC::Keayl::Application.new(controllers => [InstrController]);
+    my $app = MVC::Keayl::Application.new(
+      controllers => [InstrController],
+      config      => MVC::Keayl::Config.new(environment => 'test'),
+    );
     $app.draw-routes({ get '/show', to => 'instr#show' });
     expect($app.endpoint.call(request('GET', '/show')).header('X-Request-Id').defined).to.be-truthy;
   }
