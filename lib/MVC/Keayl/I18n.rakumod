@@ -360,8 +360,8 @@ sub model-key($model --> Str) {
 }
 
 sub humanize(Str:D $value --> Str) {
-  my $text = $value.subst(/ '_id' $ /, '').subst(/<[_\-]>/, ' ', :g);
-  $text.subst(/^ . /, *.uc)
+  my $text = $value.subst(/ '_' ['id' | 'at'] $ /, '').subst(/<[_\-]>/, ' ', :g);
+  $text.split(/\s+/).grep(*.chars).map(*.subst(/^ . /, *.uc)).join(' ')
 }
 
 method human-attribute-name($model, Str:D $attribute, *%options --> Str) {

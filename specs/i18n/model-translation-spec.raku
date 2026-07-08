@@ -18,7 +18,7 @@ describe 'MVC::Keayl::I18n model translation', {
     }
 
     it 'humanizes an unknown attribute', {
-      expect(backend.human-attribute-name(User, 'first_name')).to.be('First name');
+      expect(backend.human-attribute-name(User, 'first_name')).to.be('First Name');
     }
   }
 
@@ -29,6 +29,10 @@ describe 'MVC::Keayl::I18n model translation', {
 
     it 'humanizes an unknown model name', {
       expect(backend.human-model-name('account')).to.be('Account');
+    }
+
+    it 'accepts a model instance in place of the class', {
+      expect(backend.human-model-name(User.new)).to.be('Member');
     }
   }
 
@@ -57,6 +61,10 @@ describe 'MVC::Keayl::I18n model translation', {
 
     it 'falls back to the human attribute name for a label', {
       expect(backend.form-label(User, 'email_address')).to.be('Email address');
+    }
+
+    it 'resolves a form label from a model instance', {
+      expect(backend.form-label(User.new, 'password')).to.be('Secret');
     }
 
     it 'uses a translated placeholder', {

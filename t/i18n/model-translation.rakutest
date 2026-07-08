@@ -23,7 +23,7 @@ class User { }
 
 {
   my $backend = build-backend;
-  is $backend.human-attribute-name(User, 'first_name'), 'First name',
+  is $backend.human-attribute-name(User, 'first_name'), 'First Name',
     'humanizes an unknown attribute';
 }
 
@@ -37,6 +37,11 @@ class User { }
 {
   my $backend = build-backend;
   is $backend.human-model-name('account'), 'Account', 'humanizes an unknown model name';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.human-model-name(User.new), 'Member', 'accepts a model instance in place of the class';
 }
 
 # translate-error
@@ -77,6 +82,12 @@ class User { }
   my $backend = build-backend;
   is $backend.form-label(User, 'email_address'), 'Email address',
     'falls back to the human attribute name for a label';
+}
+
+{
+  my $backend = build-backend;
+  is $backend.form-label(User.new, 'password'), 'Secret',
+    'resolves a form label from a model instance';
 }
 
 {
