@@ -1672,6 +1672,8 @@ dot is a lazy key resolved against the controller and action, so in
 <span class="nv">$i18n</span>.<span class="n">human-model-name</span>(<span class="n">User</span>);                              <span class="c1"># &quot;Member&quot;</span>
 <span class="nv">$i18n</span>.<span class="n">translate-error</span>(<span class="n">User</span>, <span class="s">&#39;name&#39;</span>, <span class="s">&#39;too_short&#39;</span>, <span class="nb">count</span> =&gt; <span class="mi">8</span>);
 </code></pre></div></td></tr></table></div>
+<p>Each of these takes the model as a class or an instance, so the form helpers can
+pass the record they are building through unchanged.</p>
 <p><code>translate-error</code> walks the message chain from the most specific
 <code>activerecord.errors.models.&lt;model&gt;.attributes.&lt;attr&gt;.&lt;type&gt;</code> to the generic
 <code>errors.messages.&lt;type&gt;</code>.</p>
