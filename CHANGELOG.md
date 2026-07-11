@@ -3,6 +3,31 @@
 All notable changes to MVC::Keayl are recorded here. The format groups entries
 under Added, Changed, Fixed, and Removed.
 
+## v0.9.1 (2026-07-11)
+
+### Added
+
+- Multipart form parsing: a `multipart/form-data` request body parses text fields
+  and file fields, each file becoming a `{ filename, content, type }` hash whose
+  `content` is the raw upload as a `Blob`, so binary uploads reach controller
+  parameters byte-for-byte.
+- Model and form translation on the i18n backend: `human-attribute-name`,
+  `human-model-name`, `translate-error`, `form-label`, `form-placeholder`, and
+  `submit-default`, each accepting the model as a class or an instance.
+
+### Changed
+
+- Development defaults to a log level that shows request logging, so a locally
+  booted app logs each request without extra configuration. Other environments
+  stay silent unless `log-level` is set.
+
+### Fixed
+
+- Class-level controller traits (`is layout`, `is protect-from-forgery`,
+  `is filter-parameters`, `is wrap-parameters`, and a class-level `helper-method`
+  declaration) were silently dropped when the controller was precompiled in its
+  own module. They are now stored on the class itself and survive precompilation.
+
 ## v0.9.0 (2026-06-25)
 
 First public release. MVC::Keayl is the web layer of a Rails-style stack for
