@@ -100,6 +100,16 @@ sub request($method, $path, *%args) {
 
 {
   my $sink   = StringSink.new;
+  my $logger = MVC::Keayl::Logger.new(level => 'info', out => $sink);
+  my $stack  = MVC::Keayl::Middleware::Logger.new(app => StatusEndpoint.new, :$logger, clock => step-clock());
+
+  $stack.call(request('GET', '/widgets'));
+
+  is $sink.text.lines[0], 'Started GET /widgets', 'a started line is written before the request runs';
+}
+
+{
+  my $sink   = StringSink.new;
   my $logger = MVC::Keayl::Logger.new(level => 'silent', out => $sink);
   my $stack  = MVC::Keayl::Middleware::Logger.new(app => StatusEndpoint.new, :$logger);
 
@@ -120,8 +130,9 @@ sub request($method, $path, *%args) {
 
   my @lines = $sink.text.lines;
 
-  is @lines[0], 'during-request',   'logging emitted while the request runs comes first';
-  like @lines[1], /'GET /widgets'/, 'the request summary line is written last';
+  is @lines[0], 'Started GET /widgets', 'the started line is written before the request runs';
+  is @lines[1], 'during-request',   'logging emitted while the request runs comes next';
+  like @lines[2], /'GET /widgets'/, 'the request summary line is written last';
 }
 
 # controller timing and parameter filtering through the middleware

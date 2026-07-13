@@ -22,6 +22,8 @@ method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
 
   my $start = &!clock.();
 
+  $!logger.info(started-line($event));
+
   my $response;
   {
     my $*KEAYL-LOG-EVENT = $event;
@@ -32,6 +34,12 @@ method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
   $!logger.info(format-line($event, &!clock.() - $start));
 
   $response
+}
+
+sub started-line(MVC::Keayl::LogEvent:D $event --> Str) {
+  my $line = "Started {$event.method} {$event.path}";
+  $line = "[{$event.request-id}] $line" with $event.request-id;
+  $line
 }
 
 sub milliseconds($seconds --> Str) {

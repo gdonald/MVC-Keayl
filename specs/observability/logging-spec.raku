@@ -115,6 +115,14 @@ describe 'MVC::Keayl::Middleware::Logger', {
     expect($sink.text.contains('POST /widgets 201 in 1.00ms')).to.be-truthy;
   }
 
+  it 'writes a started line before the request runs', {
+    my $sink   = StringSink.new;
+    my $logger = MVC::Keayl::Logger.new(level => 'info', out => $sink);
+    my $stack  = MVC::Keayl::Middleware::Logger.new(app => StatusEndpoint.new, :$logger, clock => step-clock());
+    $stack.call(request('GET', '/widgets'));
+    expect($sink.text.lines[0]).to.be('Started GET /widgets');
+  }
+
   context 'with a disabled logger', {
     let(:sink, { StringSink.new });
     let(:stack, {
@@ -143,12 +151,16 @@ describe 'MVC::Keayl::Middleware::Logger', {
       sink.text.lines
     });
 
-    it 'emits the in-request logging first', {
-      expect(lines[0]).to.be('during-request');
+    it 'writes the started line before the in-request logging', {
+      expect(lines[0]).to.be('Started GET /widgets');
+    }
+
+    it 'emits the in-request logging after the started line', {
+      expect(lines[1]).to.be('during-request');
     }
 
     it 'writes the request summary line last', {
-      expect(lines[1]).to.match(/'GET /widgets'/);
+      expect(lines[2]).to.match(/'GET /widgets'/);
     }
   }
 }
