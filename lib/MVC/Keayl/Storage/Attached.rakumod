@@ -109,11 +109,25 @@ class One is export {
   has Service $.service     = storage-service();
   has Repository $.repository = storage-repository();
 
+  # The attachment lookup is memoised per proxy: a request typically asks
+  # is-attached, then blob, then download, and each starts from `attachment`.
+  has $!attachment-cache;
+  has Bool $!attachment-loaded = False;
+
   method !type { $!record.^name }
   method !id   { $!record.id }
 
+  method !forget-attachment {
+    $!attachment-cache  = Nil;
+    $!attachment-loaded = False;
+  }
+
   method attachment {
-    $!repository.attachment-for(self!type, self!id, $!name)
+    unless $!attachment-loaded {
+      $!attachment-cache  = $!repository.attachment-for(self!type, self!id, $!name);
+      $!attachment-loaded = True;
+    }
+    $!attachment-cache
   }
 
   method blob {
@@ -130,18 +144,22 @@ class One is export {
     my $blob = resolve-blob($attachable, $!service, $!repository);
     return Nil without $blob;
 
-    $!repository.create-attachment(MVC::Keayl::Storage::Attachment.new(
+    my $attachment = $!repository.create-attachment(MVC::Keayl::Storage::Attachment.new(
       name        => $!name,
       record-type => self!type,
       record-id   => self!id,
       :$blob,
-    ))
+    ));
+    $!attachment-cache  = $attachment;
+    $!attachment-loaded = True;
+    $attachment
   }
 
   method detach {
     with self.attachment -> $attachment {
       $!repository.delete-attachment($attachment);
     }
+    self!forget-attachment;
     Nil
   }
 
@@ -153,6 +171,7 @@ class One is export {
       }
       $!repository.delete-attachment($attachment);
     }
+    self!forget-attachment;
     Nil
   }
 
@@ -189,11 +208,19 @@ class Many is export {
   has Service $.service       = storage-service();
   has Repository $.repository = storage-repository();
 
+  # Memoised like One.attachment: blobs, is-attached, and elems all start
+  # from `attachments`.
+  has $!attachments-cache;
+
   method !type { $!record.^name }
   method !id   { $!record.id }
 
+  method !forget-attachments {
+    $!attachments-cache = Nil;
+  }
+
   method attachments(--> List) {
-    $!repository.attachments-for(self!type, self!id, $!name)
+    ($!attachments-cache //= $!repository.attachments-for(self!type, self!id, $!name))<>
   }
 
   method blobs(--> List) {
@@ -220,6 +247,7 @@ class Many is export {
         :$blob,
       ));
     }
+    self!forget-attachments;
     self.attachments
   }
 
@@ -231,11 +259,13 @@ class Many is export {
       }
       $!repository.delete-attachment($attachment);
     }
+    self!forget-attachments;
     Nil
   }
 
   method detach {
     $!repository.delete-attachment($_) for self.attachments;
+    self!forget-attachments;
     Nil
   }
 }

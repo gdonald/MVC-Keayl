@@ -107,6 +107,12 @@ $user.documents.elems;   # 2
 $user.documents.blobs;   # the attached blobs
 ```
 
+Each accessor call (`$user.avatar`, `$user.documents`) returns a proxy that
+caches its repository lookup, so reads like `is-attached`, `blob`, and
+`download` on the same proxy share one query. `attach`, `detach`, and `purge`
+through a proxy refresh its cache, and a fresh accessor call re-reads the
+repository.
+
 ### Repository
 
 A repository persists blob and attachment records.

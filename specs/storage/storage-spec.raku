@@ -25,6 +25,11 @@ class StorageUser does Attachable {
 StorageUser.has-one-attached('avatar');
 StorageUser.has-many-attached('documents');
 
+class CountingRepository is MemoryRepository {
+  has Int $.lookups is rw = 0;
+  method attachments-for(|c) { $!lookups++; callsame }
+}
+
 describe 'MVC::Keayl::Storage::Blob', {
   let(:blob, { MVC::Keayl::Storage::Blob.build('hello world', filename => 'greeting.txt', content-type => 'text/plain') });
 
@@ -230,6 +235,92 @@ describe 'has-many-attached', {
   it 'exposes each blob', {
     user.documents.attach(%( io => 'one', filename => '1.txt' ), %( io => 'two', filename => '2.txt' ));
     expect(user.documents.blobs.map(*.filename).sort.join(',')).to.be('1.txt,2.txt');
+  }
+}
+
+describe 'attachment memoisation', {
+  let(:repo, { CountingRepository.new });
+
+  before-each({
+    reset-storage;
+    set-storage-service(DiskService.new(root => temp-root));
+    set-storage-repository(repo);
+  });
+
+  it 'serves is-attached, blob, and download from one repository lookup', {
+    StorageUser.new(id => 6).avatar.attach(%( io => 'bytes', filename => 'a.txt' ));
+    my $avatar = StorageUser.new(id => 6).avatar;
+    repo.lookups = 0;
+
+    $avatar.is-attached;
+    $avatar.blob;
+    $avatar.download;
+
+    expect(repo.lookups).to.be(1);
+  }
+
+  it 'sees a replacement attached through the same proxy', {
+    my $avatar = StorageUser.new(id => 6).avatar;
+    $avatar.attach(%( io => 'first', filename => 'a.txt' ));
+    $avatar.attach(%( io => 'second', filename => 'b.txt' ));
+    expect($avatar.filename).to.be('b.txt');
+  }
+
+  it 'reports detachment through the same proxy', {
+    my $avatar = StorageUser.new(id => 6).avatar;
+    $avatar.attach(%( io => 'bytes', filename => 'a.txt' ));
+    $avatar.detach;
+    expect($avatar.is-attached).to.be-falsy;
+  }
+
+  it 'reports a purge through the same proxy', {
+    my $avatar = StorageUser.new(id => 6).avatar;
+    $avatar.attach(%( io => 'bytes', filename => 'a.txt' ));
+    $avatar.purge;
+    expect($avatar.is-attached).to.be-falsy;
+  }
+
+  it 'serves reads after an attach without a repository lookup', {
+    my $avatar = StorageUser.new(id => 6).avatar;
+    $avatar.attach(%( io => 'bytes', filename => 'a.txt' ));
+    repo.lookups = 0;
+
+    $avatar.filename;
+
+    expect(repo.lookups).to.be(0);
+  }
+
+  it 'serves blobs, elems, and is-attached from one repository lookup', {
+    StorageUser.new(id => 7).documents.attach(%( io => 'one', filename => '1.txt' ));
+    my $documents = StorageUser.new(id => 7).documents;
+    repo.lookups = 0;
+
+    $documents.is-attached;
+    $documents.elems;
+    $documents.blobs;
+
+    expect(repo.lookups).to.be(1);
+  }
+
+  it 'sees additions attached through the same proxy', {
+    my $documents = StorageUser.new(id => 7).documents;
+    $documents.attach(%( io => 'one', filename => '1.txt' ));
+    $documents.attach(%( io => 'two', filename => '2.txt' ));
+    expect($documents.elems).to.be(2);
+  }
+
+  it 'reports a collection detach through the same proxy', {
+    my $documents = StorageUser.new(id => 7).documents;
+    $documents.attach(%( io => 'one', filename => '1.txt' ));
+    $documents.detach;
+    expect($documents.elems).to.be(0);
+  }
+
+  it 'reports a collection purge through the same proxy', {
+    my $documents = StorageUser.new(id => 7).documents;
+    $documents.attach(%( io => 'one', filename => '1.txt' ));
+    $documents.purge;
+    expect($documents.is-attached).to.be-falsy;
   }
 }
 

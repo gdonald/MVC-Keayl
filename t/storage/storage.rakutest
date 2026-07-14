@@ -209,4 +209,67 @@ StorageUser.has-many-attached('documents');
   dies-ok { $user.nonexistent }, 'an undeclared attachment name is a method-not-found error';
 }
 
+# attachment memoisation
+
+class CountingRepository is MemoryRepository {
+  has Int $.lookups is rw = 0;
+  method attachments-for(|c) { $!lookups++; callsame }
+}
+
+{
+  reset-storage;
+  my $root = temp-root;
+  set-storage-service(DiskService.new(:$root));
+  my $repo = CountingRepository.new;
+  set-storage-repository($repo);
+
+  StorageUser.new(id => 6).avatar.attach(%( io => 'bytes', filename => 'a.txt' ));
+  my $avatar = StorageUser.new(id => 6).avatar;
+  $repo.lookups = 0;
+
+  $avatar.is-attached;
+  $avatar.blob;
+  $avatar.download;
+
+  is $repo.lookups, 1, 'is-attached, blob, and download share one repository lookup';
+
+  $avatar.attach(%( io => 'second', filename => 'b.txt' ));
+  is $avatar.filename, 'b.txt', 'a replacement attached through the same proxy is visible';
+
+  $avatar.detach;
+  nok $avatar.is-attached, 'a detach through the same proxy is visible';
+
+  $avatar.attach(%( io => 'third', filename => 'c.txt' ));
+  $avatar.purge;
+  nok $avatar.is-attached, 'a purge through the same proxy is visible';
+
+  $avatar.attach(%( io => 'fourth', filename => 'd.txt' ));
+  $repo.lookups = 0;
+  $avatar.filename;
+  is $repo.lookups, 0, 'reads after an attach need no repository lookup';
+
+  StorageUser.new(id => 7).documents.attach(%( io => 'one', filename => '1.txt' ));
+  my $documents = StorageUser.new(id => 7).documents;
+  $repo.lookups = 0;
+
+  $documents.is-attached;
+  $documents.elems;
+  $documents.blobs;
+
+  is $repo.lookups, 1, 'blobs, elems, and is-attached share one repository lookup';
+
+  $documents.attach(%( io => 'two', filename => '2.txt' ));
+  is $documents.elems, 2, 'an addition attached through the same proxy is visible';
+
+  $documents.detach;
+  is $documents.elems, 0, 'a collection detach through the same proxy is visible';
+
+  $documents.attach(%( io => 'three', filename => '3.txt' ));
+  $documents.purge;
+  nok $documents.is-attached, 'a collection purge through the same proxy is visible';
+
+  reset-storage;
+  cleanup($root);
+}
+
 done-testing;
