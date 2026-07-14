@@ -1574,6 +1574,11 @@ id:</p>
 <span class="nv">$user</span>.<span class="n">documents</span>.<span class="nb">elems</span>;   <span class="c1"># 2</span>
 <span class="nv">$user</span>.<span class="n">documents</span>.<span class="n">blobs</span>;   <span class="c1"># the attached blobs</span>
 </code></pre></div></td></tr></table></div>
+<p>Each accessor call (<code>$user.avatar</code>, <code>$user.documents</code>) returns a proxy that
+caches its repository lookup, so reads like <code>is-attached</code>, <code>blob</code>, and
+<code>download</code> on the same proxy share one query. <code>attach</code>, <code>detach</code>, and <code>purge</code>
+through a proxy refresh its cache, and a fresh accessor call re-reads the
+repository.</p>
 <h3 id="repository">Repository<a class="headerlink" href="#repository" title="Permanent link">&para;</a></h3>
 <p>A repository persists blob and attachment records.
 <code>MVC::Keayl::Storage::Repository</code> defines the interface, and <code>MemoryRepository</code>
