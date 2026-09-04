@@ -17,7 +17,7 @@ use ControllerFixtures;
 
 {
   my $response = DownloadController.new.dispatch('data-inline');
-  is $response.header('Content-Disposition'), 'inline', 'send-data honours an inline disposition';
+  is $response.header('Content-Disposition'), 'inline', 'send-data honors an inline disposition';
   is $response.header('content-type'), 'application/octet-stream', 'send-data defaults to octet-stream';
 }
 
@@ -39,8 +39,8 @@ use ControllerFixtures;
 
 {
   my $response = DownloadController.new.dispatch('file-typed');
-  is $response.header('content-type'), 'text/plain', 'send-file honours an explicit content type';
-  is $response.header('Content-Disposition'), 'inline; filename="down.txt"', 'send-file honours an explicit filename and disposition';
+  is $response.header('content-type'), 'text/plain', 'send-file honors an explicit content type';
+  is $response.header('Content-Disposition'), 'inline; filename="down.txt"', 'send-file honors an explicit filename and disposition';
 }
 
 # range requests

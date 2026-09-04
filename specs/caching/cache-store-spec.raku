@@ -269,7 +269,7 @@ describe 'MVC::Keayl::Cache::FileStore', {
     expect($read).to.be('HELLO');
   }
 
-  it 'honours expiry', {
+  it 'honors expiry', {
     my $root = temp-root;
     my $t = 5000;
     my $store = MVC::Keayl::Cache::FileStore.new(:$root, clock => sub { $t });

@@ -81,7 +81,7 @@ describe 'MVC::Keayl number-to-phone', {
     expect(number-to-phone(1235551234, extension => 555)).to.be('123-555-1234 x 555');
   }
 
-  it 'honours a delimiter', {
+  it 'honors a delimiter', {
     expect(number-to-phone(1235551234, delimiter => '.')).to.be('123.555.1234');
   }
 }

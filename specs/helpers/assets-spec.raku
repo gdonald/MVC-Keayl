@@ -123,7 +123,7 @@ describe 'import maps', {
     expect($importmap.imports<application>).to.be('/assets/application.js');
   }
 
-  it 'honours an explicit url', {
+  it 'honors an explicit url', {
     my $importmap = MVC::Keayl::Assets::ImportMap.new;
     $importmap.pin('lodash', to => 'https://cdn/lodash.js');
     expect($importmap.imports<lodash>).to.be('https://cdn/lodash.js');

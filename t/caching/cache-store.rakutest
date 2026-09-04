@@ -198,7 +198,7 @@ sub temp-root(--> IO::Path) {
     'a second file-store instance reads the persisted value';
 
   $t = 5200;
-  nok $store.read('frag/home').defined, 'the file store honours expiry';
+  nok $store.read('frag/home').defined, 'the file store honors expiry';
 
   $store.write('a/1', 'one');
   $store.write('a/2', 'two');

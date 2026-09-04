@@ -37,7 +37,7 @@ describe 'MVC::Keayl pluralize', {
     expect(pluralize(3, 'box')).to.be('3 boxes');
   }
 
-  it 'honours an explicit plural', {
+  it 'honors an explicit plural', {
     expect(pluralize(5, 'octopus', plural => 'octopi')).to.be('5 octopi');
   }
 }
@@ -79,7 +79,7 @@ describe 'MVC::Keayl number-to-currency', {
     expect(number-to-currency(-9.99)).to.be('-$9.99');
   }
 
-  it 'honours unit and format', {
+  it 'honors unit and format', {
     expect(number-to-currency(1000, unit => '€', format => '%n%u', precision => 0)).to.be('1,000€');
   }
 }

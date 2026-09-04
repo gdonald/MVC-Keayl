@@ -141,7 +141,7 @@ use I18nFixtures;
 {
   my $backend = build-backend;
   $backend.set-locale('fr');
-  is $backend.translate('hello'), 'Bonjour le monde', 'honours the set locale';
+  is $backend.translate('hello'), 'Bonjour le monde', 'honors the set locale';
 }
 
 {

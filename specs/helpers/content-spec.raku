@@ -12,7 +12,7 @@ describe 'MVC::Keayl highlight', {
     expect(highlight('tiger TIGER', 'tiger').Str).to.be('<mark>tiger</mark> <mark>TIGER</mark>');
   }
 
-  it 'honours a custom highlighter', {
+  it 'honors a custom highlighter', {
     expect(highlight('use tiger', 'tiger', highlighter => '<em>\1</em>').Str).to.be('use <em>tiger</em>');
   }
 

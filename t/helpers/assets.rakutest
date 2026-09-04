@@ -125,7 +125,7 @@ sub params(%data) {
   $importmap.pin('lodash', to => 'https://cdn/lodash.js');
 
   is $importmap.imports<application>, '/assets/application.js', 'pin defaults the module url under /assets';
-  is $importmap.imports<lodash>, 'https://cdn/lodash.js', 'pin honours an explicit url';
+  is $importmap.imports<lodash>, 'https://cdn/lodash.js', 'pin honors an explicit url';
 }
 
 {

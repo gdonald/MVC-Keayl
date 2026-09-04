@@ -32,7 +32,7 @@ describe 'MVC::Keayl routing block redirect', {
     expect(target.location-for({ id => 9 })).to.be('/articles/9');
   }
 
-  it 'honours an overridden status', {
+  it 'honors an overridden status', {
     expect(target.status).to.be(302);
   }
 }

@@ -21,7 +21,7 @@ describe 'MVC::Keayl::Controller send-data', {
 }
 
 describe 'MVC::Keayl::Controller send-data defaults', {
-  it 'honours an inline disposition', {
+  it 'honors an inline disposition', {
     expect(DownloadController.new.dispatch('data-inline').header('Content-Disposition')).to.be('inline');
   }
 
@@ -58,11 +58,11 @@ describe 'MVC::Keayl::Controller send-file', {
 describe 'MVC::Keayl::Controller send-file overrides', {
   let(:response, { DownloadController.new.dispatch('file-typed') });
 
-  it 'honours an explicit content type', {
+  it 'honors an explicit content type', {
     expect(response.header('content-type')).to.be('text/plain');
   }
 
-  it 'honours an explicit filename and disposition', {
+  it 'honors an explicit filename and disposition', {
     expect(response.header('Content-Disposition')).to.be('inline; filename="down.txt"');
   }
 }

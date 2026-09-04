@@ -92,7 +92,7 @@ describe 'MVC::Keayl button-tag and image-submit-tag', {
     expect(button-tag().Str).to.be('<button type="submit">Button</button>');
   }
 
-  it 'honours an explicit type', {
+  it 'honors an explicit type', {
     expect(button-tag('Reset', %( type => 'reset' )).Str).to.be('<button type="reset">Reset</button>');
   }
 

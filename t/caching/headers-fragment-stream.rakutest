@@ -20,7 +20,7 @@ use MVC::Keayl::View;
     method show { self.expires-in(60, public => True, must-revalidate => True); self.render(:plain('x')) }
   }
   is PublicTtlController.new.dispatch('show').header('Cache-Control'), 'public, max-age=60, must-revalidate',
-    'expires-in honours public and extra directives';
+    'expires-in honors public and extra directives';
 }
 
 {

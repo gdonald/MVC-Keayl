@@ -38,7 +38,7 @@ use MVC::Keayl::Helpers::DateTime;
 }
 
 {
-  is pluralize(5, 'octopus', plural => 'octopi'), '5 octopi', 'pluralize honours an explicit plural';
+  is pluralize(5, 'octopus', plural => 'octopi'), '5 octopi', 'pluralize honors an explicit plural';
 }
 
 # simple-format
@@ -80,7 +80,7 @@ use MVC::Keayl::Helpers::DateTime;
 }
 
 {
-  is number-to-currency(1000, unit => '€', format => '%n%u', precision => 0), '1,000€', 'number-to-currency honours unit and format';
+  is number-to-currency(1000, unit => '€', format => '%n%u', precision => 0), '1,000€', 'number-to-currency honors unit and format';
 }
 
 # number-to-percentage

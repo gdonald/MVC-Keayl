@@ -56,7 +56,7 @@ use MVC::Keayl::Parameters;
 
 {
   my $filter = MVC::Keayl::ParameterFilter.new(also => ['pin']);
-  is $filter.filter(%( pin => '1234' ))<pin>, '[FILTERED]', 'an additional filter name is honoured';
+  is $filter.filter(%( pin => '1234' ))<pin>, '[FILTERED]', 'an additional filter name is honored';
 }
 
 {

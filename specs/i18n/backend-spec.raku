@@ -123,7 +123,7 @@ describe 'MVC::Keayl::I18n translation backend', {
   }
 
   context 'locale state', {
-    it 'honours the set locale', {
+    it 'honors the set locale', {
       backend.set-locale('fr');
       expect(backend.translate('hello')).to.be('Bonjour le monde');
     }

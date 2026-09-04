@@ -3,6 +3,21 @@
 All notable changes to MVC::Keayl are recorded here. The format groups entries
 under Added, Changed, Fixed, and Removed.
 
+## v0.9.2 (2026-07-24)
+
+### Added
+
+- Request logging emits a `Started <method> <path>` line when a request begins,
+  prefixed with the request ID when one is present, so a request appears in the
+  log before its handler runs.
+
+### Changed
+
+- Storage accessors memoize their repository lookup. Reads such as
+  `is-attached`, `blob`, `blobs`, `elems`, and `download` on one proxy share a
+  single query. `attach`, `detach`, and `purge` refresh the proxy's cache, and a
+  fresh accessor call re-reads the repository.
+
 ## v0.9.1 (2026-07-11)
 
 ### Added

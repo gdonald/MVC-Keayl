@@ -54,7 +54,7 @@ describe 'MVC::Keayl::Controller render body', {
     expect(response.body).to.be('id,name');
   }
 
-  it 'honours an explicit content-type', {
+  it 'honors an explicit content-type', {
     expect(response.header('content-type')).to.be('text/csv');
   }
 }

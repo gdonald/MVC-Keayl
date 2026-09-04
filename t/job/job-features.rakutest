@@ -180,7 +180,7 @@ class DbPriorityJob is MVC::Keayl::Job {
   MVC::Keayl::Job.reset-queue-adapter;
 }
 
-# database adapter honours scheduling
+# database adapter honors scheduling
 
 {
   @db-ran = ();

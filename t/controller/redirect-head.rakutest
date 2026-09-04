@@ -19,7 +19,7 @@ use ControllerFixtures;
 }
 
 {
-  is FlowController.new.dispatch('permanent').status, 301, 'redirect-to honours a numeric status';
+  is FlowController.new.dispatch('permanent').status, 301, 'redirect-to honors a numeric status';
 }
 
 {

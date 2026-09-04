@@ -45,7 +45,7 @@ sub builder(*%options) {
     'submit text for a persisted record uses the update key';
 }
 
-# behaviour without a backend is unchanged
+# behavior without a backend is unchanged
 
 {
   my $plain = FormBuilder.new(object-name => 'user');

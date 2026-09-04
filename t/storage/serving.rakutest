@@ -121,7 +121,7 @@ sub params(%data) {
     params => params({ signed-id => $signed, disposition => 'attachment' }),
   ).dispatch('show');
 
-  is $response.header('Content-Disposition'), 'attachment; filename="d.txt"', 'the proxy controller honours an attachment disposition';
+  is $response.header('Content-Disposition'), 'attachment; filename="d.txt"', 'the proxy controller honors an attachment disposition';
 
   reset-storage;
   cleanup($root);

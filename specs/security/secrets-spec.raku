@@ -41,7 +41,7 @@ describe 'MVC::Keayl::Secrets derivation', {
     expect($a.derive-key('salt') eq $b.derive-key('salt')).to.be-falsy;
   }
 
-  it 'honours a configurable length', {
+  it 'honors a configurable length', {
     expect(MVC::Keayl::Secrets.new(secret-key-base => 'base').derive-key('salt', length => 16).chars).to.be(32);
   }
 

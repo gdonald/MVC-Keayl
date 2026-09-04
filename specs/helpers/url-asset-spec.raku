@@ -76,7 +76,7 @@ describe 'MVC::Keayl asset-path', {
     expect(asset-path('app', :type('css'))).to.be('/assets/app.css');
   }
 
-  it 'honours a custom resolver', {
+  it 'honors a custom resolver', {
     my &resolver = -> $source, $type { 'https://cdn.example/' ~ $source };
     expect(asset-path('logo.png', :&resolver)).to.be('https://cdn.example/logo.png');
   }

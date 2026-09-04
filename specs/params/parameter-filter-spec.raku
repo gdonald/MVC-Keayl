@@ -40,7 +40,7 @@ describe 'MVC::Keayl::ParameterFilter nesting', {
 }
 
 describe 'MVC::Keayl::ParameterFilter configuration', {
-  it 'honours an additional filter name', {
+  it 'honors an additional filter name', {
     expect(MVC::Keayl::ParameterFilter.new(also => ['pin']).filter(%( pin => '1234' ))<pin>).to.be('[FILTERED]');
   }
 

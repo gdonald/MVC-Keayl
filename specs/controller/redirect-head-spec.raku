@@ -17,7 +17,7 @@ describe 'MVC::Keayl::Controller redirect-to', {
     expect(FlowController.new.dispatch('to-url').header('Location')).to.be('https://example.com');
   }
 
-  it 'honours a numeric status', {
+  it 'honors a numeric status', {
     expect(FlowController.new.dispatch('permanent').status).to.be(301);
   }
 

@@ -18,7 +18,7 @@ use MVC::Keayl::Helpers::Tag;
 
 {
   is highlight('use tiger', 'tiger', highlighter => '<em>\1</em>').Str, 'use <em>tiger</em>',
-    'highlight honours a custom highlighter';
+    'highlight honors a custom highlighter';
 }
 
 {

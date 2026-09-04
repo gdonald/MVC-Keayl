@@ -13,7 +13,7 @@ describe 'MVC::Keayl::Controller cache headers', {
     expect(TtlController.new.dispatch('show').header('Cache-Control')).to.be('private, max-age=3600');
   }
 
-  it 'honours public and extra directives', {
+  it 'honors public and extra directives', {
     my class PublicTtlController is MVC::Keayl::Controller {
       method show { self.expires-in(60, public => True, must-revalidate => True); self.render(:plain('x')) }
     }

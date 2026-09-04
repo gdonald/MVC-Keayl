@@ -104,7 +104,7 @@ describe 'MVC::Keayl::Storage::Serving::ProxyController', {
   context 'with an attachment disposition', {
     let(:blob, { make-blob('attach-me', 'd.txt', 'text/plain') });
 
-    it 'honours the attachment disposition', {
+    it 'honors the attachment disposition', {
       my $signed = storage-verifier.generate(blob.id, purpose => 'blob');
       my $response = MVC::Keayl::Storage::Serving::ProxyController.new(params => params({ signed-id => $signed, disposition => 'attachment' })).dispatch('show');
       expect($response.header('Content-Disposition')).to.be('attachment; filename="d.txt"');

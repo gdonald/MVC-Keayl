@@ -111,7 +111,7 @@ sub builder(*%args) { FormBuilder.new(|%args) }
 }
 
 {
-  is button-tag('Reset', %( type => 'reset' )).Str, '<button type="reset">Reset</button>', 'button-tag honours an explicit type';
+  is button-tag('Reset', %( type => 'reset' )).Str, '<button type="reset">Reset</button>', 'button-tag honors an explicit type';
 }
 
 {

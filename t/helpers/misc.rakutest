@@ -89,7 +89,7 @@ use MVC::Keayl::Helpers::Number;
 }
 
 {
-  is number-to-phone(1235551234, delimiter => '.'), '123.555.1234', 'number-to-phone honours a delimiter';
+  is number-to-phone(1235551234, delimiter => '.'), '123.555.1234', 'number-to-phone honors a delimiter';
 }
 
 # number-to-human
