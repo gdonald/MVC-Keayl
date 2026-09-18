@@ -3,7 +3,7 @@
 All notable changes to MVC::Keayl are recorded here. The format groups entries
 under Added, Changed, Fixed, and Removed.
 
-## v0.9.2 (2026-07-24)
+## v0.9.2 (2026-09-18)
 
 ### Added
 
@@ -17,6 +17,11 @@ under Added, Changed, Fixed, and Removed.
   `is-attached`, `blob`, `blobs`, `elems`, and `download` on one proxy share a
   single query. `attach`, `detach`, and `purge` refresh the proxy's cache, and a
   fresh accessor call re-reads the repository.
+
+### Removed
+
+- The `docs-src` MkDocs tree. The manual now lives in the keayl.dev site
+  repository and is maintained there.
 
 ## v0.9.1 (2026-07-11)
 
