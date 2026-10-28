@@ -40,6 +40,7 @@ method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
   with $match.target -> $target {
     if $target.^can('app') {
       my $app         = $target.app;
+      self!share-secret($app);
       my $sub-request = $request.rebase('/' ~ ($match.params<mounted_path> // ''));
       my $result      = $app ~~ Callable ?? $app($sub-request) !! $app.call($sub-request);
 
@@ -61,6 +62,13 @@ method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
     ),
     { self!invoke($class, $match, $request) },
   )
+}
+
+method !share-secret($app) {
+  return unless $app ~~ MVC::Keayl::Dispatcher;
+  return without %!controller-options<secret>;
+
+  $app.controller-options<secret> //= %!controller-options<secret>;
 }
 
 method !invoke($class, $match, MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {

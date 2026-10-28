@@ -13,6 +13,8 @@ role Service is export {
   method delete(Str:D $key)                    { ... }
   method exist(Str:D $key --> Bool)            { ... }
   method url(Str:D $key, *%options --> Str)    { ... }
+
+  method has-public-url(--> Bool) { True }
 }
 
 class DiskService does Service is export {
@@ -48,6 +50,8 @@ class DiskService does Service is export {
   method url(Str:D $key, *%options --> Str) {
     self!path($key).absolute
   }
+
+  method has-public-url(--> Bool) { False }
 }
 
 class ExternalService does Service is export {
@@ -103,5 +107,9 @@ class MirrorService does Service is export {
 
   method url(Str:D $key, *%options --> Str) {
     $!primary.url($key, |%options)
+  }
+
+  method has-public-url(--> Bool) {
+    $!primary.has-public-url
   }
 }

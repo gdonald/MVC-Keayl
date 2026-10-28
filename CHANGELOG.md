@@ -3,6 +3,35 @@
 All notable changes to MVC::Keayl are recorded here. The format groups entries
 under Added, Changed, Fixed, and Removed.
 
+## v0.9.3 (2026-10-28)
+
+### Added
+
+- `storage-routes` declares the blob serving, direct upload, and disk upload
+  routes, and `storage-controllers` lists the controllers that serve them.
+- `Service.has-public-url` reports whether a storage service's `url` can be
+  fetched by a browser. `DiskService` returns `False`.
+- `Application.root` and `Application.secret-key-base`. A `secret-key-base`
+  initializer sets the controllers' `secret` from the credentials
+  `secret-key-base`, falls back to a fixed development value in development and
+  test, and refuses to boot in production without one.
+- `MVC::Keayl::Middleware::MethodOverride`, included in every application
+  through a `method-override` initializer. A `POST` naming `PATCH`, `PUT`, or
+  `DELETE` in a `_method` form field or an `X-HTTP-Method-Override` header is
+  routed with that method, so the forms `button-to` and `form-with` render
+  reach their routes.
+- `Request.with-method` returns a copy of a request with a different method.
+- `parse-body` is exported from `MVC::Keayl::Params`.
+
+### Changed
+
+- Blob serving controllers read the `signed_id` route parameter, keeping
+  `signed-id` as a fallback.
+- Signed ids and upload tokens use URL-safe Base64 without padding. Tokens
+  issued with standard Base64 still verify.
+- `RedirectController` streams the blob when the service has no public URL.
+- A mounted dispatcher built without a `secret` uses the host's `secret`.
+
 ## v0.9.2 (2026-09-18)
 
 ### Added

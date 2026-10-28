@@ -70,6 +70,16 @@ class Attachment is export {
   has $.created-at;
 }
 
+sub url-safe-base64(Str:D $text --> Str) {
+  MIME::Base64.encode-str($text, :oneline).trans('+/' => '-_').subst(/'='+ $/, '')
+}
+
+sub decode-url-safe-base64(Str:D $encoded --> Str) {
+  my $standard = $encoded.trans('-_' => '+/');
+
+  MIME::Base64.decode-str($standard ~ '=' x (-$standard.chars % 4))
+}
+
 class Verifier is export {
   has Str $.secret is required;
   has &.clock = sub { now };
@@ -82,7 +92,7 @@ class Verifier is export {
     my %envelope = data => $data, purpose => ($purpose // Str);
     %envelope<expires-at> = &!clock().Numeric + $expires-in if $expires-in.defined;
 
-    my $payload = MIME::Base64.encode-str(to-json(%envelope, :!pretty), :oneline);
+    my $payload = url-safe-base64(to-json(%envelope, :!pretty));
 
     $payload ~ '--' ~ self!sign($payload)
   }
@@ -97,7 +107,7 @@ class Verifier is export {
     my $signature = $token.substr($separator + 2);
     return Nil unless secure-compare(self!sign($payload), $signature);
 
-    my %envelope = from-json(MIME::Base64.decode-str($payload));
+    my %envelope = from-json(decode-url-safe-base64($payload));
 
     return Nil unless (%envelope<purpose> // Str) eqv ($purpose // Str);
     return Nil if %envelope<expires-at>.defined && &!clock().Numeric >= %envelope<expires-at>;

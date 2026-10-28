@@ -1,0 +1,89 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Application;
+use MVC::Keayl::Config;
+use MVC::Keayl::Controller;
+use MVC::Keayl::Routing;
+use MVC::Keayl::TestSupport;
+use MVC::Keayl::Helpers::Url;
+use MVC::Keayl::Helpers::Form;
+
+class OverrideCompaniesController is MVC::Keayl::Controller {
+  method create  { self.render(plain => 'create') }
+  method update  { self.render(plain => 'update') }
+  method replace { self.render(plain => 'replace') }
+  method destroy { self.render(plain => 'destroy') }
+}
+
+sub override-session(--> IntegrationSession) {
+  my $app = MVC::Keayl::Application.new(
+    config      => MVC::Keayl::Config.new(environment => 'test'),
+    controllers => [OverrideCompaniesController],
+  );
+
+  $app.draw-routes({
+    post   '/companies/:id', to => 'override_companies#create';
+    patch  '/companies/:id', to => 'override_companies#update';
+    put    '/companies/:id', to => 'override_companies#replace';
+    delete '/companies/:id', to => 'override_companies#destroy';
+  });
+
+  IntegrationSession.new(app => $app.endpoint)
+}
+
+sub post-form(Str:D $body --> Str) {
+  override-session.post('/companies/5',
+    headers => %( 'Content-Type' => 'application/x-www-form-urlencoded' ),
+    :$body).body
+}
+
+sub hidden-fields($html --> Str) {
+  $html.Str.match(/ 'name="' (<-["]>+) '" type="hidden" value="' (<-["]>+) '"' /, :g).map({ "$_[0]=$_[1]" }).join('&')
+}
+
+# default stack
+
+{
+  my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(environment => 'test'));
+  $app.boot;
+
+  ok $app.middleware.contains('method-override'), 'method override is part of the default application middleware';
+}
+
+# form overrides
+
+is post-form('_method=delete'), 'destroy', 'a POST form naming delete reaches the DELETE route';
+is post-form('_method=patch'), 'update', 'a POST form naming patch reaches the PATCH route';
+is post-form('_method=put'), 'replace', 'a POST form naming put reaches the PUT route';
+is post-form('_method=DELETE'), 'destroy', 'a POST form may name the method in uppercase';
+is post-form('_method=get'), 'create', 'a POST form naming a method other than PATCH, PUT, or DELETE stays a POST';
+is post-form('name=Acme'), 'create', 'a POST without an override stays a POST';
+
+{
+  my $body = "--B\r\nContent-Disposition: form-data; name=\"_method\"\r\n\r\ndelete\r\n--B--\r\n";
+  my $response = override-session.post('/companies/5',
+    headers => %( 'Content-Type' => 'multipart/form-data; boundary=B' ),
+    :$body);
+
+  is $response.body, 'destroy', 'a POST multipart form naming _method reaches the named route';
+}
+
+# header override
+
+is override-session.post('/companies/5', headers => %( 'X-HTTP-Method-Override' => 'patch' )).body, 'update',
+  'a POST with an X-HTTP-Method-Override header reaches the named route';
+
+# GET is never overridden
+
+is override-session.get('/companies/5?_method=delete').status, 405, 'a GET naming _method is not overridden';
+
+# helper fields
+
+is post-form(hidden-fields(button-to('Delete', '/companies/5', %( method => 'delete' )))), 'destroy',
+  'the fields button-to renders reach the DELETE route';
+
+is post-form(hidden-fields(form-with(url => '/companies/5', method => 'patch'))), 'update',
+  'the fields form-with renders reach the PATCH route';
+
+done-testing;

@@ -87,6 +87,10 @@ describe 'MVC::Keayl::Storage::Service::DiskService', {
     service.delete('abcdef12');
     expect(service.exist('abcdef12')).to.be-falsy;
   }
+
+  it 'has no public url', {
+    expect(service.has-public-url).to.be-falsy;
+  }
 }
 
 describe 'MVC::Keayl::Storage::Service::ExternalService', {
@@ -114,6 +118,10 @@ describe 'MVC::Keayl::Storage::Service::ExternalService', {
 
   it 'builds a url through the client', {
     expect(service.url('k1')).to.be('https://cdn.test/k1');
+  }
+
+  it 'has a public url', {
+    expect(service.has-public-url).to.be-truthy;
   }
 }
 
@@ -143,6 +151,10 @@ describe 'MVC::Keayl::Storage::Service::MirrorService', {
     service.upload('deadbeef', 'replicated');
     service.delete('deadbeef');
     expect(mirror.exist('deadbeef')).to.be-falsy;
+  }
+
+  it 'has a public url only when its primary does', {
+    expect(service.has-public-url).to.be-falsy;
   }
 }
 

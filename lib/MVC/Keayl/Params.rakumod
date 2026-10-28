@@ -135,7 +135,7 @@ sub parse-multipart($body-in, Str:D $boundary --> Hash) is export {
   %params
 }
 
-sub parse-body($request --> Hash) {
+sub parse-body($request --> Hash) is export {
   my $content-type = $request.header('content-type') // '';
 
   return parse-json($request.body)        if $content-type.contains('application/json');

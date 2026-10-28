@@ -223,6 +223,10 @@ method query-params(--> Hash) {
   %!query-params
 }
 
+method with-method(Str:D $method --> ::?CLASS) {
+  self.clone(:$method)
+}
+
 method rebase(Str:D $path --> ::?CLASS) {
   # Carry the body through as raw bytes. Mounting a sub-application rebases the
   # request, and decoding a binary multipart upload as UTF-8 here (via `body`)

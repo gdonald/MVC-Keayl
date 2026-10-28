@@ -11,17 +11,22 @@ use MVC::Keayl::Routing;
 use MVC::Keayl::Logger;
 use MVC::Keayl::Middleware::Logger;
 use MVC::Keayl::Middleware::RequestId;
+use MVC::Keayl::Middleware::MethodOverride;
 use MVC::Keayl::Middleware::Database;
 use ORM::ActiveRecord::DB;
 use MVC::Keayl::ErrorReporting;
 use MVC::Keayl::ErrorReporter;
 use MVC::Keayl::I18n;
+use MVC::Keayl::Credentials;
 
 unit class MVC::Keayl::Application;
+
+constant DEVELOPMENT-SECRET-KEY-BASE = 'keayl-development-secret-key-base';
 
 has $.router      = MVC::Keayl::Router.new;
 has $.middleware  = MVC::Keayl::MiddlewareStack.new;
 has $.config      = MVC::Keayl::Config.new;
+has IO::Path() $.root = '.'.IO;
 has $.logger is rw;
 has @.error-reporters;
 has @.controllers;
@@ -42,6 +47,10 @@ submethod TWEAK {
   self.initializer('active-record-connection', -> $app {
     my $has-db = ? try { DB.read-config.elems.so };
     $app.middleware.prepend('db-connection', MVC::Keayl::Middleware::Database) if $has-db;
+  });
+
+  self.initializer('secret-key-base', -> $app {
+    $app.controller-options<secret> //= $app.secret-key-base;
   });
 
   self.initializer('template-haml', -> $app {
@@ -89,6 +98,10 @@ submethod TWEAK {
     $app.middleware.prepend('request-logger', MVC::Keayl::Middleware::Logger, logger => $app.logger);
   });
 
+  self.initializer('method-override', -> $app {
+    $app.middleware.prepend('method-override', MVC::Keayl::Middleware::MethodOverride);
+  });
+
   self.initializer('request-id', -> $app {
     $app.middleware.prepend('request-id', MVC::Keayl::Middleware::RequestId);
   });
@@ -117,6 +130,16 @@ method environment(--> Str)    { $!config.environment }
 method is-development(--> Bool) { $!config.environment eq 'development' }
 method is-test(--> Bool)        { $!config.environment eq 'test' }
 method is-production(--> Bool)   { $!config.environment eq 'production' }
+
+method secret-key-base(--> Str) {
+  my $credentials = try MVC::Keayl::Credentials.resolve(root => $!root);
+  my $secret      = $credentials.defined ?? $credentials<secret-key-base> !! Str;
+
+  return ~$secret if $secret.defined && $secret ne '';
+  die 'no secret-key-base configured (set it in config/credentials.yml.enc)' if self.is-production;
+
+  DEVELOPMENT-SECRET-KEY-BASE
+}
 
 method boot(--> ::?CLASS) {
   return self if $!booted;

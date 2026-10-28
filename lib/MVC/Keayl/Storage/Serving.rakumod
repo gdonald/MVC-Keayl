@@ -1,5 +1,6 @@
 use v6.d;
 use MVC::Keayl::Controller;
+use MVC::Keayl::Routing;
 use MVC::Keayl::Storage;
 use MVC::Keayl::Storage::Attached;
 
@@ -9,41 +10,56 @@ sub upload-path(Str:D $key, :$expires-in = 300 --> Str) is export {
   '/keayl/disk/' ~ storage-verifier.generate($key, purpose => 'upload', :$expires-in)
 }
 
-class RedirectController is MVC::Keayl::Controller {
-  method show {
-    my $id = storage-verifier.verify(self.params<signed-id>, purpose => 'blob');
-    return self.head(404) without $id;
+sub signed-blob($controller) {
+  my $signed-id = $controller.params<signed_id> // $controller.params<signed-id>;
 
-    my $blob = storage-repository.find-blob($id);
+  my $id = storage-verifier.verify($signed-id, purpose => 'blob');
+  return Nil without $id;
+
+  storage-repository.find-blob($id)
+}
+
+sub send-blob($controller, $blob) {
+  my $bytes = storage-service.download($blob.key);
+  return $controller.head(404) without $bytes;
+
+  my $disposition = $controller.params<disposition> // 'inline';
+
+  $controller.send-data(
+    $bytes,
+    type        => $blob.content-type,
+    filename    => $blob.filename,
+    disposition => $disposition,
+  )
+}
+
+class RedirectController is MVC::Keayl::Controller {
+  method controller-path(--> Str) { 'keayl/blobs/redirect' }
+
+  method show {
+    my $blob = signed-blob(self);
     return self.head(404) without $blob;
+
+    return send-blob(self, $blob) unless storage-service.has-public-url;
 
     self.redirect-to(storage-service.url($blob.key), status => 302)
   }
 }
 
 class ProxyController is MVC::Keayl::Controller {
-  method show {
-    my $id = storage-verifier.verify(self.params<signed-id>, purpose => 'blob');
-    return self.head(404) without $id;
+  method controller-path(--> Str) { 'keayl/blobs/proxy' }
 
-    my $blob = storage-repository.find-blob($id);
+  method show {
+    my $blob = signed-blob(self);
     return self.head(404) without $blob;
 
-    my $bytes = storage-service.download($blob.key);
-    return self.head(404) without $bytes;
-
-    my $disposition = self.params<disposition> // 'inline';
-
-    self.send-data(
-      $bytes,
-      type        => $blob.content-type,
-      filename    => $blob.filename,
-      disposition => $disposition,
-    )
+    send-blob(self, $blob)
   }
 }
 
 class DirectUploadsController is MVC::Keayl::Controller {
+  method controller-path(--> Str) { 'keayl/direct-uploads' }
+
   method create {
     my %attributes = self.params<blob> // self.params.Hash;
 
@@ -69,6 +85,8 @@ class DirectUploadsController is MVC::Keayl::Controller {
 }
 
 class DiskController is MVC::Keayl::Controller {
+  method controller-path(--> Str) { 'keayl/disk' }
+
   method update {
     my $key = storage-verifier.verify(self.params<token>, purpose => 'upload');
     return self.head(404) without $key;
@@ -77,4 +95,15 @@ class DiskController is MVC::Keayl::Controller {
 
     self.head(204)
   }
+}
+
+sub storage-controllers(--> List) is export {
+  (RedirectController, ProxyController, DirectUploadsController, DiskController)
+}
+
+sub storage-routes() is export {
+  get  '/keayl/blobs/redirect/:signed_id/*filename', to => 'keayl/blobs/redirect#show';
+  get  '/keayl/blobs/proxy/:signed_id/*filename',    to => 'keayl/blobs/proxy#show';
+  post '/keayl/direct-uploads',                      to => 'keayl/direct-uploads#create';
+  put  '/keayl/disk/:token',                         to => 'keayl/disk#update';
 }

@@ -107,7 +107,10 @@ describe 'MVC::Keayl::Application', {
 
 describe 'MVC::Keayl::Application environment behavior', {
   it 'does not reload templates in production', {
-    my $app = MVC::Keayl::Application.new(config => MVC::Keayl::Config.new(environment => 'production'));
+    my $app = MVC::Keayl::Application.new(
+      config             => MVC::Keayl::Config.new(environment => 'production'),
+      controller-options => %( secret => 'production-secret' ),
+    );
     $app.boot;
     expect($app.controller-options<view-renderer>.reload).to.be-falsy;
   }

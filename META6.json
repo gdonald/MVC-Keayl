@@ -1,7 +1,7 @@
 {
   "name": "MVC::Keayl",
   "description": "Model-View-Controller web framework",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "api": "1",
   "perl": "6.d",
   "authors": ["Greg Donald"],
@@ -98,6 +98,7 @@
     "MVC::Keayl::Middleware::Database": "lib/MVC/Keayl/Middleware/Database.rakumod",
     "MVC::Keayl::Middleware::HostAuthorization": "lib/MVC/Keayl/Middleware/HostAuthorization.rakumod",
     "MVC::Keayl::Middleware::Logger": "lib/MVC/Keayl/Middleware/Logger.rakumod",
+    "MVC::Keayl::Middleware::MethodOverride": "lib/MVC/Keayl/Middleware/MethodOverride.rakumod",
     "MVC::Keayl::Middleware::RequestId": "lib/MVC/Keayl/Middleware/RequestId.rakumod",
     "MVC::Keayl::Middleware::SSL": "lib/MVC/Keayl/Middleware/SSL.rakumod",
     "MVC::Keayl::Middleware::SecureHeaders": "lib/MVC/Keayl/Middleware/SecureHeaders.rakumod",

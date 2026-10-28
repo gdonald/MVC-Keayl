@@ -57,6 +57,7 @@ StorageUser.has-many-attached('documents');
 
   $service.delete('abcdef12');
   nok $service.exist('abcdef12'), 'the disk service deletes a key';
+  nok $service.has-public-url, 'the disk service has no public url';
 
   cleanup($root);
 }
@@ -79,6 +80,7 @@ StorageUser.has-many-attached('documents');
   ok $service.exist('k1'), 'the external service round-trips existence through the client';
   is $service.download('k1').decode, 'data', 'the external service downloads through the client';
   is $service.url('k1'), 'https://cdn.test/k1', 'the external service builds a url through the client';
+  ok $service.has-public-url, 'the external service has a public url';
 }
 
 # mirror service
@@ -98,6 +100,7 @@ StorageUser.has-many-attached('documents');
 
   $service.delete('deadbeef');
   nok $mirror.exist('deadbeef'), 'the mirror service deletes from every mirror';
+  nok $service.has-public-url, 'the mirror service has a public url only when its primary does';
 
   cleanup($primary-root);
   cleanup($mirror-root);
