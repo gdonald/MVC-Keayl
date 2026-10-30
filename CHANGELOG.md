@@ -3,7 +3,7 @@
 All notable changes to MVC::Keayl are recorded here. The format groups entries
 under Added, Changed, Fixed, and Removed.
 
-## v0.9.3 (2026-10-28)
+## v0.9.3 - 2026-10-28
 
 ### Added
 
@@ -32,7 +32,7 @@ under Added, Changed, Fixed, and Removed.
 - `RedirectController` streams the blob when the service has no public URL.
 - A mounted dispatcher built without a `secret` uses the host's `secret`.
 
-## v0.9.2 (2026-09-18)
+## v0.9.2 - 2026-09-18
 
 ### Added
 
@@ -52,7 +52,7 @@ under Added, Changed, Fixed, and Removed.
 - The `docs-src` MkDocs tree. The manual now lives in the keayl.dev site
   repository and is maintained there.
 
-## v0.9.1 (2026-07-11)
+## v0.9.1 - 2026-07-11
 
 ### Added
 
@@ -77,7 +77,7 @@ under Added, Changed, Fixed, and Removed.
   declaration) were silently dropped when the controller was precompiled in its
   own module. They are now stored on the class itself and survive precompilation.
 
-## v0.9.0 (2026-06-25)
+## v0.9.0 - 2026-06-25
 
 First public release. MVC::Keayl is the web layer of a Rails-style stack for
 Raku, pairing with ORM::ActiveRecord for models and Template::HAML for views.

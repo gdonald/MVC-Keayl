@@ -4,6 +4,7 @@ use MVC::Keayl::Job;
 use MVC::Keayl::Job::QueueAdapter::Test;
 use MVC::Keayl::Job::QueueAdapter::Database;
 use MVC::Keayl::Job::GlobalID;
+use JobFeatWidget;
 
 my @perform-sink;
 my @db-ran;
@@ -40,13 +41,6 @@ class JobFeatEnqueueJob is MVC::Keayl::Job {
   method perform { }
 }
 JobFeatEnqueueJob.before-enqueue(-> $j { @perform-sink.push('enqueued') });
-
-# Declared in GLOBAL so the GlobalID locator can resolve it by name from the
-# library, which behave's per-file spec scope otherwise hides.
-class GLOBAL::JobFeatWidget {
-  has $.id;
-  method find($id) { JobFeatWidget.new(id => $id.Int) }
-}
 
 class JobFeatDbRecordJob is MVC::Keayl::Job {
   method perform($value) { @db-ran.push($value) }
