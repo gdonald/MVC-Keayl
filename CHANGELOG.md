@@ -3,6 +3,23 @@
 All notable changes to MVC::Keayl are recorded here. The format groups entries
 under Added, Changed, Fixed, and Removed.
 
+## Unreleased
+
+### Added
+
+- `Application.boot` freezes the `Text::Inflector` rules after the
+  initializers run, so an app registers its own words in an initializer:
+  `$app.initializer('inflections', -> $app { Text::Inflector.inflections: { ... } })`.
+  `Text::Inflector` is now a dependency.
+
+### Changed
+
+- The CLI generators, resource routes, controllers, and the `pluralize` view
+  helper use `Text::Inflector` instead of their own plural rules.
+- `keayl generate model` names the table the way ORM::ActiveRecord does:
+  `LineItem` gets `line_items` instead of `lineitems`, and `Person` gets
+  `people` instead of `persons`.
+
 ## v0.9.3 - 2026-10-28
 
 ### Added

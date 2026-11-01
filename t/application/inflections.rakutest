@@ -1,0 +1,17 @@
+use v6.d;
+use lib 'lib';
+use lib 'specs/lib';
+use Test;
+use MVC::Keayl::Application;
+use Text::Inflector;
+
+plan 3;
+
+my $app = MVC::Keayl::Application.new;
+$app.initializer('inflections', -> $a { Text::Inflector.inflections: { .irregular('cow', 'kine') } });
+$app.boot;
+
+is Text::Inflector.pluralize('cow'), 'kine', 'boot applies the rules an initializer registers';
+ok Text::Inflector.is-frozen,                'boot freezes the rules';
+throws-like { Text::Inflector.inflections: { .uncountable('aircraft') } }, Exception, message => /'frozen'/,
+  'new rules are refused after boot';

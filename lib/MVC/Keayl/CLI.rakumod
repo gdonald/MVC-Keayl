@@ -4,6 +4,7 @@ use MVC::Keayl::Routing;
 use MVC::Keayl::Adapter::Cro;
 use MVC::Keayl::Credentials;
 use MVC::Keayl::Assets;
+use Text::Inflector;
 
 unit module MVC::Keayl::CLI;
 
@@ -268,20 +269,15 @@ sub credentials-edit(IO() :$root = '.'.IO, Str :$env, :&edit, :%env-vars = %*ENV
 }
 
 sub camelize(Str:D $name --> Str) is export {
-  $name.split(/ <[-_]>+ /).grep(*.chars).map(*.tc).join
+  Text::Inflector.camelize($name.trans('_' => '-'))
 }
 
 sub pluralize(Str:D $word --> Str) is export {
-  return $word.subst(/ 'y' $/, 'ies') if $word ~~ / <-[aeiou]> 'y' $/;
-  return $word ~ 'es' if $word ~~ / [ 's' | 'x' | 'z' | 'ch' | 'sh' ] $/;
-  $word ~ 's'
+  Text::Inflector.pluralize($word)
 }
 
 sub singularize(Str:D $word --> Str) is export {
-  return $word.subst(/ 'ies' $/, 'y') if $word ~~ / 'ies' $/;
-  return $word.subst(/ 'es' $/, '') if $word ~~ / [ 's' | 'x' | 'z' | 'ch' | 'sh' ] 'es' $/;
-  return $word.subst(/ 's' $/, '') if $word ~~ / <-[s]> 's' $/;
-  $word
+  Text::Inflector.singularize($word)
 }
 
 sub controller-class-name(Str:D $name --> Str) is export {
@@ -450,7 +446,7 @@ sub generate-migration(Str:D $name, @fields, IO() :$root = '.'.IO, Str :$timesta
 
 sub generate-model(Str:D $name, @fields, IO() :$root = '.'.IO, Str :$timestamp, :$out = $*OUT --> Int) is export {
   my $class = model-class-name($name);
-  my $table = pluralize($class.lc);
+  my $table = Text::Inflector.tableize($class);
 
   emit-file($root.add("app/models/$class.rakumod"), model-source($class), :$out);
   generate-migration("create-$table", @fields, :$root, :$timestamp, :$out);

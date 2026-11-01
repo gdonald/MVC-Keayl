@@ -1,5 +1,6 @@
 use v6.d;
 use MVC::Keayl::Router;
+use Text::Inflector;
 
 unit module MVC::Keayl::Routing::Resources;
 
@@ -73,16 +74,11 @@ class ResourceScope {
 }
 
 sub singularize(Str:D $word --> Str) is export {
-  return $word.subst(/ies$/, 'y')             if $word ~~ /ies$/;
-  return $word.subst(/(s|x|z|ch|sh)es$/, {$0}) if $word ~~ /(s|x|z|ch|sh)es$/;
-  return $word.subst(/s$/, '')                if $word ~~ /s$/;
-  $word
+  Text::Inflector.singularize($word)
 }
 
 sub pluralize(Str:D $word --> Str) is export {
-  return $word.subst(/y$/, 'ies') if $word ~~ /<-[aeiou]>y$/;
-  return $word ~ 'es'             if $word ~~ /(s|x|z|ch|sh)$/;
-  $word ~ 's'
+  Text::Inflector.pluralize($word)
 }
 
 sub resolve-actions(@all, $only, $except --> List) {

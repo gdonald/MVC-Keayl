@@ -18,6 +18,7 @@ use MVC::Keayl::ErrorReporting;
 use MVC::Keayl::ErrorReporter;
 use MVC::Keayl::I18n;
 use MVC::Keayl::Credentials;
+use Text::Inflector;
 
 unit class MVC::Keayl::Application;
 
@@ -148,6 +149,7 @@ method boot(--> ::?CLASS) {
     $initializer<block>(self);
   }
 
+  Text::Inflector.freeze;
   $!booted = True;
   self
 }

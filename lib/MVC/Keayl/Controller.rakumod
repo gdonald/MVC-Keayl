@@ -16,6 +16,7 @@ use MVC::Keayl::Cache;
 use MVC::Keayl::I18n::Locale;
 use MVC::Keayl::HttpAuthentication;
 use MVC::Keayl::Live;
+use Text::Inflector;
 
 unit class MVC::Keayl::Controller;
 
@@ -49,13 +50,6 @@ sub status-code($status --> Int) {
 
 sub header-name(Str:D $key --> Str) {
   $key.split(/<[-_]>/).map(*.tc).join('-')
-}
-
-sub singularize(Str:D $word --> Str) {
-  return $word.subst(/ 'ies' $/, 'y') if $word.ends-with('ies');
-  return $word.subst(/ 'ses' $/, 's') if $word.ends-with('ses');
-  return $word.substr(0, *- 1)         if $word.ends-with('s');
-  $word
 }
 
 my %MIME-TYPES =
@@ -763,7 +757,7 @@ method !wrap-config {
 }
 
 method !default-wrap-key(--> Str) {
-  singularize(self.controller-path.split('/')[*-1])
+  Text::Inflector.singularize(self.controller-path.split('/')[*-1])
 }
 
 method !request-content-format(--> Str) {

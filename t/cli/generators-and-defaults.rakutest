@@ -79,6 +79,22 @@ sub silent { StringSink.new }
   like $migration, /'body => { :text }'/, 'a typed field uses its type';
 }
 
+{
+  my $dir = temp-dir('gen-model-multi-word');
+  generate-model('line-item', ['name:string'], root => $dir, timestamp => '20260101000000', out => silent);
+
+  my $migration = $dir.add('db/migrate/20260101000000-create-line_items.raku').slurp;
+  like $migration, /"self.create-table: 'line_items'"/, 'a multi-word model gets the table name ORM::ActiveRecord uses';
+}
+
+{
+  my $dir = temp-dir('gen-model-irregular');
+  generate-model('person', ['name:string'], root => $dir, timestamp => '20260101000000', out => silent);
+
+  my $migration = $dir.add('db/migrate/20260101000000-create-people.raku').slurp;
+  like $migration, /"self.create-table: 'people'"/, 'an irregular model gets the irregular plural table';
+}
+
 # migration generator
 
 {

@@ -15,7 +15,8 @@
     "MIME::Base64",
     "YAMLish",
     "ORM::ActiveRecord:auth<zef:gdonald>",
-    "Template::HAML:auth<zef:gdonald>"
+    "Template::HAML:auth<zef:gdonald>",
+    "Text::Inflector:auth<zef:gdonald>"
   ],
   "build-depends": [],
   "test-depends": [

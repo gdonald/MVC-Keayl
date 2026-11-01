@@ -91,6 +91,30 @@ describe 'the model generator', {
   }
 }
 
+describe 'the model generator with a multi-word name', {
+  let(:root, {
+    my $dir = temp-dir('spec-gen-model-multi-word');
+    generate-model('line-item', ['name:string'], root => $dir, timestamp => '20260101000000', out => silent);
+    $dir
+  });
+
+  it 'names the table the way ORM::ActiveRecord does', {
+    expect(root().add('db/migrate/20260101000000-create-line_items.raku').slurp.contains("self.create-table: 'line_items'")).to.be-truthy;
+  }
+}
+
+describe 'the model generator with an irregular name', {
+  let(:root, {
+    my $dir = temp-dir('spec-gen-model-irregular');
+    generate-model('person', ['name:string'], root => $dir, timestamp => '20260101000000', out => silent);
+    $dir
+  });
+
+  it 'names the table with the irregular plural', {
+    expect(root().add('db/migrate/20260101000000-create-people.raku').slurp.contains("self.create-table: 'people'")).to.be-truthy;
+  }
+}
+
 describe 'the resource generator', {
   let(:root, {
     my $dir = temp-dir('spec-gen-resource');

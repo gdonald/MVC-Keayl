@@ -1,27 +1,11 @@
 use v6.d;
 use MVC::Keayl::SafeString;
+use Text::Inflector;
 
 unit module MVC::Keayl::Helpers::Text;
 
-my %irregular = (
-  person => 'people', child => 'children', man => 'men', woman => 'women',
-  foot   => 'feet',   tooth => 'teeth',    mouse => 'mice', goose => 'geese',
-  ox     => 'oxen',   leaf  => 'leaves',   life  => 'lives', knife => 'knives',
-);
-
-my %uncountable = <equipment information rice money species series fish sheep deer>.map(* => True).hash;
-
 sub pluralize-word(Str() $word --> Str) is export {
-  my $lower = $word.lc;
-
-  return $word if %uncountable{$lower};
-  return %irregular{$lower} if %irregular{$lower}:exists;
-
-  given $word {
-    when /:i <[bcdfghjklmnpqrstvwxz]> 'y' $/ { return $word.subst(/'y' $/, 'ies') }
-    when /:i [ s | x | z | ch | sh ] $/      { return $word ~ 'es' }
-    default                                  { return $word ~ 's' }
-  }
+  Text::Inflector.pluralize($word)
 }
 
 sub pluralize($count, Str() $singular, Str :$plural --> Str) is export {
