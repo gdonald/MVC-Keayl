@@ -49,7 +49,7 @@ method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
   }
 
   my $class = self!resolve($match.controller);
-  return self!not-found($request) if $class =:= Mu;
+  return self!not-found($request) if $class === Mu;
 
   MVC::Keayl::Notifications.instrument(
     'dispatch.keayl',

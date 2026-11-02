@@ -20,6 +20,11 @@ under Added, Changed, Fixed, and Removed.
   `LineItem` gets `line_items` instead of `lineitems`, and `Person` gets
   `people` instead of `persons`.
 
+### Fixed
+
+- A route whose controller is not registered answers `404 Not Found`. It
+  raised a type check error in the dispatcher.
+
 ## v0.9.3 - 2026-10-28
 
 ### Added

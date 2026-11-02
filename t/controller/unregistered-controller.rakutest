@@ -1,0 +1,30 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MVC::Keayl::Dispatcher;
+use MVC::Keayl::Request;
+use MVC::Keayl::Routing;
+use MVC::Keayl::Controller;
+
+class LampsController is MVC::Keayl::Controller {
+  method index { self.render(plain => 'all lamps') }
+}
+
+sub dispatch(Str:D $path) {
+  my $router = routes {
+    get '/lamps',   to => 'lamps#index';
+    get '/widgets', to => 'widgets#index';
+  };
+  my $dispatcher = MVC::Keayl::Dispatcher.new(:$router, controllers => [LampsController]);
+  $dispatcher.call(MVC::Keayl::Request.new(method => 'GET', :$path));
+}
+
+{
+  my $response = dispatch('/widgets');
+  is $response.status, 404, 'a route whose controller is not registered answers 404';
+  is $response.body, 'Not Found', 'the 404 carries the not found body';
+}
+
+is dispatch('/lamps').body, 'all lamps', 'a registered controller still dispatches';
+
+done-testing;
