@@ -144,6 +144,12 @@ describe 'routing assertions', {
     expect({ assert-recognizes(router, 'GET', '/nope') }).to.throw;
   }
 
+  it 'report a failure named X::MVC::Keayl::Test::AssertionFailed', {
+    try assert-recognizes(router, 'GET', '/nope');
+
+    expect($!.^name).to.eq('X::MVC::Keayl::Test::AssertionFailed');
+  }
+
   it 'generate the expected path', {
     expect({ assert-generates(router, 'widget', '/widgets/5', 5) }).not.to.throw;
   }

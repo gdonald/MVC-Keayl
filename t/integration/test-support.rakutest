@@ -117,6 +117,9 @@ sub session(--> IntegrationSession) {
   lives-ok { assert-recognizes($router, 'GET', '/widgets/5', matching => %( controller => 'widgets', action => 'show', id => '5' )) },
     'assert-recognizes matches a route, action, and params';
   dies-ok { assert-recognizes($router, 'GET', '/nope') }, 'assert-recognizes fails for an unrecognized path';
+  try assert-recognizes($router, 'GET', '/nope');
+  is $!.^name, 'X::MVC::Keayl::Test::AssertionFailed',
+    'a failed assertion is named X::MVC::Keayl::Test::AssertionFailed';
 
   lives-ok { assert-generates($router, 'widget', '/widgets/5', 5) }, 'assert-generates builds the expected path';
   dies-ok  { assert-generates($router, 'widget', '/widgets/9', 5) }, 'assert-generates fails for the wrong path';

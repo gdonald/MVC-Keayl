@@ -9,3 +9,8 @@ class X::MVC::Keayl::InvalidAuthenticityToken is Exception {
   has $.message-text = 'invalid authenticity token';
   method message(--> Str) { $!message-text }
 }
+
+class X::MVC::Keayl::Test::AssertionFailed is Exception {
+  has Str $.reason;
+  method message { $!reason }
+}

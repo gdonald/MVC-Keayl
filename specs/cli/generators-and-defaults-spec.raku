@@ -225,6 +225,14 @@ describe 'a new application', {
   it 'ships a browser spec for the home page', {
     expect(root().add('blog/specs/home-spec.raku').slurp.contains('playwright-page')).to.be-truthy;
   }
+
+  it 'starts the home spec live server in each example', {
+    expect(root().add('blog/specs/home-spec.raku').slurp.contains('before-each { live-server.start }')).to.be-truthy;
+  }
+
+  it 'does not start a server when the home spec file loads', {
+    expect(root().add('blog/specs/home-spec.raku').slurp.contains('END')).to.be-falsy;
+  }
 }
 
 describe 'a scaffolded home page rendered through the stack', {

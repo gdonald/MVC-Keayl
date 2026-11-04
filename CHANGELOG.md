@@ -24,6 +24,11 @@ under Added, Changed, Fixed, and Removed.
 
 - A route whose controller is not registered answers `404 Not Found`. It
   raised a type check error in the dispatcher.
+- A failed test assertion reports its type as
+  `X::MVC::Keayl::Test::AssertionFailed` instead of
+  `MVC::Keayl::TestSupport::X::MVC::Keayl::Test::AssertionFailed`.
+- `keayl new` writes a `specs/home-spec.raku` that starts and stops its
+  `LiveServer` in each example instead of when the file loads.
 
 ## v0.9.3 - 2026-10-28
 

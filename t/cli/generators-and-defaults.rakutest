@@ -233,6 +233,8 @@ sub silent { StringSink.new }
 
   ok $dir.add('blog/specs/home-spec.raku').e, 'new ships a browser spec for the home page';
   like $dir.add('blog/specs/home-spec.raku').slurp, /'playwright-page'/, 'the home spec drives a browser page';
+  like $dir.add('blog/specs/home-spec.raku').slurp, /'before-each { live-server.start }'/, 'the home spec starts its live server in each example';
+  unlike $dir.add('blog/specs/home-spec.raku').slurp, /'END'/, 'the home spec does not start a server when the file loads';
 }
 
 {

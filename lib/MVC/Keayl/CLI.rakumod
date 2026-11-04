@@ -1004,14 +1004,15 @@ sub home-spec(--> Str) {
     use MVC::Keayl::TestSupport;
     use MVC::Keayl::CLI;
 
-    my $server = LiveServer.new(
-      app => load-application('config/application.raku').endpoint,
-    ).start;
-
-    END { $server.stop }
+    my $endpoint = load-application('config/application.raku').endpoint;
 
     describe 'the home page in a browser', {
-      playwright-page(:artifacts<tmp>, base-url => { $server.base-url });
+      let(:live-server, { LiveServer.new(app => $endpoint) });
+
+      before-each { live-server.start }
+      after-each  { live-server.stop }
+
+      playwright-page(:artifacts<tmp>, base-url => { live-server.base-url });
 
       before-each { visit('/') }
 

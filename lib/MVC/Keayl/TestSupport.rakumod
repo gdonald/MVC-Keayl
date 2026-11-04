@@ -6,13 +6,9 @@ use MVC::Keayl::Routing::UrlHelpers;
 use MVC::Keayl::Mailer::Delivery::Test;
 use MVC::Keayl::Job;
 use MVC::Keayl::Adapter::Cro;
+use MVC::Keayl::Errors;
 
 unit module MVC::Keayl::TestSupport;
-
-class X::MVC::Keayl::Test::AssertionFailed is Exception is export {
-  has Str $.reason;
-  method message { $!reason }
-}
 
 sub fail-assertion(Str:D $reason) {
   X::MVC::Keayl::Test::AssertionFailed.new(:$reason).throw
