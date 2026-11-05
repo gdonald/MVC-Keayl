@@ -214,6 +214,19 @@ describe 'MVC::Keayl::CLI scaffold-app', {
     }
   }
 
+  context 'an application scaffolded into the current directory', {
+    let(:root, { temp-dir('spec-scaffold-dot').add('crm') });
+
+    before-each {
+      root.mkdir;
+      scaffold-app('.', into => root);
+    }
+
+    it 'names the app after the directory', {
+      expect(from-json(root.add('config/application.json').slurp)<shared><app-name>).to.eq('crm');
+    }
+  }
+
   it 'reports the files it created', {
     expect(scaffold-app('blog', into => temp-dir('spec-scaffold-created')).elems > 0).to.be-truthy;
   }

@@ -29,6 +29,8 @@ under Added, Changed, Fixed, and Removed.
   `MVC::Keayl::TestSupport::X::MVC::Keayl::Test::AssertionFailed`.
 - `keayl new` writes a `specs/home-spec.raku` that starts and stops its
   `LiveServer` in each example instead of when the file loads.
+- `keayl new .` names the app after the current directory. It wrote `.` as
+  the app name.
 
 ## v0.9.3 - 2026-10-28
 

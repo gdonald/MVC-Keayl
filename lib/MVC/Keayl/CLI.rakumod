@@ -158,18 +158,19 @@ sub console(
 sub scaffold-app(Str:D $name, IO() :$into = '.'.IO, Str:D :$database = 'sqlite' --> List) is export {
   normalize-database($database); # validate before writing any files
 
-  my $root = $into.add($name);
+  my $root     = $into.add($name);
+  my $app-name = $root.resolve.basename;
 
   my %files =
-    'META6.json'                             => app-meta($name),
-    'config/application.json'                => application-json($name, :$database),
+    'META6.json'                             => app-meta($app-name),
+    'config/application.json'                => application-json($app-name, :$database),
     'config/application.raku'                => application-raku(),
     'config/routes.raku'                     => routes-raku(),
-    'app/controllers/HomeController.rakumod' => home-controller($name),
+    'app/controllers/HomeController.rakumod' => home-controller($app-name),
     'app/helpers/ApplicationHelper.rakumod'  => application-helper(),
     'app/models/.keep'                       => '',
     'app/views/layouts/application.html.haml' => application-layout(),
-    'app/views/home/index.html.haml'         => home-view($name),
+    'app/views/home/index.html.haml'         => home-view($app-name),
     'assets/favicon.svg'                     => favicon-svg(),
     'assets/css/style.css'                   => stylesheet(),
     'public/404.html'                        => exception-page('404', 'Not Found', 'The page you were looking for does not exist.'),
@@ -177,7 +178,7 @@ sub scaffold-app(Str:D $name, IO() :$into = '.'.IO, Str:D :$database = 'sqlite' 
     'public/500.html'                        => exception-page('500', 'Internal Server Error', 'We are sorry, but something went wrong.'),
     'specs/home-spec.raku'                   => home-spec(),
     'tmp/.keep'                              => '',
-    'README.md'                              => readme($name),
+    'README.md'                              => readme($app-name),
     '.gitignore'                             => gitignore();
 
   my %executables =

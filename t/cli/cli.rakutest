@@ -198,6 +198,16 @@ is program-name(), 'keayl', 'the program name is keayl';
 }
 
 {
+  my $dir = temp-dir('scaffold-dot').add('crm');
+  $dir.mkdir;
+  scaffold-app('.', into => $dir);
+
+  my %config = from-json($dir.add('config/application.json').slurp);
+
+  is %config<shared><app-name>, 'crm', 'scaffold-app names an app scaffolded into . after the directory';
+}
+
+{
   my $dir = temp-dir('scaffold-routes');
   scaffold-app('shop', into => $dir);
 
