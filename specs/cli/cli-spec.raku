@@ -121,6 +121,40 @@ describe 'MVC::Keayl::CLI load-application', {
   }
 }
 
+describe 'MVC::Keayl::CLI insert-routes', {
+  let(:err, { StringSink.new });
+
+  context 'when the routes file is missing', {
+    let(:path, { temp-dir('spec-insert-routes-missing').add('config/routes.raku') });
+
+    it 'fails', {
+      expect(insert-routes(path, ["resources 'posts';"], out => StringSink.new, err => err)).to.be-falsy;
+    }
+
+    it 'reports the missing routes file', {
+      insert-routes(path, ["resources 'posts';"], out => StringSink.new, err => err);
+      expect(err.text.contains("no {path} to add routes to")).to.be-truthy;
+    }
+  }
+
+  context 'when the file has no routes block', {
+    let(:path, { temp-dir('spec-insert-routes-no-block').add('routes.raku') });
+
+    before-each {
+      write-file(path, "use MVC::Keayl::Routing;\n");
+    }
+
+    it 'fails', {
+      expect(insert-routes(path, ["resources 'posts';"], out => StringSink.new, err => err)).to.be-falsy;
+    }
+
+    it 'reports the missing routes block', {
+      insert-routes(path, ["resources 'posts';"], out => StringSink.new, err => err);
+      expect(err.text.contains("no routes block found in {path}")).to.be-truthy;
+    }
+  }
+}
+
 describe 'MVC::Keayl::CLI build-server', {
   context 'with the defaults', {
     let(:adapter, { build-server(MVC::Keayl::Application.new) });

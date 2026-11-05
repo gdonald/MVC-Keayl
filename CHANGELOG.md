@@ -31,6 +31,9 @@ under Added, Changed, Fixed, and Removed.
   `LiveServer` in each example instead of when the file loads.
 - `keayl new .` names the app after the current directory. It wrote `.` as
   the app name.
+- `keayl routes`, `keayl console`, and the generators print their error when a
+  file is missing or has no routes block. They died with a signature error
+  from `note`.
 
 ## v0.9.3 - 2026-10-28
 

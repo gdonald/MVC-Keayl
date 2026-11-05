@@ -9,7 +9,6 @@ class StringSink is export {
 
   method print(*@args) { $!text ~= @args.join;        Nil }
   method say(*@args)   { $!text ~= @args.join ~ "\n"; Nil }
-  method note(*@args)  { $!text ~= @args.join ~ "\n"; Nil }
 }
 
 # A stand-in for an input handle that yields a fixed list of lines, so the

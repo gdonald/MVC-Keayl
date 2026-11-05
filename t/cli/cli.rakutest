@@ -108,6 +108,25 @@ is program-name(), 'keayl', 'the program name is keayl';
   isa-ok $app, MVC::Keayl::Application, 'load-application evaluates the file into an application';
 }
 
+# insert-routes
+
+{
+  my $err  = StringSink.new;
+  my $path = temp-dir('insert-routes-missing').add('config/routes.raku');
+
+  nok insert-routes($path, ["resources 'posts';"], out => StringSink.new, :$err), 'insert-routes fails when the routes file is missing';
+  like $err.text, /"no $path to add routes to"/, 'insert-routes reports the missing routes file';
+}
+
+{
+  my $err  = StringSink.new;
+  my $path = temp-dir('insert-routes-no-block').add('routes.raku');
+  write-file($path, "use MVC::Keayl::Routing;\n");
+
+  nok insert-routes($path, ["resources 'posts';"], out => StringSink.new, :$err), 'insert-routes fails when the file has no routes block';
+  like $err.text, /"no routes block found in $path"/, 'insert-routes reports the missing routes block';
+}
+
 # build-server
 
 {

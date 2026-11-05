@@ -90,7 +90,7 @@ sub routes-table(@table --> Str) is export {
 
 sub print-routes(IO() $path = 'config/routes.raku', :$out = $*OUT, :$err = $*ERR --> Int) is export {
   unless $path.e {
-    $err.note: "{NAME}: no $path found";
+    $err.say: "{NAME}: no $path found";
     return 1;
   }
 
@@ -102,7 +102,7 @@ sub print-routes(IO() $path = 'config/routes.raku', :$out = $*OUT, :$err = $*ERR
 
 sub load-application(IO() $path = 'config/application.raku', :$err = $*ERR --> MVC::Keayl::Application) is export {
   unless $path.e {
-    $err.note: "{NAME}: no $path found";
+    $err.say: "{NAME}: no $path found";
     return MVC::Keayl::Application;
   }
 
@@ -300,7 +300,7 @@ sub emit-file(IO() $file, Str:D $content, :$out = $*OUT --> Bool) {
 
 sub insert-routes(IO() $path, @stubs, :$out = $*OUT, :$err = $*ERR --> Bool) is export {
   unless $path.e {
-    $err.note: "{NAME}: no $path to add routes to";
+    $err.say: "{NAME}: no $path to add routes to";
     return False;
   }
 
@@ -308,7 +308,7 @@ sub insert-routes(IO() $path, @stubs, :$out = $*OUT, :$err = $*ERR --> Bool) is 
   my $index    = @lines.first(:k, * ~~ / 'routes' \s* '{' | 'draw' \s* '{' /);
 
   without $index {
-    $err.note: "{NAME}: no routes block found in $path";
+    $err.say: "{NAME}: no routes block found in $path";
     return False;
   }
 
