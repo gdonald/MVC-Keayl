@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use DBIish;
 use MVC::Keayl::Endpoint;

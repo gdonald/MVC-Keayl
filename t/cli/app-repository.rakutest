@@ -1,0 +1,137 @@
+use v6.d;
+use Test;
+use MVC::Keayl::CLI;
+use MVC::Keayl::Application;
+use JSON::Fast;
+use CLIFixtures;
+
+sub silent { StringSink.new }
+
+sub app-root(Str:D $name --> IO::Path) {
+  my $dir = temp-dir($name);
+  write-file($dir.add('META6.json'), '{ "name": "Demo", "provides": {} }');
+  $dir
+}
+
+sub provides(IO::Path:D $dir --> Hash) {
+  from-json($dir.add('META6.json').slurp)<provides>
+}
+
+# scaffolded application
+
+{
+  my $dir = temp-dir('repo-new');
+  scaffold-app('blog', into => $dir);
+
+  my $app = $dir.add('blog');
+
+  is-deeply provides($app), %(
+    ApplicationHelper => 'app/helpers/ApplicationHelper.rakumod',
+    HomeController    => 'app/controllers/HomeController.rakumod',
+  ), 'new lists the home controller and the application helper in provides';
+
+  unlike $app.add('config/application.raku').slurp, /'use lib'/, 'the application file adds no include path';
+  like $app.add('.behave').slurp, /"\$c.lib('.', 'specs/support')"/, 'the behave config loads the app and the spec support directory';
+  ok $app.add('specs/support/.keep').e, 'new keeps the spec support directory';
+  is $app.add('bin/server').lines[0], '#!/usr/bin/env -S raku -I.', 'the server script starts raku with the app root on the include path';
+  like $app.add('bin/dev').slurp, /'exec raku -I. bin/server'/, 'the dev script starts the server with the app root on the include path';
+}
+
+{
+  my $dir = temp-dir('repo-load-twice').resolve;
+  scaffold-app('blog', into => $dir);
+
+  my $cwd = $*CWD;
+  chdir $dir.add('blog');
+  LEAVE chdir $cwd;
+
+  load-application('config/application.raku');
+
+  isa-ok load-application('config/application.raku'), MVC::Keayl::Application, 'an application loads again from the same root';
+  is $*REPO.repo-chain.grep({ $_ ~~ CompUnit::Repository::FileSystem && .prefix.resolve.absolute eq $dir.add('blog').absolute }).elems, 1,
+    'loading an application twice puts its root on the include path once';
+}
+
+# generators register their modules
+
+{
+  my $dir = app-root('repo-model');
+  generate-model('widget', ['name:string'], root => $dir, timestamp => '20260101000000', out => silent);
+
+  is provides($dir)<Widget>, 'app/models/Widget.rakumod', 'the model generator adds the model to provides';
+  unlike $dir.add('t/models/widget.rakutest').slurp, /'use lib'/, 'the generated test adds no include path';
+  unlike $dir.add('specs/models/widget-spec.raku').slurp, /'use lib'/, 'the generated spec adds no include path';
+}
+
+{
+  my $dir = app-root('repo-controller');
+  generate-controller('posts', ['index'], root => $dir, out => silent, err => silent);
+
+  is provides($dir)<PostsController>, 'app/controllers/PostsController.rakumod', 'the controller generator adds the controller to provides';
+  is provides($dir)<PostsHelper>, 'app/helpers/PostsHelper.rakumod', 'the controller generator adds its helper to provides';
+}
+
+{
+  my $dir = app-root('repo-components');
+  generate-mailer('user', ['welcome'], root => $dir, out => silent);
+  generate-job('cleanup', root => $dir, out => silent);
+  generate-channel('chat', root => $dir, out => silent);
+  generate-helper('tags', root => $dir, out => silent);
+
+  my %provides = provides($dir);
+
+  is %provides<UserMailer>, 'app/mailers/UserMailer.rakumod', 'the mailer generator adds the mailer to provides';
+  is %provides<CleanupJob>, 'app/jobs/CleanupJob.rakumod', 'the job generator adds the job to provides';
+  is %provides<ChatChannel>, 'app/channels/ChatChannel.rakumod', 'the channel generator adds the channel to provides';
+  is %provides<TagsHelper>, 'app/helpers/TagsHelper.rakumod', 'the helper generator adds the helper to provides';
+}
+
+{
+  my $dir = app-root('repo-resource');
+  base-routes-file($dir);
+  generate-resource('post', ['title:string'], root => $dir, out => silent, err => silent);
+
+  is provides($dir)<Post>, 'app/models/Post.rakumod', 'the resource generator adds the model to provides';
+  is provides($dir)<PostsController>, 'app/controllers/PostsController.rakumod', 'the resource generator adds the controller to provides';
+}
+
+{
+  my $dir = app-root('repo-scaffold');
+  base-routes-file($dir);
+  generate-scaffold('post', root => $dir, out => silent, err => silent);
+
+  my %provides = provides($dir);
+
+  is %provides<Post>, 'app/models/Post.rakumod', 'the scaffold generator adds the model to provides';
+  is %provides<PostsController>, 'app/controllers/PostsController.rakumod', 'the scaffold generator adds the controller to provides';
+  is %provides<PostsHelper>, 'app/helpers/PostsHelper.rakumod', 'the scaffold generator adds the helper to provides';
+}
+
+# add-provides
+
+{
+  my $dir = app-root('repo-add');
+  my $out = StringSink.new;
+
+  ok add-provides($dir, 'Widget', 'app/models/Widget.rakumod', :$out), 'add-provides reports a new entry';
+  like $out.text, /'provide Widget'/, 'add-provides prints the module it adds';
+  nok add-provides($dir, 'Widget', 'app/models/Widget.rakumod', out => silent), 'add-provides skips an entry already present';
+  is provides($dir).elems, 1, 'add-provides keeps one entry per module';
+}
+
+{
+  my $dir = temp-dir('repo-no-provides');
+  write-file($dir.add('META6.json'), '{ "name": "Demo" }');
+  add-provides($dir, 'Widget', 'app/models/Widget.rakumod', out => silent);
+
+  is provides($dir)<Widget>, 'app/models/Widget.rakumod', 'add-provides creates provides when the META6 has none';
+}
+
+{
+  my $dir = temp-dir('repo-no-meta');
+
+  nok add-provides($dir, 'Widget', 'app/models/Widget.rakumod', out => silent), 'add-provides does nothing without a META6';
+  nok $dir.add('META6.json').e, 'add-provides writes no META6';
+}
+
+done-testing;

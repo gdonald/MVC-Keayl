@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use MVC::Keayl::Helpers::Text;
 use MVC::Keayl::Helpers::Number;

@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use MVC::Keayl::Credentials;
 use MVC::Keayl::CLI;

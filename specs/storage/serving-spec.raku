@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use JSON::Fast;
 use MIME::Base64;

@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use MVC::Keayl::Helpers::Tag;
 use MVC::Keayl::Helpers::Url;

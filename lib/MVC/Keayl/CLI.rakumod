@@ -5,6 +5,7 @@ use MVC::Keayl::Adapter::Cro;
 use MVC::Keayl::Credentials;
 use MVC::Keayl::Assets;
 use Text::Inflector;
+use JSON::Fast;
 
 unit module MVC::Keayl::CLI;
 
@@ -106,7 +107,23 @@ sub load-application(IO() $path = 'config/application.raku', :$err = $*ERR --> M
     return MVC::Keayl::Application;
   }
 
+  use-app-repository($path.absolute.IO.parent.parent);
+
   EVALFILE $path
+}
+
+sub use-app-repository(IO::Path:D $root --> Nil) {
+  return unless $root.add('META6.json').e;
+
+  my $prefix = $root.resolve.absolute;
+
+  return if $*REPO.repo-chain.first({
+    $_ ~~ CompUnit::Repository::FileSystem && .prefix.resolve.absolute eq $prefix
+  });
+
+  CompUnit::RepositoryRegistry.use-repository(
+    CompUnit::RepositoryRegistry.repository-for-spec($prefix),
+  );
 }
 
 sub build-server(
@@ -177,6 +194,8 @@ sub scaffold-app(Str:D $name, IO() :$into = '.'.IO, Str:D :$database = 'sqlite' 
     'public/422.html'                        => exception-page('422', 'Unprocessable Entity', 'The change you wanted was rejected.'),
     'public/500.html'                        => exception-page('500', 'Internal Server Error', 'We are sorry, but something went wrong.'),
     'specs/home-spec.raku'                   => home-spec(),
+    'specs/support/.keep'                    => '',
+    '.behave'                                => behave-config(),
     'tmp/.keep'                              => '',
     'README.md'                              => readme($app-name),
     '.gitignore'                             => gitignore();
@@ -298,6 +317,26 @@ sub emit-file(IO() $file, Str:D $content, :$out = $*OUT --> Bool) {
   True
 }
 
+sub emit-module(IO() $root, Str:D $module, Str:D $relative, Str:D $content, :$out = $*OUT --> Bool) {
+  my $created = emit-file($root.add($relative), $content, :$out);
+  add-provides($root, $module, $relative, :$out);
+  $created
+}
+
+sub add-provides(IO() $root, Str:D $module, Str:D $relative, :$out = $*OUT --> Bool) is export {
+  my $meta-file = $root.add('META6.json');
+  return False unless $meta-file.e;
+
+  my %meta = from-json($meta-file.slurp);
+  return False if (%meta<provides>{$module} // '') eq $relative;
+
+  %meta<provides>{$module} = $relative;
+  $meta-file.spurt: to-json(%meta, :sorted-keys) ~ "\n";
+
+  $out.say: "  provide $module";
+  True
+}
+
 sub insert-routes(IO() $path, @stubs, :$out = $*OUT, :$err = $*ERR --> Bool) is export {
   unless $path.e {
     $err.say: "{NAME}: no $path to add routes to";
@@ -328,10 +367,10 @@ sub generate-controller(Str:D $name, @actions, IO() :$root = '.'.IO, :$out = $*O
   my $class = controller-class-name($name);
   my $path  = $name.lc;
 
-  emit-file($root.add("app/controllers/$class.rakumod"), controller-source($class, @actions), :$out);
+  emit-module($root, $class, "app/controllers/$class.rakumod", controller-source($class, @actions), :$out);
 
   my $helper = helper-module-name($name);
-  emit-file($root.add("app/helpers/$helper.rakumod"), helper-source($helper, $name), :$out);
+  emit-module($root, $helper, "app/helpers/$helper.rakumod", helper-source($helper, $name), :$out);
 
   for @actions -> $action {
     emit-file($root.add("app/views/$path/$action.html.haml"), controller-view($path, $action), :$out);
@@ -367,7 +406,6 @@ sub component-test(IO() $root, Str:D $relative, Str:D $class, Str:D $use, :$out 
 sub test-stub(Str:D $class, Str:D $use --> Str) {
   fill(q:to/RAKU/, %( '__CLASS__' => $class, '__USE__' => $use ));
     use v6.d;
-    use lib 'lib';
     use Test;
     use __USE__;
 
@@ -379,7 +417,6 @@ sub test-stub(Str:D $class, Str:D $use --> Str) {
 
 sub spec-stub(Str:D $class, Str:D $use --> Str) {
   fill(q:to/RAKU/, %( '__CLASS__' => $class, '__USE__' => $use ));
-    use lib 'lib';
     use BDD::Behave;
     use __USE__;
 
@@ -393,7 +430,7 @@ sub generate-mailer(Str:D $name, @actions, IO() :$root = '.'.IO, :$out = $*OUT -
   my $class = mailer-class-name($name);
   my $path  = $name.lc ~ '_mailer';
 
-  emit-file($root.add("app/mailers/$class.rakumod"), mailer-source($class, @actions), :$out);
+  emit-module($root, $class, "app/mailers/$class.rakumod", mailer-source($class, @actions), :$out);
 
   for @actions -> $action {
     emit-file($root.add("app/views/$path/$action.html.haml"), "%p $class\#$action", :$out);
@@ -408,7 +445,7 @@ sub generate-mailer(Str:D $name, @actions, IO() :$root = '.'.IO, :$out = $*OUT -
 sub generate-job(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT --> Int) is export {
   my $class = job-class-name($name);
 
-  emit-file($root.add("app/jobs/$class.rakumod"), job-source($class), :$out);
+  emit-module($root, $class, "app/jobs/$class.rakumod", job-source($class), :$out);
   component-test($root, "jobs/$name", $class, $class, :$out);
 
   0
@@ -417,7 +454,7 @@ sub generate-job(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT --> Int) is ex
 sub generate-channel(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT --> Int) is export {
   my $class = channel-class-name($name);
 
-  emit-file($root.add("app/channels/$class.rakumod"), channel-source($class), :$out);
+  emit-module($root, $class, "app/channels/$class.rakumod", channel-source($class), :$out);
   component-test($root, "channels/$name", $class, $class, :$out);
 
   0
@@ -426,7 +463,7 @@ sub generate-channel(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT --> Int) i
 sub generate-helper(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT --> Int) is export {
   my $module = helper-module-name($name);
 
-  emit-file($root.add("app/helpers/$module.rakumod"), helper-source($module, $name), :$out);
+  emit-module($root, $module, "app/helpers/$module.rakumod", helper-source($module, $name), :$out);
   component-test($root, "helpers/$name", $module, $module, :$out);
 
   0
@@ -449,7 +486,7 @@ sub generate-model(Str:D $name, @fields, IO() :$root = '.'.IO, Str :$timestamp, 
   my $class = model-class-name($name);
   my $table = Text::Inflector.tableize($class);
 
-  emit-file($root.add("app/models/$class.rakumod"), model-source($class), :$out);
+  emit-module($root, $class, "app/models/$class.rakumod", model-source($class), :$out);
   generate-migration("create-$table", @fields, :$root, :$timestamp, :$out);
   component-test($root, "models/$name", $class, $class, :$out);
 
@@ -463,7 +500,7 @@ sub generate-resource(Str:D $name, @fields, IO() :$root = '.'.IO, :$out = $*OUT,
 
   generate-model($singular, @fields, :$root, :$out);
 
-  emit-file($root.add("app/controllers/$class.rakumod"), controller-source($class, []), :$out);
+  emit-module($root, $class, "app/controllers/$class.rakumod", controller-source($class, []), :$out);
   insert-routes($root.add('config/routes.raku'), ["resources '$plural';"], :$out, :$err);
 
   0
@@ -572,11 +609,11 @@ sub generate-scaffold(Str:D $name, IO() :$root = '.'.IO, :$out = $*OUT, :$err = 
   my $model    = camelize($singular);
   my $class    = camelize($plural) ~ 'Controller';
 
-  emit-file($root.add("app/models/$model.rakumod"), model-source($model), :$out);
-  emit-file($root.add("app/controllers/$class.rakumod"), scaffold-controller-source($class, $model, $singular, $plural), :$out);
+  emit-module($root, $model, "app/models/$model.rakumod", model-source($model), :$out);
+  emit-module($root, $class, "app/controllers/$class.rakumod", scaffold-controller-source($class, $model, $singular, $plural), :$out);
 
   my $helper = helper-module-name($plural);
-  emit-file($root.add("app/helpers/$helper.rakumod"), helper-source($helper, $plural), :$out);
+  emit-module($root, $helper, "app/helpers/$helper.rakumod", helper-source($helper, $plural), :$out);
 
   emit-file($root.add("app/views/$plural/index.html.haml"), scaffold-index-view($singular, $plural), :$out);
   emit-file($root.add("app/views/$plural/show.html.haml"),  scaffold-show-view($singular, $plural), :$out);
@@ -769,7 +806,6 @@ sub application-raku(--> Str) {
     use MVC::Keayl::HealthController;
     use MVC::Keayl::PWAController;
     use MVC::Keayl::Middleware::Static;
-    use lib 'app/controllers';
     use HomeController;
 
     my $app = MVC::Keayl::Application.new(
@@ -921,14 +957,25 @@ sub app-meta(Str:D $name --> Str) {
         "WWW::Playwright:auth<zef:gdonald>",
         "ORM::Factory:auth<zef:gdonald>"
       ],
-      "provides": {}
+      "provides": {
+        "ApplicationHelper": "app/helpers/ApplicationHelper.rakumod",
+        "HomeController": "app/controllers/HomeController.rakumod"
+      }
     }
     JSON
 }
 
+sub behave-config(--> Str) {
+  q:to/RAKU/;
+    use BDD::Behave::Configuration;
+
+    configure-behave -> $c { $c.lib('.', 'specs/support') };
+    RAKU
+}
+
 sub server-script(--> Str) {
   q:to/RAKU/;
-    #!/usr/bin/env raku
+    #!/usr/bin/env -S raku -I.
     use MVC::Keayl::CLI;
 
     my Str $host = %*ENV<KEAYL_HOST> // '127.0.0.1';
@@ -958,7 +1005,7 @@ sub dev-script(--> Str) {
     export KEAYL_HOST="${KEAYL_HOST:-127.0.0.1}"
     export KEAYL_PORT="${KEAYL_PORT:-3000}"
 
-    exec raku bin/server
+    exec raku -I. bin/server
     SH
 }
 

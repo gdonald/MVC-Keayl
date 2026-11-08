@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use MVC::Keayl::Mailer;
 use MVC::Keayl::Mail;
@@ -90,6 +89,70 @@ describe 'MVC::Keayl::Mail encoding', {
 
   it 'includes an html part', {
     expect(encoded.contains('text/html')).to.be-truthy;
+  }
+}
+
+describe 'MVC::Keayl::Mail headers', {
+  let(:date, { DateTime.new('2026-11-08T14:05:09Z') });
+
+  let(:mail, {
+    MVC::Keayl::Mail.new(
+      from       => 'a@example.com',
+      to         => ['b@example.com'],
+      bcc        => ['c@example.com'],
+      subject    => 'Hi',
+      text-part  => "Hello\nthere",
+      date       => date,
+      message-id => '<fixed@example.com>',
+    )
+  });
+
+  it 'leaves out the bcc header', {
+    expect(mail.encoded.contains('Bcc:')).to.be-falsy;
+  }
+
+  it 'keeps the bcc address a recipient', {
+    expect(mail.recipients).to.eq(('b@example.com', 'c@example.com'));
+  }
+
+  it 'ends header lines with CRLF', {
+    expect(mail.encoded.contains("Subject: Hi\r\n")).to.be-truthy;
+  }
+
+  it 'ends body lines with CRLF', {
+    expect(mail.encoded.contains("Hello\r\nthere")).to.be-truthy;
+  }
+
+  it 'has no bare LF', {
+    expect(mail.encoded.split("\r\n").first(*.contains("\n"))).to.be-falsy;
+  }
+
+  it 'carries the date header', {
+    expect(mail.encoded.contains('Date: Sun, 08 Nov 2026 14:05:09 +0000')).to.be-truthy;
+  }
+
+  it 'carries the message id header', {
+    expect(mail.encoded.contains('Message-ID: <fixed@example.com>')).to.be-truthy;
+  }
+
+  context 'without a given message id', {
+    let(:generated, { MVC::Keayl::Mail.new(from => 'a@example.com', subject => 'Hi') });
+
+    it 'generates one at the sender domain', {
+      expect(so generated.message-id ~~ /^ '<' <xdigit> ** 32 '@example.com>' $/).to.be-truthy;
+    }
+
+    it 'keeps the generated message id across reads', {
+      expect(generated.message-id).to.be(generated.message-id);
+    }
+  }
+
+  context 'without a sender', {
+    let(:anonymous, { MVC::Keayl::Mail.new(subject => 'Hi') });
+
+    it 'generates a message id at localhost', {
+      expect(anonymous.message-id.ends-with('@localhost>')).to.be-truthy;
+    }
   }
 }
 

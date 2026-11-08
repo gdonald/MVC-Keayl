@@ -13,6 +13,7 @@
     "Digest::SHA1::Native",
     "OpenSSL",
     "MIME::Base64",
+    "JSON::Fast:auth<zef:timo>",
     "YAMLish",
     "ORM::ActiveRecord:auth<zef:gdonald>",
     "Template::HAML:auth<zef:gdonald>",

@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use MVC::Keayl::Adapter::Test;
 use MVC::Keayl::MiddlewareStack;

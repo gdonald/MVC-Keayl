@@ -1,11 +1,23 @@
 use v6.d;
 use MIME::Base64;
+use Crypt::Random;
 
 my %extension-types =
   pdf => 'application/pdf', zip => 'application/zip', csv => 'text/csv',
   txt => 'text/plain', html => 'text/html', json => 'application/json',
   png => 'image/png', jpg => 'image/jpeg', jpeg => 'image/jpeg',
   gif => 'image/gif', svg => 'image/svg+xml';
+
+my @day-names   = <Sun Mon Tue Wed Thu Fri Sat>;
+my @month-names = <Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec>;
+
+my sub message-date(DateTime:D $when --> Str) {
+  my $utc = $when.utc;
+
+  sprintf '%s, %02d %s %04d %02d:%02d:%02d +0000',
+    @day-names[$utc.day-of-week % 7], $utc.day, @month-names[$utc.month - 1], $utc.year,
+    $utc.hour, $utc.minute, $utc.second.Int;
+}
 
 my sub content-type-for(Str:D $filename --> Str) {
   my $dot = $filename.rindex('.');
@@ -63,6 +75,8 @@ class MVC::Keayl::Mail {
   has Str $.text-part;
   has     %.headers;
   has     @.attachments;
+  has DateTime $.date = DateTime.now;
+  has Str      $.message-id;
 
   method has-html(--> Bool)  { $!html-part.defined }
   method has-text(--> Bool)  { $!text-part.defined }
@@ -70,13 +84,19 @@ class MVC::Keayl::Mail {
 
   method recipients(--> List) { (|@!to, |@!cc, |@!bcc).list }
 
+  method message-id(--> Str) {
+    $!message-id //= do {
+      my $domain = ($!from // '').match(/ '@' (<-[>\s]>+) /)[0] // 'localhost';
+      "<{crypt_random_buf(16).list.map(*.fmt('%02x')).join}\@$domain>"
+    }
+  }
+
   method header-lines(--> List) {
-    my @lines;
+    my @lines = "Date: {message-date($!date)}", "Message-ID: {self.message-id}";
 
     @lines.push: "From: $!from"          if $!from.defined;
     @lines.push: "To: {@!to.join(', ')}"   if @!to;
     @lines.push: "Cc: {@!cc.join(', ')}"   if @!cc;
-    @lines.push: "Bcc: {@!bcc.join(', ')}" if @!bcc;
     @lines.push: "Reply-To: $!reply-to"   if $!reply-to.defined;
     @lines.push: "Subject: $!subject"     if $!subject.defined;
 
@@ -135,6 +155,6 @@ class MVC::Keayl::Mail {
       @lines.append: self!body-lines($boundary);
     }
 
-    @lines.join("\n")
+    @lines.join("\n").subst(/\r?\n/, "\r\n", :g)
   }
 }

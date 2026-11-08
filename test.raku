@@ -16,7 +16,7 @@ chdir $*PROGRAM.parent;
 my $jobs = max(2, ($*KERNEL.cpu-cores // 2) - 2);
 
 my @all-stages = (
-  { :name<prove6>, :dir<t>,     :cmd['prove6', "-j$jobs", '-Ilib', 't'] },
+  { :name<prove6>, :dir<t>,     :cmd['prove6', "-j$jobs", '-Ispecs/lib', '-Ilib', 't'] },
   { :name<behave>, :dir<specs>, :cmd['behave', '--parallel', $jobs.Str] },
 );
 

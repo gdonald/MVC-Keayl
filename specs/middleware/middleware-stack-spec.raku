@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use MVC::Keayl::MiddlewareStack;
 use MVC::Keayl::Request;

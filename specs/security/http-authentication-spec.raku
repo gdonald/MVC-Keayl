@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use MIME::Base64;
 use MVC::Keayl::HttpAuthentication;

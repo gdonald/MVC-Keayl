@@ -1,6 +1,4 @@
 use v6.d;
-use lib 'lib';
-use lib 'specs/lib';
 use Test;
 use MVC::Keayl::Mailer;
 use MVC::Keayl::Mail;
@@ -72,6 +70,43 @@ sub mailer(*%args) { NoticeMailer.new(view-renderer => renderer(), |%args) }
   like $text, /'multipart/alternative'/,     'a multipart message declares multipart/alternative';
   like $text, /'text/plain'/,                'the encoded message includes a text part';
   like $text, /'text/html'/,                 'the encoded message includes an html part';
+}
+
+# message headers
+
+{
+  my $mail = MVC::Keayl::Mail.new(
+    from       => 'a@example.com',
+    to         => ['b@example.com'],
+    bcc        => ['c@example.com'],
+    subject    => 'Hi',
+    text-part  => "Hello\nthere",
+    date       => DateTime.new('2026-11-08T14:05:09Z'),
+    message-id => '<fixed@example.com>',
+  );
+
+  my $text = $mail.encoded;
+
+  unlike $text, /'Bcc:'/,                                  'the encoded message leaves out the bcc header';
+  is-deeply $mail.recipients, ('b@example.com', 'c@example.com'), 'the bcc address stays a recipient';
+  ok $text.contains("Subject: Hi\r\n"),                     'the encoded message ends header lines with CRLF';
+  ok $text.contains("Hello\r\nthere"),                      'the encoded message ends body lines with CRLF';
+  nok $text.split("\r\n").first(*.contains("\n")),         'the encoded message has no bare LF';
+  ok $text.contains('Date: Sun, 08 Nov 2026 14:05:09 +0000'), 'the encoded message carries the date header';
+  ok $text.contains('Message-ID: <fixed@example.com>'),     'the encoded message carries the message id header';
+}
+
+{
+  my $mail = MVC::Keayl::Mail.new(from => 'a@example.com', subject => 'Hi');
+
+  like $mail.message-id, /^ '<' <xdigit> ** 32 '@example.com>' $/, 'a generated message id uses the sender domain';
+  is $mail.message-id, $mail.message-id,                           'a generated message id stays the same across reads';
+}
+
+{
+  my $mail = MVC::Keayl::Mail.new(subject => 'Hi');
+
+  like $mail.message-id, /'@localhost>' $/, 'a generated message id falls back to localhost without a sender';
 }
 
 # test delivery

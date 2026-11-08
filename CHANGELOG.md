@@ -11,6 +11,11 @@ under Added, Changed, Fixed, and Removed.
   initializers run, so an app registers its own words in an initializer:
   `$app.initializer('inflections', -> $app { Text::Inflector.inflections: { ... } })`.
   `Text::Inflector` is now a dependency.
+- `MVC::Keayl::Mail` has `date` and `message-id` attributes, and the encoded
+  message carries `Date:` and `Message-ID:` headers. A message id not given is
+  generated at the sender's domain.
+- `add-provides($root, $module, $path)` adds a module to an application's
+  `META6.json` `provides`.
 
 ### Changed
 
@@ -19,6 +24,13 @@ under Added, Changed, Fixed, and Removed.
 - `keayl generate model` names the table the way ORM::ActiveRecord does:
   `LineItem` gets `line_items` instead of `lineitems`, and `Person` gets
   `people` instead of `persons`.
+- `keayl new` and the generators write no `use lib` lines. Each generated
+  controller, helper, model, mailer, job, and channel is added to the app's
+  `META6.json` `provides`, and `keayl new` lists `HomeController` and
+  `ApplicationHelper` there. `bin/server` and `bin/dev` start Raku with `-I.`,
+  a new `.behave` sets the include path to `.` and `specs/support`, and
+  `load-application` adds the app root to the include path. An app's modules
+  load from one repository and one `.precomp` store.
 
 ### Fixed
 
@@ -34,6 +46,10 @@ under Added, Changed, Fixed, and Removed.
 - `keayl routes`, `keayl console`, and the generators print their error when a
   file is missing or has no routes block. They died with a signature error
   from `note`.
+- `META6.json` lists `JSON::Fast` in `depends`. It installed only as a
+  dependency of `Cro::HTTP`.
+- `Mail.encoded` leaves the `Bcc:` header out of the message and ends lines with
+  CRLF.
 
 ## v0.9.3 - 2026-10-28
 

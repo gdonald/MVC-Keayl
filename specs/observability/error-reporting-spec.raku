@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use MVC::Keayl::ErrorReporter;
 use MVC::Keayl::ErrorReporting;
