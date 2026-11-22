@@ -11,6 +11,7 @@ unit class MVC::Keayl::Adapter::Cro does MVC::Keayl::Adapter;
 has Str $.host = '127.0.0.1';
 has Int $.port is required;
 has Str $.scheme = 'http';
+has     $.request-log-dir = %*ENV<KEAYL_REQUEST_LOG>;
 has     $!server;
 
 my class Bridge does Cro::Transform {
@@ -22,15 +23,33 @@ my class Bridge does Cro::Transform {
   method transformer(Supply:D $in --> Supply:D) {
     supply {
       whenever $in -> $request {
+        $!adapter.log-request-event($request, "received {$request.method} {$request.target}");
+
         my $response = Cro::HTTP::Response.new(:$request);
 
         whenever $request.body-blob -> $blob {
+          $!adapter.log-request-event($request, 'body');
           $!adapter.fill-response($request, $blob, $response);
+
           emit $response;
+          $!adapter.log-request-event($request, 'emitted');
         }
       }
     }
   }
+}
+
+method log-request-event(Cro::HTTP::Request:D $request, Str:D $event --> Nil) {
+  return without $!request-log-dir;
+
+  my $time = DateTime.now.utc;
+  my $peer = $request.connection.?peer-port // '-';
+
+  my $line = sprintf "%04d-%02d-%02dT%02d:%02d:%06.3fZ port=%s peer=%s %s\n",
+    $time.year, $time.month, $time.day, $time.hour, $time.minute, $time.second,
+    $!port, $peer, $event;
+
+  $!request-log-dir.IO.add("requests-{$*PID}.log").spurt($line, :append);
 }
 
 method build-request(Cro::HTTP::Request:D $cro, Blob:D $body --> MVC::Keayl::Request) {
@@ -68,6 +87,8 @@ method fill-response(
 ) {
   my $request  = self.build-request($cro-request, $body);
   my $response = self.app.call($request);
+
+  self.log-request-event($cro-request, "called {$response.status}");
 
   if $response.is-streaming {
     my ($status, $headers) = $response.streaming-finish;

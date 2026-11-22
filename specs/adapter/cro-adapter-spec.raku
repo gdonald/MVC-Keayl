@@ -96,3 +96,58 @@ describe 'MVC::Keayl::Adapter::Cro served over a socket', {
     }
   }
 }
+
+sub request-log-dir(Str:D $label --> IO::Path) {
+  my $dir = $*TMPDIR.add("keayl-request-log-$label-$*PID");
+  $dir.mkdir;
+  $dir
+}
+
+describe 'MVC::Keayl::Adapter::Cro request log', {
+  it 'reads its directory from KEAYL_REQUEST_LOG', {
+    temp %*ENV<KEAYL_REQUEST_LOG> = '/var/log/keayl';
+
+    expect(cro-adapter.request-log-dir).to.be('/var/log/keayl');
+  }
+
+  context 'with no request log directory', {
+    let(:adapter, { MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :port(0), :request-log-dir(Nil)) });
+
+    it 'writes no log file', {
+      adapter.log-request-event(cro-request('GET', '/'), 'body');
+
+      expect($*TMPDIR.add("requests-{$*PID}.log").e).to.be-falsy;
+    }
+  }
+
+  context 'an event for a request with no connection', {
+    let(:dir, { request-log-dir('unconnected') });
+    let(:adapter, { MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :port(4321), :request-log-dir(dir.Str)) });
+
+    it 'writes the time, server port, a placeholder peer port, and the event', {
+      adapter.log-request-event(cro-request('GET', '/'), 'body');
+
+      expect(dir.add("requests-{$*PID}.log").slurp).to.match(/^ \d**4 '-' \d\d '-' \d\d 'T' \d\d ':' \d\d ':' \d\d '.' \d**3 'Z port=4321 peer=- body' \n $/);
+    }
+  }
+
+  context 'a request served over a socket', {
+    let(:dir, { request-log-dir('served') });
+
+    it 'records received, body, called, and emitted with the server and peer ports', {
+      my $port    = free-port();
+      my $adapter = MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :host('127.0.0.1'), :$port, :request-log-dir(dir.Str));
+
+      $adapter.start;
+      await (await Cro::HTTP::Client.post("http://127.0.0.1:{$port}/echo?x=9", body => 'payload'.encode('utf-8'))).body-text;
+      $adapter.stop;
+
+      my @lines = dir.add("requests-{$*PID}.log").lines;
+
+      aggregate-failures {
+        expect(@lines.map(*.split(' ', 4)[3]).List).to.be(('received POST /echo?x=9', 'body', 'called 200', 'emitted'));
+        expect(@lines.grep(/" port=$port peer=" \d+ ' '/).elems).to.be(4);
+      }
+    }
+  }
+}

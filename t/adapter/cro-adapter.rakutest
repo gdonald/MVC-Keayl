@@ -81,4 +81,53 @@ sub cro-request(Str $method, Str $target, *@headers) {
   is (await $response.body-text), 'payload', 'the served response carries the body';
 }
 
+# request log
+
+sub request-log-dir(Str:D $label --> IO::Path) {
+  my $dir = $*TMPDIR.add("keayl-request-log-t-$label-$*PID");
+  $dir.mkdir;
+  $dir
+}
+
+{
+  temp %*ENV<KEAYL_REQUEST_LOG> = '/var/log/keayl';
+
+  is cro-adapter.request-log-dir, '/var/log/keayl', 'the request log directory comes from KEAYL_REQUEST_LOG';
+}
+
+{
+  my $adapter = MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :port(0), :request-log-dir(Nil));
+
+  $adapter.log-request-event(cro-request('GET', '/'), 'body');
+
+  nok $*TMPDIR.add("requests-{$*PID}.log").e, 'no log file is written without a request log directory';
+}
+
+{
+  my $dir     = request-log-dir('unconnected');
+  my $adapter = MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :port(4321), :request-log-dir($dir.Str));
+
+  $adapter.log-request-event(cro-request('GET', '/'), 'body');
+
+  like $dir.add("requests-{$*PID}.log").slurp,
+    /^ \d**4 '-' \d\d '-' \d\d 'T' \d\d ':' \d\d ':' \d\d '.' \d**3 'Z port=4321 peer=- body' \n $/,
+    'an event for a request with no connection records the time, server port, a placeholder peer port, and the event';
+}
+
+{
+  my $dir     = request-log-dir('served');
+  my $port    = free-port();
+  my $adapter = MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :host('127.0.0.1'), :$port, :request-log-dir($dir.Str));
+
+  $adapter.start;
+  await (await Cro::HTTP::Client.post("http://127.0.0.1:$port/echo?x=9", body => 'payload'.encode('utf-8'))).body-text;
+  $adapter.stop;
+
+  my @lines = $dir.add("requests-{$*PID}.log").lines;
+
+  is-deeply @lines.map(*.split(' ', 4)[3]).List, ('received POST /echo?x=9', 'body', 'called 200', 'emitted'),
+    'a served request records received, body, called, and emitted in order';
+  is @lines.grep(/" port=$port peer=" \d+ ' '/).elems, 4, 'each served event records the server and peer ports';
+}
+
 done-testing;
