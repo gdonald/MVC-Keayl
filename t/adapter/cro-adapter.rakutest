@@ -5,6 +5,8 @@ use Cro::HTTP::Request;
 use Cro::HTTP::Response;
 use Cro::HTTP::Client;
 use ServerFixtures;
+use MVC::Keayl::Notifications;
+use MVC::Keayl::Request;
 
 sub cro-adapter {
   MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :port(0))
@@ -128,6 +130,111 @@ sub request-log-dir(Str:D $label --> IO::Path) {
   is-deeply @lines.map(*.split(' ', 4)[3]).List, ('received POST /echo?x=9', 'body', 'called 200', 'emitted'),
     'a served request records received, body, called, and emitted in order';
   is @lines.grep(/" port=$port peer=" \d+ ' '/).elems, 4, 'each served event records the server and peer ports';
+}
+
+# request log of dispatch, render, and SQL events
+
+sub request-log-events(IO::Path:D $dir --> List) {
+  $dir.add("requests-{$*PID}.log").lines.map({ .split(' ', 4)[3].subst(/'duration=' \S+/, 'duration=D') }).List
+}
+
+sub logging-adapter(Str:D $label, $app --> MVC::Keayl::Adapter::Cro) {
+  MVC::Keayl::Adapter::Cro.new(:$app, :port(4321), :request-log-dir(request-log-dir($label).Str))
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my $adapter = logging-adapter('instrumented', InstrumentedEndpoint.new);
+
+  $adapter.subscribe-request-log;
+  $adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, Cro::HTTP::Response.new);
+  $adapter.unsubscribe-request-log;
+
+  is-deeply request-log-events($adapter.request-log-dir.IO), (
+    'dispatch.keayl.start controller=deals action=show',
+    'render.keayl.start kind=template name=deals/show',
+    'sql.active_record.start name=SELECT sql=SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at FROM de',
+    'sql.active_record name=SELECT duration=D sql=SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at FROM de',
+    'render.keayl kind=template name=deals/show duration=D',
+    'dispatch.keayl controller=deals action=show duration=D',
+    'called 200',
+  ), 'a dispatched request records a start line and an end line with the duration for each step';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my $adapter = logging-adapter('subscribed-twice', InstrumentedEndpoint.new);
+
+  $adapter.subscribe-request-log;
+  $adapter.subscribe-request-log;
+  $adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, Cro::HTTP::Response.new);
+  $adapter.unsubscribe-request-log;
+
+  is request-log-events($adapter.request-log-dir.IO).elems, 7, 'an adapter subscribed twice records each event once';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my $adapter = logging-adapter('failing-dispatch', FailingDispatchEndpoint.new);
+
+  $adapter.subscribe-request-log;
+  try $adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, Cro::HTTP::Response.new);
+  $adapter.unsubscribe-request-log;
+
+  is request-log-events($adapter.request-log-dir.IO)[1], 'dispatch.keayl controller=deals action=show duration=D exception=X::AdHoc',
+    'a dispatch that dies records the exception type on the end line';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my $adapter = logging-adapter('unsubscribed', InstrumentedEndpoint.new);
+
+  $adapter.subscribe-request-log;
+  $adapter.unsubscribe-request-log;
+  $adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, Cro::HTTP::Response.new);
+
+  is-deeply request-log-events($adapter.request-log-dir.IO), ('called 200',), 'an adapter that has unsubscribed records only the called line';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my $serving-adapter = logging-adapter('serving-adapter', InstrumentedEndpoint.new);
+  my $idle-adapter    = logging-adapter('idle-adapter', InstrumentedEndpoint.new);
+
+  $serving-adapter.subscribe-request-log;
+  $idle-adapter.subscribe-request-log;
+  $serving-adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, Cro::HTTP::Response.new);
+  $serving-adapter.unsubscribe-request-log;
+  $idle-adapter.unsubscribe-request-log;
+
+  nok $idle-adapter.request-log-dir.IO.add("requests-{$*PID}.log").e, 'events are recorded only in the log of the adapter serving the request';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my $adapter = logging-adapter('outside-request', InstrumentedEndpoint.new);
+
+  $adapter.subscribe-request-log;
+  InstrumentedEndpoint.new.call(MVC::Keayl::Request.new(:method<GET>, :target</deals/2>));
+  $adapter.unsubscribe-request-log;
+
+  nok $adapter.request-log-dir.IO.add("requests-{$*PID}.log").e, 'an event outside any request writes no log file';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
+  my $adapter = MVC::Keayl::Adapter::Cro.new(:app(InstrumentedEndpoint.new), :port(4321), :request-log-dir(Nil));
+
+  $adapter.subscribe-request-log;
+
+  nok MVC::Keayl::Notifications.has-subscribers('dispatch.keayl'), 'an adapter with no request log directory subscribes to no events';
 }
 
 done-testing;

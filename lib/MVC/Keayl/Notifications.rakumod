@@ -37,7 +37,10 @@ method notify(Str:D $event, %payload) {
 }
 
 method instrument(Str:D $event, %payload is copy, &block) {
-  return block() unless self.has-subscribers($event);
+  my $start-event = "$event.start";
+  return block() unless self.has-subscribers($event) || self.has-subscribers($start-event);
+
+  self.notify($start-event, %payload);
 
   my $start = now;
   my $result;

@@ -4,6 +4,8 @@ use Cro::HTTP::Request;
 use Cro::HTTP::Response;
 use Cro::HTTP::Client;
 use ServerFixtures;
+use MVC::Keayl::Notifications;
+use MVC::Keayl::Request;
 
 sub cro-adapter {
   MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :port(0))
@@ -148,6 +150,119 @@ describe 'MVC::Keayl::Adapter::Cro request log', {
         expect(@lines.map(*.split(' ', 4)[3]).List).to.be(('received POST /echo?x=9', 'body', 'called 200', 'emitted'));
         expect(@lines.grep(/" port=$port peer=" \d+ ' '/).elems).to.be(4);
       }
+    }
+  }
+}
+
+sub request-log-events(IO::Path:D $dir --> List) {
+  $dir.add("requests-{$*PID}.log").lines.map({ .split(' ', 4)[3].subst(/'duration=' \S+/, 'duration=D') }).List
+}
+
+describe 'MVC::Keayl::Adapter::Cro request log of dispatch, render, and SQL events', {
+  before-each { MVC::Keayl::Notifications.reset }
+
+  let(:cro-response, { Cro::HTTP::Response.new });
+
+  context 'a dispatched request whose action renders a template and runs a query', {
+    let(:dir, { request-log-dir('instrumented') });
+    let(:adapter, { MVC::Keayl::Adapter::Cro.new(:app(InstrumentedEndpoint.new), :port(4321), :request-log-dir(dir.Str)) });
+
+    it 'records a start line and an end line with the duration for each step', {
+      adapter.subscribe-request-log;
+      adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, cro-response);
+      adapter.unsubscribe-request-log;
+
+      expect(request-log-events(dir)).to.be((
+        'dispatch.keayl.start controller=deals action=show',
+        'render.keayl.start kind=template name=deals/show',
+        'sql.active_record.start name=SELECT sql=SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at FROM de',
+        'sql.active_record name=SELECT duration=D sql=SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at FROM de',
+        'render.keayl kind=template name=deals/show duration=D',
+        'dispatch.keayl controller=deals action=show duration=D',
+        'called 200',
+      ));
+    }
+  }
+
+  context 'an adapter subscribed twice', {
+    let(:dir, { request-log-dir('subscribed-twice') });
+    let(:adapter, { MVC::Keayl::Adapter::Cro.new(:app(InstrumentedEndpoint.new), :port(4321), :request-log-dir(dir.Str)) });
+
+    it 'records each event once', {
+      adapter.subscribe-request-log;
+      adapter.subscribe-request-log;
+      adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, cro-response);
+      adapter.unsubscribe-request-log;
+
+      expect(request-log-events(dir).elems).to.be(7);
+    }
+  }
+
+  context 'a dispatch that dies', {
+    let(:dir, { request-log-dir('failing-dispatch') });
+    let(:adapter, { MVC::Keayl::Adapter::Cro.new(:app(FailingDispatchEndpoint.new), :port(4321), :request-log-dir(dir.Str)) });
+
+    it 'records the exception type on the end line', {
+      adapter.subscribe-request-log;
+      try adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, cro-response);
+      adapter.unsubscribe-request-log;
+
+      expect(request-log-events(dir)[1]).to.be('dispatch.keayl controller=deals action=show duration=D exception=X::AdHoc');
+    }
+  }
+
+  context 'an adapter that has unsubscribed', {
+    let(:dir, { request-log-dir('unsubscribed') });
+    let(:adapter, { MVC::Keayl::Adapter::Cro.new(:app(InstrumentedEndpoint.new), :port(4321), :request-log-dir(dir.Str)) });
+
+    it 'records only the called line', {
+      adapter.subscribe-request-log;
+      adapter.unsubscribe-request-log;
+      adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, cro-response);
+
+      expect(request-log-events(dir)).to.be(('called 200',));
+    }
+  }
+
+  context 'two subscribed adapters', {
+    let(:serving-dir, { request-log-dir('serving-adapter') });
+    let(:idle-dir, { request-log-dir('idle-adapter') });
+    let(:serving-adapter, { MVC::Keayl::Adapter::Cro.new(:app(InstrumentedEndpoint.new), :port(4321), :request-log-dir(serving-dir.Str)) });
+    let(:idle-adapter, { MVC::Keayl::Adapter::Cro.new(:app(InstrumentedEndpoint.new), :port(4322), :request-log-dir(idle-dir.Str)) });
+
+    it 'records the events only in the log of the adapter serving the request', {
+      serving-adapter.subscribe-request-log;
+      idle-adapter.subscribe-request-log;
+      serving-adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, cro-response);
+      serving-adapter.unsubscribe-request-log;
+      idle-adapter.unsubscribe-request-log;
+
+      expect(idle-dir.add("requests-{$*PID}.log").e).to.be-falsy;
+    }
+  }
+
+  context 'an event outside any request', {
+    let(:dir, { request-log-dir('outside-request') });
+    let(:endpoint, { InstrumentedEndpoint.new });
+    let(:adapter, { MVC::Keayl::Adapter::Cro.new(:app(endpoint), :port(4321), :request-log-dir(dir.Str)) });
+    let(:request, { MVC::Keayl::Request.new(:method<GET>, :target</deals/2>) });
+
+    it 'writes no log file', {
+      adapter.subscribe-request-log;
+      endpoint.call(request);
+      adapter.unsubscribe-request-log;
+
+      expect(dir.add("requests-{$*PID}.log").e).to.be-falsy;
+    }
+  }
+
+  context 'with no request log directory', {
+    let(:adapter, { MVC::Keayl::Adapter::Cro.new(:app(InstrumentedEndpoint.new), :port(4321), :request-log-dir(Nil)) });
+
+    it 'subscribes to no events', {
+      adapter.subscribe-request-log;
+
+      expect(MVC::Keayl::Notifications.has-subscribers('dispatch.keayl')).to.be-falsy;
     }
   }
 }

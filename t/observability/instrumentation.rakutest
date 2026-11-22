@@ -110,6 +110,16 @@ sub dispatcher(:$view-renderer) {
 {
   MVC::Keayl::Notifications.reset;
 
+  my @seen;
+  MVC::Keayl::Notifications.subscribe('work.start', -> %payload { @seen.push: %payload<label> });
+  MVC::Keayl::Notifications.instrument('work', %( label => 'job' ), { @seen.push: 'ran' });
+
+  is-deeply @seen, ['job', 'ran'], 'instrument notifies a start event with the payload before the block runs';
+}
+
+{
+  MVC::Keayl::Notifications.reset;
+
   my %captured;
   MVC::Keayl::Notifications.subscribe('boom', -> %payload { %captured = %payload });
 

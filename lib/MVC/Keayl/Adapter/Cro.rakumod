@@ -3,16 +3,23 @@ use Cro;
 use Cro::HTTP::Server;
 use Cro::HTTP::Request;
 use Cro::HTTP::Response;
+use ORM::ActiveRecord::Instrumentation::Notifications;
 use MVC::Keayl::Adapter;
+use MVC::Keayl::Notifications;
 use MVC::Keayl::Request;
 
 unit class MVC::Keayl::Adapter::Cro does MVC::Keayl::Adapter;
+
+constant ActiveRecordNotifications = Notifications;
+constant SQL-EXCERPT-LENGTH        = 80;
 
 has Str $.host = '127.0.0.1';
 has Int $.port is required;
 has Str $.scheme = 'http';
 has     $.request-log-dir = %*ENV<KEAYL_REQUEST_LOG>;
 has     $!server;
+has     @!keayl-subscriptions;
+has     @!active-record-subscriptions;
 
 my class Bridge does Cro::Transform {
   has $.adapter is required;
@@ -52,6 +59,45 @@ method log-request-event(Cro::HTTP::Request:D $request, Str:D $event --> Nil) {
   $!request-log-dir.IO.add("requests-{$*PID}.log").spurt($line, :append);
 }
 
+method subscribe-request-log(--> Nil) {
+  return without $!request-log-dir;
+  return if @!keayl-subscriptions;
+
+  for <dispatch.keayl dispatch.keayl.start render.keayl render.keayl.start> -> $event {
+    @!keayl-subscriptions.push: MVC::Keayl::Notifications.subscribe($event, -> %payload { self!log-notification($event, %payload) });
+  }
+
+  for <sql.active_record sql.active_record.start> -> $event {
+    @!active-record-subscriptions.push: ActiveRecordNotifications.subscribe($event, -> %payload { self!log-notification($event, %payload) });
+  }
+}
+
+method unsubscribe-request-log(--> Nil) {
+  MVC::Keayl::Notifications.unsubscribe($_) for @!keayl-subscriptions;
+  ActiveRecordNotifications.unsubscribe($_) for @!active-record-subscriptions;
+
+  @!keayl-subscriptions         = ();
+  @!active-record-subscriptions = ();
+}
+
+method !log-notification(Str:D $event, %payload --> Nil) {
+  my $context = $*KEAYL-REQUEST-LOG;
+  return without $context;
+  return unless $context.key === self;
+
+  my @fields = do given $event {
+    when /^ 'dispatch.keayl' / { "controller={%payload<controller> // ''}", "action={%payload<action> // ''}" }
+    when /^ 'render.keayl' /   { "kind={%payload<kind> // ''}", "name={%payload<name> // ''}" }
+    default                    { "name={%payload<name> // ''}" }
+  }
+
+  @fields.push: sprintf('duration=%.3f', %payload<duration>) with %payload<duration>;
+  @fields.push: "exception={%payload<exception>.^name}" with %payload<exception>;
+  @fields.push: 'sql=' ~ %payload<sql>.subst(/\s+/, ' ', :g).substr(0, SQL-EXCERPT-LENGTH) with %payload<sql>;
+
+  self.log-request-event($context.value, "$event {@fields.join(' ')}");
+}
+
 method build-request(Cro::HTTP::Request:D $cro, Blob:D $body --> MVC::Keayl::Request) {
   my %headers;
 
@@ -86,6 +132,7 @@ method fill-response(
   --> Cro::HTTP::Response
 ) {
   my $request  = self.build-request($cro-request, $body);
+  my $*KEAYL-REQUEST-LOG = Pair.new(self, $cro-request);
   my $response = self.app.call($request);
 
   self.log-request-event($cro-request, "called {$response.status}");
@@ -113,9 +160,11 @@ method start(--> Nil) {
   );
 
   $!server.start;
+  self.subscribe-request-log;
 }
 
 method stop(--> Nil) {
+  self.unsubscribe-request-log;
   .stop with $!server;
   $!server = Nil;
 }

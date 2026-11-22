@@ -1,5 +1,7 @@
 use v6.d;
+use ORM::ActiveRecord::Instrumentation::Notifications;
 use MVC::Keayl::Endpoint;
+use MVC::Keayl::Notifications;
 use MVC::Keayl::Request;
 use MVC::Keayl::Response;
 
@@ -19,6 +21,25 @@ class EchoEndpoint does MVC::Keayl::Endpoint is export {
     $response.body($request.body);
 
     $response
+  }
+}
+
+class InstrumentedEndpoint does MVC::Keayl::Endpoint is export {
+  method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
+    MVC::Keayl::Notifications.instrument('dispatch.keayl', %( controller => 'deals', action => 'show' ), {
+      MVC::Keayl::Notifications.instrument('render.keayl', %( kind => 'template', name => 'deals/show' ), {
+        Notifications.notify('sql.active_record.start', %( name => 'SELECT', sql => "SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at\n  FROM deals WHERE deals.id = 2" ));
+        Notifications.instrument('sql.active_record', %( name => 'SELECT', sql => "SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at\n  FROM deals WHERE deals.id = 2" ), { 1 });
+      });
+
+      MVC::Keayl::Response.new
+    })
+  }
+}
+
+class FailingDispatchEndpoint does MVC::Keayl::Endpoint is export {
+  method call(MVC::Keayl::Request:D $request --> MVC::Keayl::Response:D) {
+    MVC::Keayl::Notifications.instrument('dispatch.keayl', %( controller => 'deals', action => 'show' ), { die X::AdHoc.new(payload => 'lost connection') })
   }
 }
 

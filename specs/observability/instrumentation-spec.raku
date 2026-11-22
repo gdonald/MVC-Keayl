@@ -109,6 +109,13 @@ describe 'MVC::Keayl::Notifications instrument', {
     expect(MVC::Keayl::Notifications.instrument('nobody', %(), { 5 })).to.be(5);
   }
 
+  it 'notifies a start event with the payload before the block runs', {
+    my @seen;
+    MVC::Keayl::Notifications.subscribe('work.start', -> %payload { @seen.push: %payload<label> });
+    MVC::Keayl::Notifications.instrument('work', %( label => 'job' ), { @seen.push: 'ran' });
+    expect(@seen).to.be(['job', 'ran']);
+  }
+
   it 'rethrows a block error', {
     expect({ MVC::Keayl::Notifications.instrument('boom', %(), { die 'kaboom' }) }).to.throw;
   }
