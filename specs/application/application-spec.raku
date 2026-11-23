@@ -10,6 +10,7 @@ use MVC::Keayl::Routing;
 use MVC::Keayl::Assets;
 use MVC::Keayl::Logger;
 use CLIFixtures;
+use ViewFixtures;
 
 class WidgetsController is MVC::Keayl::Controller {
   method index { self.render(:plain('all widgets')) }
@@ -150,6 +151,42 @@ describe 'MVC::Keayl::Application environment behavior', {
     $app.endpoint.call(request('GET', '/widgets'));
 
     expect($sink.text).to.match(/ 'GET /widgets' /);
+  }
+}
+
+describe 'MVC::Keayl::Application view precompile at boot', {
+  let(:views, { compile-fixture('spec-app-precompile')[0].Str });
+
+  context 'when the config sets precompile-views', {
+    let(:config, { MVC::Keayl::Config.new(environment => 'test', settings => %( view-paths => [views], precompile-views => True )) });
+    let(:app, { MVC::Keayl::Application.new(config => config) });
+
+    it 'compiles each template and layout while booting', {
+      expect(compiled-files({ app.boot }).sort.List).to.be(<application.html.haml show.html.haml>);
+    }
+  }
+
+  context 'when KEAYL_PRECOMPILE_VIEWS is set in the environment', {
+    let(:config, { MVC::Keayl::Config.new(environment => 'test', settings => %( view-paths => [views] )) });
+    let(:app, { MVC::Keayl::Application.new(config => config) });
+
+    it 'compiles each template and layout while booting', {
+      temp %*ENV<KEAYL_PRECOMPILE_VIEWS> = '1';
+
+      expect(compiled-files({ app.boot }).sort.List).to.be(<application.html.haml show.html.haml>);
+    }
+  }
+
+  context 'when neither the config nor the environment asks for it', {
+    let(:config, { MVC::Keayl::Config.new(environment => 'test', settings => %( view-paths => [views] )) });
+    let(:app, { MVC::Keayl::Application.new(config => config) });
+
+    it 'compiles nothing while booting', {
+      temp %*ENV<KEAYL_PRECOMPILE_VIEWS>;
+      %*ENV<KEAYL_PRECOMPILE_VIEWS>:delete;
+
+      expect(compiled-files({ app.boot }).elems).to.be(0);
+    }
   }
 }
 

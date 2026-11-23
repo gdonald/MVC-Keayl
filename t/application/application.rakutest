@@ -10,6 +10,7 @@ use MVC::Keayl::Routing;
 use MVC::Keayl::Assets;
 use MVC::Keayl::Logger;
 use CLIFixtures;
+use ViewFixtures;
 
 class WidgetsController is MVC::Keayl::Controller {
   method index { self.render(:plain('all widgets')) }
@@ -139,6 +140,36 @@ sub request($method, $path, *%args) {
 {
   my $app = MVC::Keayl::Application.new;
   ok $app.initializer-names.grep('template-haml'), 'the template-haml initializer is registered by default';
+}
+
+# application: view precompile at boot
+
+sub precompile-config(Str:D $label, *%settings) {
+  my $views = compile-fixture($label)[0].Str;
+  MVC::Keayl::Config.new(environment => 'test', settings => %( view-paths => [$views], |%settings ))
+}
+
+{
+  my $app = MVC::Keayl::Application.new(config => precompile-config('app-precompile-config', precompile-views => True));
+
+  is-deeply compiled-files({ $app.boot }).sort.List, <application.html.haml show.html.haml>,
+    'booting compiles each template and layout when the config sets precompile-views';
+}
+
+{
+  temp %*ENV<KEAYL_PRECOMPILE_VIEWS> = '1';
+  my $app = MVC::Keayl::Application.new(config => precompile-config('app-precompile-env'));
+
+  is-deeply compiled-files({ $app.boot }).sort.List, <application.html.haml show.html.haml>,
+    'booting compiles each template and layout when KEAYL_PRECOMPILE_VIEWS is set';
+}
+
+{
+  temp %*ENV<KEAYL_PRECOMPILE_VIEWS>;
+  %*ENV<KEAYL_PRECOMPILE_VIEWS>:delete;
+  my $app = MVC::Keayl::Application.new(config => precompile-config('app-precompile-off'));
+
+  is compiled-files({ $app.boot }).elems, 0, 'booting compiles nothing when neither the config nor the environment asks for it';
 }
 
 # application: environment-derived behavior

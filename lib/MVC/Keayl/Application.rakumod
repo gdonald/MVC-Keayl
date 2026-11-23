@@ -59,6 +59,9 @@ submethod TWEAK {
       paths  => ($app.config<view-paths> // ['app/views']).Array,
       reload => !$app.is-production,
     );
+
+    $app.controller-options<view-renderer>.precompile
+      if %*ENV<KEAYL_PRECOMPILE_VIEWS> || $app.config<precompile-views>;
   });
 
   self.initializer('assets', -> $app {
