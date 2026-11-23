@@ -98,7 +98,7 @@ method !lookup-name(Str:D $name, $controller --> Str) {
   $controller.controller-path ~ '/' ~ $name
 }
 
-method !compiled-for(IO::Path:D $file --> List) {
+method !compiled-for(IO::Path:D $file, :@helper-names --> List) {
   my $key     = $file.absolute;
   my $handler = %!handlers{$file.extension} // die "no view handler for .{$file.extension}";
 
@@ -108,7 +108,7 @@ method !compiled-for(IO::Path:D $file --> List) {
       ($entry.defined && (!$!reload || $entry<mtime> == $file.modified.Num)) ?? $entry<compiled> !! Nil
     },
     build => {
-      MVC::Keayl::Notifications.instrument('compile.keayl', %( file => $key ), { $handler.compile($file.slurp) })
+      MVC::Keayl::Notifications.instrument('compile.keayl', %( file => $key ), { $handler.compile($file.slurp, :@helper-names) })
     },
     store => -> $value {
       %!store{$key} = { mtime => $file.modified.Num, compiled => $value } if $!cache;
@@ -153,17 +153,22 @@ method !compile-once(Str:D $key, :&lookup!, :&build!, :&store! --> Mu) {
 }
 
 method precompile(--> Nil) {
-  for @!paths -> $path {
-    for files-under($path.IO).grep({ %!handlers{.extension}:exists }) -> $file {
-      self!compiled-for($file);
+  my %helper-names = (|self!helper-closures.keys, |self!layout-helpers('').keys).map(* => True);
+
+  unless &!helper-loader.defined {
+    for @!helper-paths -> $path {
+      for files-under($path.IO).grep(*.extension eq 'rakumod') -> $file {
+        my %subs = self!load-helper-module($file.relative($path.IO).IO.extension('').Str.subst('/', '::', :g));
+        %helper-names{$_} = True for %subs.keys;
+      }
     }
   }
 
-  return if &!helper-loader.defined;
+  my @helper-names = %helper-names.keys.map(*.subst('_', '-', :g)).unique.sort;
 
-  for @!helper-paths -> $path {
-    for files-under($path.IO).grep(*.extension eq 'rakumod') -> $file {
-      self!load-helper-module($file.relative($path.IO).IO.extension('').Str.subst('/', '::', :g));
+  for @!paths -> $path {
+    for files-under($path.IO).grep({ %!handlers{.extension}:exists }) -> $file {
+      self!compiled-for($file, :@helper-names);
     }
   }
 }

@@ -2,6 +2,7 @@ use v6.d;
 use MVC::Keayl::View::Handler;
 use MVC::Keayl::Controller;
 use MVC::Keayl::Notifications;
+use Template::HAML::DirectCodegen;
 use CLIFixtures;
 
 unit module ViewFixtures;
@@ -56,4 +57,12 @@ sub compiled-files(&block --> List) is export {
   MVC::Keayl::Notifications.unsubscribe($id);
 
   @files.List
+}
+
+sub evaluations(&block --> Int) is export {
+  my $before = direct-eval-count;
+
+  block();
+
+  direct-eval-count() - $before
 }

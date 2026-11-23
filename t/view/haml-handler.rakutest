@@ -1,0 +1,60 @@
+use v6.d;
+use Test;
+use Template::HAML::Config;
+use MVC::Keayl::View::Context;
+use MVC::Keayl::View::Handler::HAML;
+use ViewFixtures;
+
+constant HELPER-TEMPLATE = "%p= shout('hi')\n";
+
+sub helper-context() {
+  MVC::Keayl::View::Context.new(helpers => %( shout => -> $text { $text.uc } ))
+}
+
+{
+  my $handler = MVC::Keayl::View::Handler::HAML.new;
+
+  is $handler.render($handler.compile("%p hi\n"), {}), "<p>hi</p>\n", 'a compiled template renders';
+  is $handler.render($handler.compile(HELPER-TEMPLATE), {}, context => helper-context()), "<p>HI</p>\n",
+    'a compiled template calls a helper from the context';
+}
+
+{
+  my $handler  = MVC::Keayl::View::Handler::HAML.new;
+  my $compiled = $handler.compile(HELPER-TEMPLATE, helper-names => ["shout", "whisper"]);
+
+  is evaluations({ $handler.render($compiled, {}, context => helper-context()) }), 0,
+    'a template compiled with the helper names a render uses evaluates no code on that render';
+}
+
+{
+  my $handler = MVC::Keayl::View::Handler::HAML.new;
+  my $compiled;
+
+  is evaluations({ $compiled = $handler.compile(HELPER-TEMPLATE) }), 0, 'compiling without helper names evaluates no code';
+
+  $handler.render($compiled, {}, context => helper-context());
+
+  is evaluations({ $handler.render($compiled, {}, context => helper-context()) }), 0,
+    'a second render with the same helpers evaluates no code';
+}
+
+{
+  my $handler = MVC::Keayl::View::Handler::HAML.new;
+
+  is evaluations({
+    $handler.compile(HELPER-TEMPLATE, helper-names => ["shout"]);
+    $handler.compile(HELPER-TEMPLATE, helper-names => ["shout"]);
+  }), 1, 'compiling the same source twice evaluates the template once';
+}
+
+{
+  my $handler = MVC::Keayl::View::Handler::HAML.new(config => Template::HAML::Config.new(emit => 'ast'));
+
+  is $handler.compile("%p hi\n"), "%p hi\n", 'with an abstract syntax tree config a template compiles to its source';
+  is $handler.render($handler.compile("%p hi\n"), {}), "<p>hi</p>\n", 'with an abstract syntax tree config a template renders without a context';
+  is $handler.render($handler.compile(HELPER-TEMPLATE), {}, context => helper-context()), "<p>HI</p>\n",
+    'with an abstract syntax tree config a template calls a helper from the context';
+}
+
+done-testing;

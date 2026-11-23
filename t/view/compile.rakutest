@@ -51,6 +51,13 @@ sub fixture-view(Str:D $label, *%options) {
 
   is @files.elems, 0, 'after precompiling, a template and its layout render without compiling';
 
+  my $evaluated = evaluations({
+    $view.render-template('compile/show', {}, :$controller);
+    $view.render-layout('application', '<p>HI</p>', {}, :$controller);
+  });
+
+  is $evaluated, 0, 'after precompiling, a template and its layout render without evaluating code';
+
   is compiled-files({ $view.build-context(controller => Reports::ChartController.new) }).elems, 0,
     'precompile loads a helper module in a subdirectory under its namespaced name';
 }

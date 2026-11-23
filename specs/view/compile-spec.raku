@@ -49,6 +49,15 @@ describe 'MVC::Keayl::View precompile', {
       expect(@files.elems).to.be(0);
     }
 
+    it 'renders a template and its layout without evaluating code', {
+      my $evaluated = evaluations({
+        view.render-template('compile/show', {}, :controller(controller));
+        view.render-layout('application', '<p>HI</p>', {}, :controller(controller));
+      });
+
+      expect($evaluated).to.be(0);
+    }
+
     it 'loads a helper module in a subdirectory under its namespaced name', {
       expect(compiled-files({ view.build-context(:controller(chart-controller)) }).elems).to.be(0);
     }
