@@ -63,7 +63,7 @@ method subscribe-request-log(--> Nil) {
   return without $!request-log-dir;
   return if @!keayl-subscriptions;
 
-  for <dispatch.keayl dispatch.keayl.start render.keayl render.keayl.start> -> $event {
+  for <dispatch.keayl dispatch.keayl.start render.keayl render.keayl.start compile.keayl compile.keayl.start> -> $event {
     @!keayl-subscriptions.push: MVC::Keayl::Notifications.subscribe($event, -> %payload { self!log-notification($event, %payload) });
   }
 
@@ -88,6 +88,7 @@ method !log-notification(Str:D $event, %payload --> Nil) {
   my @fields = do given $event {
     when /^ 'dispatch.keayl' / { "controller={%payload<controller> // ''}", "action={%payload<action> // ''}" }
     when /^ 'render.keayl' /   { "kind={%payload<kind> // ''}", "name={%payload<name> // ''}" }
+    when /^ 'compile.keayl' /  { "file={%payload<file> // ''}" }
     default                    { "name={%payload<name> // ''}" }
   }
 

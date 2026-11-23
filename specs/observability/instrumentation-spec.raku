@@ -160,11 +160,11 @@ describe 'dispatch and render hooks', {
     expect(%captured<action>).to.be('show');
   }
 
-  it 'instruments render with the kind of render', {
+  it 'instruments the render and its layout with the kind of each', {
     my @kinds;
     MVC::Keayl::Notifications.subscribe('render.keayl', -> %payload { @kinds.push: %payload<kind> });
     dispatcher(view-renderer => MVC::Keayl::View.new(paths => ['specs/lib/views'])).call(request('GET', '/page'));
-    expect(@kinds).to.be(['inline']);
+    expect(@kinds).to.be(['inline', 'layout']);
   }
 }
 

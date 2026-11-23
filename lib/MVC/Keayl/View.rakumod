@@ -13,6 +13,7 @@ use MVC::Keayl::Helpers::Text;
 use MVC::Keayl::Helpers::Number;
 use MVC::Keayl::Helpers::DateTime;
 use MVC::Keayl::Cache;
+use MVC::Keayl::Notifications;
 
 unit class MVC::Keayl::View;
 
@@ -28,6 +29,8 @@ has      @.helper-paths = ['app/helpers'];
 has      &.helper-loader;
 has      %!store;
 has      %!helper-module-cache;
+has Lock $!compile-lock = Lock.new;
+has      %!compiling;
 
 submethod TWEAK {
   %!handlers{'haml'} //= MVC::Keayl::View::Handler::HAML.new;
@@ -99,14 +102,76 @@ method !compiled-for(IO::Path:D $file --> List) {
   my $key     = $file.absolute;
   my $handler = %!handlers{$file.extension} // die "no view handler for .{$file.extension}";
 
-  with %!store{$key} -> $entry {
-    return ($entry<compiled>, $handler) if !$!reload || $entry<mtime> == $file.modified.Num;
-  }
-
-  my $compiled = $handler.compile($file.slurp);
-  %!store{$key} = { mtime => $file.modified.Num, :$compiled } if $!cache;
+  my $compiled = self!compile-once("template:$key",
+    lookup => {
+      my $entry = %!store{$key};
+      ($entry.defined && (!$!reload || $entry<mtime> == $file.modified.Num)) ?? $entry<compiled> !! Nil
+    },
+    build => {
+      MVC::Keayl::Notifications.instrument('compile.keayl', %( file => $key ), { $handler.compile($file.slurp) })
+    },
+    store => -> $value {
+      %!store{$key} = { mtime => $file.modified.Num, compiled => $value } if $!cache;
+    },
+  );
 
   ($compiled, $handler)
+}
+
+method !compile-once(Str:D $key, :&lookup!, :&build!, :&store! --> Mu) {
+  my $vow;
+  my $pending = $!compile-lock.protect: {
+    my $hit = lookup();
+
+    $hit.defined
+      ?? Promise.kept($hit)
+      !! (%!compiling{$key} //= do { my $promise = Promise.new; $vow = $promise.vow; $promise })
+  };
+
+  return await $pending without $vow;
+
+  my $value;
+  {
+    CATCH {
+      default {
+        $!compile-lock.protect: { %!compiling{$key}:delete };
+        $vow.break($_);
+        .rethrow
+      }
+    }
+
+    $value = build();
+  }
+
+  $!compile-lock.protect: {
+    store($value);
+    %!compiling{$key}:delete;
+  };
+
+  $vow.keep($value);
+  $value
+}
+
+method precompile(--> Nil) {
+  for @!paths -> $path {
+    for files-under($path.IO).grep({ %!handlers{.extension}:exists }) -> $file {
+      self!compiled-for($file);
+    }
+  }
+
+  return if &!helper-loader.defined;
+
+  for @!helper-paths -> $path {
+    for files-under($path.IO).grep(*.extension eq 'rakumod') -> $file {
+      self!load-helper-module($file.relative($path.IO).IO.extension('').Str.subst('/', '::', :g));
+    }
+  }
+}
+
+sub files-under(IO::Path:D $dir --> List) {
+  return () unless $dir.d;
+
+  $dir.dir.sort.map({ .d ?? |files-under($_) !! $_ }).List
 }
 
 method render-template(Str:D $name, %locals, Str :$format, :$variant, :$controller --> Str) {
@@ -212,7 +277,7 @@ method !layout-helpers(Str:D $content --> Hash) {
   )
 }
 
-my $helper-eval-counter = 0;
+my atomicint $helper-eval-counter = 0;
 
 # Helper modules are loaded by evaluating their source under a fresh package name
 # each time, rather than `require`, so a changed file reloads in development and
@@ -228,7 +293,7 @@ sub eval-helper-subs(IO::Path:D $file --> Hash) {
   my $body = $file.slurp
     .subst(/^^ \h* 'use' \h+ 'v6' <[.\w]>* \h* ';' \h* $$/, '', :g)
     .subst(/^^ \h* 'unit' \h+ 'module' \h+ <[\w:]>+ \h* ';' \h* $$/, '');
-  my $sym  = '__KeaylHelper_' ~ ($helper-eval-counter++);
+  my $sym  = '__KeaylHelper_' ~ ($helper-eval-counter⚛++);
   my $code = "use v6.d;\nmodule $sym \{\n$body\n}\n"
     ~ $sym ~ '::.pairs.grep({ .key.starts-with("&") }).map({ .key.substr(1) => .value }).hash';
 
@@ -257,14 +322,18 @@ method !load-helper-module(Str:D $module --> Hash) {
   my $file = self!helper-module-file($module);
   return %() unless $file.defined && $file.e;
 
-  with %!helper-module-cache{$module} -> $entry {
-    return $entry<subs> if !$!reload || $entry<mtime> == $file.modified.Num;
-  }
-
-  my %subs = eval-helper-subs($file);
-  %!helper-module-cache{$module} = { mtime => $file.modified.Num, :%subs };
-
-  %subs
+  self!compile-once("helper:$module",
+    lookup => {
+      my $entry = %!helper-module-cache{$module};
+      ($entry.defined && (!$!reload || $entry<mtime> == $file.modified.Num)) ?? $entry<subs> !! Nil
+    },
+    build => {
+      MVC::Keayl::Notifications.instrument('compile.keayl', %( file => $file.absolute ), { eval-helper-subs($file) })
+    },
+    store => -> %subs {
+      %!helper-module-cache{$module} = { mtime => $file.modified.Num, :%subs };
+    },
+  )
 }
 
 method !controller-helper-modules($controller --> List) {

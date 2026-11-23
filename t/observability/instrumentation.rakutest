@@ -168,7 +168,7 @@ sub dispatcher(:$view-renderer) {
 
   dispatcher(view-renderer => MVC::Keayl::View.new(paths => ['specs/lib/views'])).call(request('GET', '/page'));
 
-  is @kinds, ['inline'], 'the render hook reports the kind of render';
+  is @kinds, ['inline', 'layout'], 'the render hook reports the render and its layout with the kind of each';
 }
 
 # request id middleware

@@ -1,0 +1,96 @@
+use v6.d;
+use Test;
+use MVC::Keayl::View;
+use MVC::Keayl::Controller;
+use ViewFixtures;
+
+class Reports::ChartController is MVC::Keayl::Controller { }
+
+sub fixture-view(Str:D $label, *%options) {
+  my ($views, $helpers) = compile-fixture($label);
+  MVC::Keayl::View.new(paths => [$views.Str], helper-paths => [$helpers.Str], |%options)
+}
+
+# compile events
+
+{
+  my $view       = fixture-view('compile-events');
+  my $controller = CompileController.new;
+
+  my @files = compiled-files({
+    $view.render-template('compile/show', {}, :$controller);
+    $view.render-layout('application', '<p>HI</p>', {}, :$controller);
+  });
+
+  is-deeply @files.List, <show.html.haml ApplicationHelper.rakumod application.html.haml>,
+    'the first render publishes a compile event for the template, its helper module, and the layout';
+
+  is compiled-files({ $view.render-template('compile/show', {}, :$controller) }).elems, 0,
+    'a second render publishes no compile event';
+}
+
+# precompile
+
+{
+  my $view = fixture-view('precompile');
+
+  is-deeply compiled-files({ $view.precompile }).sort.List, <ApplicationHelper.rakumod ChartHelper.rakumod application.html.haml show.html.haml>,
+    'precompile compiles each template, layout, and helper module under its paths';
+}
+
+{
+  my $view       = fixture-view('precompiled-render');
+  my $controller = CompileController.new;
+
+  $view.precompile;
+
+  my @files = compiled-files({
+    $view.render-template('compile/show', {}, :$controller);
+    $view.render-layout('application', '<p>HI</p>', {}, :$controller);
+  });
+
+  is @files.elems, 0, 'after precompiling, a template and its layout render without compiling';
+
+  is compiled-files({ $view.build-context(controller => Reports::ChartController.new) }).elems, 0,
+    'precompile loads a helper module in a subdirectory under its namespaced name';
+}
+
+{
+  my $view    = fixture-view('precompile-handler');
+  my $handler = SlowCountingHandler.new;
+
+  $view.register-handler('count', $handler);
+  $view.precompile;
+
+  is $handler.compiles, 1, 'precompile compiles the templates a registered handler renders';
+}
+
+{
+  my $view = fixture-view('precompile-loader', helper-loader => -> $module { %() });
+
+  is-deeply compiled-files({ $view.precompile }).sort.List, <application.html.haml show.html.haml>,
+    'with a helper loader, precompile compiles the templates and leaves helper modules to the loader';
+}
+
+# concurrent compiles
+
+{
+  my $view    = fixture-view('concurrent-compile');
+  my $handler = SlowCountingHandler.new;
+
+  $view.register-handler('count', $handler);
+  await (start { $view.render-template('compile/report', {}) }) xx 2;
+
+  is $handler.compiles, 1, 'two renders that miss the cache at the same time compile the template once';
+}
+
+{
+  my $view = fixture-view('failing-compile');
+
+  $view.register-handler('count', FailOnceHandler.new);
+
+  dies-ok { $view.render-template('compile/report', {}) }, 'a compile that fails raises its error from the render';
+  is $view.render-template('compile/report', {}), 'REPORT', 'after a failed compile the next render compiles again';
+}
+
+done-testing;

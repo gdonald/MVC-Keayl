@@ -175,6 +175,8 @@ describe 'MVC::Keayl::Adapter::Cro request log of dispatch, render, and SQL even
       expect(request-log-events(dir)).to.be((
         'dispatch.keayl.start controller=deals action=show',
         'render.keayl.start kind=template name=deals/show',
+        'compile.keayl.start file=/app/views/deals/show.html.haml',
+        'compile.keayl file=/app/views/deals/show.html.haml duration=D',
         'sql.active_record.start name=SELECT sql=SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at FROM de',
         'sql.active_record name=SELECT duration=D sql=SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at FROM de',
         'render.keayl kind=template name=deals/show duration=D',
@@ -194,7 +196,7 @@ describe 'MVC::Keayl::Adapter::Cro request log of dispatch, render, and SQL even
       adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, cro-response);
       adapter.unsubscribe-request-log;
 
-      expect(request-log-events(dir).elems).to.be(7);
+      expect(request-log-events(dir).elems).to.be(9);
     }
   }
 

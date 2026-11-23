@@ -154,6 +154,8 @@ sub logging-adapter(Str:D $label, $app --> MVC::Keayl::Adapter::Cro) {
   is-deeply request-log-events($adapter.request-log-dir.IO), (
     'dispatch.keayl.start controller=deals action=show',
     'render.keayl.start kind=template name=deals/show',
+    'compile.keayl.start file=/app/views/deals/show.html.haml',
+    'compile.keayl file=/app/views/deals/show.html.haml duration=D',
     'sql.active_record.start name=SELECT sql=SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at FROM de',
     'sql.active_record name=SELECT duration=D sql=SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at FROM de',
     'render.keayl kind=template name=deals/show duration=D',
@@ -172,7 +174,7 @@ sub logging-adapter(Str:D $label, $app --> MVC::Keayl::Adapter::Cro) {
   $adapter.fill-response(cro-request('GET', '/deals/2'), Blob.new, Cro::HTTP::Response.new);
   $adapter.unsubscribe-request-log;
 
-  is request-log-events($adapter.request-log-dir.IO).elems, 7, 'an adapter subscribed twice records each event once';
+  is request-log-events($adapter.request-log-dir.IO).elems, 9, 'an adapter subscribed twice records each event once';
 }
 
 {

@@ -987,7 +987,7 @@ method render-collection(Str:D $name, @collection, $spacer, %locals --> Str) {
 
 method render-layout(Str:D $layout, Str:D $content, %locals --> Str) {
   die 'no view renderer configured' without $!view-renderer;
-  $!view-renderer.render-layout($layout, $content, %locals, controller => self)
+  self!render-traced('layout', $layout, { $!view-renderer.render-layout($layout, $content, %locals, controller => self) })
 }
 
 method layout($name --> ::?CLASS) {
