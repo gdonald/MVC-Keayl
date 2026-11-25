@@ -83,6 +83,17 @@ sub cro-request(Str $method, Str $target, *@headers) {
   is (await $response.body-text), 'payload', 'the served response carries the body';
 }
 
+{
+  my $holder  = IO::Socket::Async.listen('127.0.0.1', 0).tap(-> $connection { $connection.close });
+  my $port    = await $holder.socket-port;
+  my $adapter = MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :host('127.0.0.1'), :$port);
+
+  LEAVE $holder.close;
+
+  throws-like { $adapter.start }, Exception, message => /'address already in use'/,
+    'start dies with the address-in-use error when another listener holds the port';
+}
+
 # request log
 
 sub request-log-dir(Str:D $label --> IO::Path) {

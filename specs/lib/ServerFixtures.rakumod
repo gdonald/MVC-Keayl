@@ -29,7 +29,6 @@ class InstrumentedEndpoint does MVC::Keayl::Endpoint is export {
     MVC::Keayl::Notifications.instrument('dispatch.keayl', %( controller => 'deals', action => 'show' ), {
       MVC::Keayl::Notifications.instrument('render.keayl', %( kind => 'template', name => 'deals/show' ), {
         MVC::Keayl::Notifications.instrument('compile.keayl', %( file => '/app/views/deals/show.html.haml' ), { 1 });
-        Notifications.notify('sql.active_record.start', %( name => 'SELECT', sql => "SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at\n  FROM deals WHERE deals.id = 2" ));
         Notifications.instrument('sql.active_record', %( name => 'SELECT', sql => "SELECT deals.id, deals.name, deals.amount, deals.stage, deals.created_at\n  FROM deals WHERE deals.id = 2" ), { 1 });
       });
 

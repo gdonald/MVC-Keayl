@@ -99,6 +99,20 @@ describe 'MVC::Keayl::Adapter::Cro served over a socket', {
   }
 }
 
+describe 'MVC::Keayl::Adapter::Cro started on a port another listener holds', {
+  let(:holder, { IO::Socket::Async.listen('127.0.0.1', 0).tap(-> $connection { $connection.close }) });
+  let(:port, { await holder.socket-port });
+  let(:adapter, { MVC::Keayl::Adapter::Cro.new(:app(EchoEndpoint.new), :host('127.0.0.1'), :port(port)) });
+
+  after-each {
+    holder.close;
+  }
+
+  it 'dies with the address-in-use error before returning', {
+    expect({ adapter.start }).to.raise-error(/'address already in use'/);
+  }
+}
+
 sub request-log-dir(Str:D $label --> IO::Path) {
   my $dir = $*TMPDIR.add("keayl-request-log-$label-$*PID");
   $dir.mkdir;

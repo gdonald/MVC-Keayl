@@ -153,7 +153,24 @@ method fill-response(
   $cro-response
 }
 
+method !ensure-port-available(--> Nil) {
+  my $refused = Promise.new;
+  my $refusal = $refused.vow;
+
+  my $tap = IO::Socket::Async.listen($!host, $!port).tap(
+    -> $connection { $connection.close },
+    quit => -> $error { $refusal.break($error) },
+  );
+
+  await Promise.anyof($tap.socket-port, $refused);
+  await $refused if $refused;
+
+  $tap.close;
+}
+
 method start(--> Nil) {
+  self!ensure-port-available;
+
   $!server = Cro::HTTP::Server.new(
     :$!host,
     :$!port,
